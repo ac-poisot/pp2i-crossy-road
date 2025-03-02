@@ -10,7 +10,10 @@
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
 #define PLAYER_START_Y 5 // starting position of the player
-#define GAME_SPEED 20 // in frames at 60 fps
+
+#define REFRESH_RATE 60 // refresh rate of the game in frames per second
+#define GAME_SPEED 20 // in frames, time between each move of the camera
+
 
 #define GRASS     1
 #define WATER     2
@@ -131,7 +134,7 @@ lane* random_lane(lane* prev_lane) {
 
 displayedData move_camera(displayedData data) {
     // Move the camera
-    data.cameraY += 1;
+    data.cameraY++;
     data.camera_first_lane = data.camera_first_lane->next;
 
     // Add a new lane
@@ -165,7 +168,7 @@ displayedData init_game(void) {
         l = random_lane(l);
     }
 
-    displayedData res = {GAME_HEIGHT, first_lane, first_lane, p, 0, 10, 0};
+    displayedData res = {GAME_HEIGHT, first_lane, first_lane, p, 0, 0, 0};
 
     return res;
 }
@@ -221,19 +224,19 @@ int main(void) {
             switch (ch) {
                 case KEY_UP:
                 if (game.player.y < game.cameraY) {
-                    game.player.y += 1;
+                    game.player.y++;
                 }
                 break;
                 case KEY_DOWN:
-                game.player.y -= 1;
+                game.player.y--;
                 break;
                 case KEY_LEFT:
                 if (game.player.x > UNPLAYABLE_WIDTH)
-                game.player.x -= 1;
+                game.player.x--;
                 break;
                 case KEY_RIGHT:
                 if (game.player.x < LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
-                    game.player.x += 1;
+                    game.player.x++;
                 }
                 break;
                 default:
@@ -244,7 +247,7 @@ int main(void) {
                 game = move_camera(game);
                 move_timer = GAME_SPEED;
             } else {
-                move_timer -= 1;
+                move_timer--;
             }
          
             display(game);
@@ -275,7 +278,7 @@ int main(void) {
             break;
         }
 
-        usleep(16667); // ~1 frame at 60 fps
+        usleep(1000000 / REFRESH_RATE); // ~1 frame at REFRESH_RATE fps
     }
 
     endwin();

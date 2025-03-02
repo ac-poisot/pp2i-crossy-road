@@ -18,7 +18,7 @@ main.o: main.c
 
 
 
-# fiare les execultables
+# create executables
 main_only_core: main.o core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_only_core main.o core.o
 
