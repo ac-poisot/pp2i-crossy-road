@@ -22,22 +22,22 @@ main.o: main.c
 main_only_core: main.o core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_only_core main.o core.o
 
-main_textuel: main.o core.o cli.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_textuel main.o core.o cli.o
+main_cli: main.o core.o cli.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli main.o core.o cli.o
 
-main_graphique: main.o core.o gui.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_graphique main.o core.o gui.o
+main_graphics: main.o core.o gui.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_graphcs main.o core.o gui.o
 
 
-# les exécutions
+# executions
 clean:
-	rm -f main.o core.o cli.o gui.o main_only_core main_textuel main_graphique
+	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics
 
 run_only_core: main_only_core
 	./main_only_core
 
-run_textuel: main_textuel
-	./main_textuel
+run_cli: main_cli
+	./main_cli
 
-run_graphique: main_graphique
-	./main_graphique
+run_graphics: main_graphics
+	./main_graphics
