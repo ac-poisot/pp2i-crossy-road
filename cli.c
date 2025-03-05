@@ -71,7 +71,23 @@ void display_lane(lane* lane, int lane_count) {
 
     while (current_obstacle != NULL) {
         for (int i = 0; i < current_obstacle->size; i++) {
-            mvprintw(screen_y, i+current_obstacle->x, "v"); // Should depend on the type of the lane        
+            switch (lane->type)
+            {
+            case GRASS:
+                mvprintw(screen_y, i+current_obstacle->x, "T");       
+                break;
+            case WATER:
+                mvprintw(screen_y, i+current_obstacle->x, "O");      
+                break;
+            case TRACK:
+                mvprintw(screen_y, i+current_obstacle->x, ">");        
+                break;
+            case ROAD:
+                mvprintw(screen_y, i+current_obstacle->x, "V");   
+                break;  
+            default:
+                break;
+            }
         }
         current_obstacle = current_obstacle->next;
     }
@@ -193,14 +209,14 @@ int main(void) {
     start_color();
     init_pair(GRASS, COLOR_BLACK, COLOR_GREEN);
     init_pair(WATER, COLOR_GREEN, COLOR_BLUE);
-    init_pair(TRACK, COLOR_RED, COLOR_BLACK);
-    init_pair(ROAD, COLOR_MAGENTA, COLOR_WHITE);
+    init_pair(TRACK, COLOR_RED, COLOR_WHITE);
+    init_pair(ROAD, COLOR_MAGENTA, COLOR_BLACK);
 
     // Initialize coin colors
     init_pair(GRASS + 4, COLOR_YELLOW, COLOR_GREEN);
     init_pair(WATER + 4, COLOR_YELLOW, COLOR_BLUE);
-    init_pair(TRACK + 4, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(ROAD + 4, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(TRACK + 4, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(ROAD + 4, COLOR_YELLOW, COLOR_BLACK);
 
     int game_state = MENU;
     int high_score = 0;
