@@ -338,16 +338,13 @@ int main(void) {
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
                 refresh();
             }
-            else {
-                clear();
-            }
         
             break;
 
             case GAME_OVER:
             mvprintw(0, 0, "Final score: %d", game.player.y);
-            mvprintw(GAME_HEIGHT/4, 8, "GAME OVER ;-;");
-            mvprintw(GAME_HEIGHT/4 + 3, 0, "Press any key to return to menu");
+            mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
+            mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR) {
                 clear();
                 game_state = MENU;
