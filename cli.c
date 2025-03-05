@@ -55,7 +55,6 @@ typedef struct displayedData {
     lane* camera_first_lane; // pointer to the first lane displayed on the screen
     player player; // player
     int score; // score
-    int purse; // purse
     int gameOver; // 1 if the game is over, 0 otherwise
 } displayedData;
 
@@ -69,11 +68,12 @@ void display_lane(lane* lane, int lane_count) {
     //Pas d'obstacles actuellement
     // Display the obstacles
     obstacle* current_obstacle = lane->obstacles;
+
     while (current_obstacle != NULL) {
         for (int i = 0; i < current_obstacle->size; i++) {
-            mvprintw(screen_y, i, "O");
+            mvprintw(screen_y, i+current_obstacle->x, "v"); // Should depend on the type of the lane        
         }
-        current_obstacle++;
+        current_obstacle = current_obstacle->next;
     }
     
     // Display the coins
@@ -102,8 +102,6 @@ void display(displayedData data) {
     mvprintw(data.cameraY - data.player.y + 1, data.player.x, "P");
     // Display the score
     mvprintw(0, 0, "Score: %d", data.player.y);
-    // Display the purse
-    mvprintw(0, 10, "Purse: %d", data.purse);
     refresh();
 }
 
@@ -120,9 +118,17 @@ void free_lanes(lane* first_lane) {
 
 lane* random_lane(lane* prev_lane) {
     lane* new_lane = malloc(sizeof(lane));
-    new_lane->y = 0;
+    new_lane->y = prev_lane->y + 1;
     new_lane->speed = 0;
-    new_lane->obstacles = NULL;
+
+    // Only one obstacle, for testing purposes
+    new_lane->obstacles = malloc(sizeof(obstacle));
+    new_lane->obstacles->next = NULL;
+    new_lane->obstacles->prev = NULL;
+    new_lane->obstacles->x = rand() % LANE_WIDTH;
+    new_lane->obstacles->size = 1;
+
+
     new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
     for (int i = 0; i < LANE_WIDTH; i++) {
         new_lane->coins[i] = !(rand() % 30); // for each tile, 1/30 chance of having a coin
@@ -154,6 +160,7 @@ displayedData init_game(void) {
 
     // Initialize the first lane
     lane* l = malloc(sizeof(lane));
+    l->y = 0;
     l->obstacles = NULL;
     l->coins = malloc(LANE_WIDTH * sizeof(bool));
     for (int i = 0; i < LANE_WIDTH; i++) {
@@ -170,7 +177,7 @@ displayedData init_game(void) {
         l = random_lane(l);
     }
 
-    displayedData res = {GAME_HEIGHT, first_lane, first_lane, p, 0, 0, 0};
+    displayedData res = {GAME_HEIGHT, first_lane, first_lane, p, 0, 0};
 
     return res;
 }
@@ -189,6 +196,7 @@ int main(void) {
     init_pair(TRACK, COLOR_RED, COLOR_BLACK);
     init_pair(ROAD, COLOR_MAGENTA, COLOR_WHITE);
 
+    // Initialize coin colors
     init_pair(GRASS + 4, COLOR_YELLOW, COLOR_GREEN);
     init_pair(WATER + 4, COLOR_YELLOW, COLOR_BLUE);
     init_pair(TRACK + 4, COLOR_YELLOW, COLOR_BLACK);
@@ -196,7 +204,10 @@ int main(void) {
 
     int game_state = MENU;
     int high_score = 0;
+    int purse = 0;
     int move_timer;
+    int current_y;
+    int current_x;
     displayedData game;
 
     while (true) {
@@ -222,6 +233,10 @@ int main(void) {
             break;
 
             case GAME:
+
+            current_y = game.player.y;
+            current_x = game.player.x;
+
             switch (ch) {
                 case KEY_UP:
                 if (game.player.y < game.cameraY) {
@@ -250,15 +265,67 @@ int main(void) {
             } else {
                 move_timer--;
             }
-         
-            display(game);
-            refresh();
-            
+        
+
+            // Check if the player is colliding with something
+
+            lane* current_lane = game.camera_first_lane;
+
+            while (current_lane->y != game.player.y && current_lane->next != NULL) {
+                current_lane = current_lane->next;
+            }
+
+            if (current_lane != NULL) {
+
+                // Check for collisions with coins
+                for (int i = 0; i < LANE_WIDTH; i++) {
+                    if (current_lane->coins[i] && game.player.x == i) {
+                        purse++;
+                        current_lane->coins[i] = false;
+                    }
+                }
+
+                // Check for collisions with obstacles
+                obstacle* current_obstacle = current_lane->obstacles;
+                while (current_obstacle != NULL) {
+                    if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_obstacle->size) {
+                        switch (current_lane->type) {
+                            case GRASS:
+                            game.player.x = current_x;
+                            game.player.y = current_y;
+                            break;
+                            case TRACK:
+                            game_state = GAME_OVER;
+                            break;
+                            case ROAD:
+                            game_state = GAME_OVER;
+                            break;
+                            case WATER:
+                            break;
+                            break;
+                            default:
+                            break;
+                        }
+                    }
+                    current_obstacle = current_obstacle->next;
+                }
+
+            }
+
             if (game.player.y < game.cameraY - GAME_HEIGHT) {
-                clear();
                 game_state = GAME_OVER;
             }
-    
+
+            if (game_state != GAME_OVER) {
+                display(game);
+                // Display the purse
+                mvprintw(0, LANE_WIDTH-3, "%d$", purse);
+                refresh();
+            }
+            else {
+                clear();
+            }
+        
             break;
 
             case GAME_OVER:
