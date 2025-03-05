@@ -26,6 +26,8 @@
 #define GAME_OVER 2
 
 typedef struct obstacle {
+    struct obstacle* next;
+    struct obstacle* prev;
     float x; // position of the obstacle
     int size; // size of the obstacle (log or vehicle length…)
 } obstacle;
@@ -64,7 +66,7 @@ void display_lane(lane* lane, int lane_count) {
     for (int i = 0; i < LANE_WIDTH; i++) {
         mvprintw(screen_y, i, " ");
     }
-
+    //Pas d'obstacles actuellement
     // Display the obstacles
     obstacle* current_obstacle = lane->obstacles;
     while (current_obstacle != NULL) {
@@ -198,7 +200,7 @@ int main(void) {
     displayedData game;
 
     while (true) {
-        int ch = getch();
+        int ch = getch();//Get the inputs from the keyboard
 
         switch (game_state) {
 
@@ -207,16 +209,15 @@ int main(void) {
             mvprintw(GAME_HEIGHT/4, 5, "~ CROSSY ROAD :3 ~");
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
             mvprintw(GAME_HEIGHT/4 + 4, 7, "Press q to quit");
+            if (ch == 'q') {
+                endwin();
+                return 0;
+            }
             if (ch != ERR) {
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
                 game = init_game();
-            }
-
-            if (ch == 'q') {
-                endwin();
-                return 0;
             }
             break;
 
