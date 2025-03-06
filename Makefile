@@ -30,13 +30,17 @@ main_graphics: main.o core.o gui.o
 
 
 # executions
+
+cli_test:
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.c -lncurses
+
 clean:
 	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics
 
 run_only_core: main_only_core
 	./main_only_core
 
-run_cli: main_cli
+run_cli: cli_test
 	./main_cli
 
 run_graphics: main_graphics

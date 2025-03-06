@@ -65,12 +65,23 @@ void display_lane(lane* lane, int lane_count) {
     for (int i = 0; i < LANE_WIDTH; i++) {
         mvprintw(screen_y, i, " ");
     }
-    //Pas d'obstacles actuellement
+    
+    // Display the coins
+    for (int i = 0; i < LANE_WIDTH; i++) {
+        if (lane->coins[i]) {
+            attron(COLOR_PAIR((lane->type) + 4));
+            mvprintw(screen_y, i, "$");
+            attroff(COLOR_PAIR((lane->type) + 4));
+        }
+    }
+
     // Display the obstacles
+    attron(COLOR_PAIR(lane->type));
+
     obstacle* current_obstacle = lane->obstacles;
 
     while (current_obstacle != NULL) {
-        for (int i = 0; i < current_obstacle->size; i++) {
+        for (int i = 0; i < current_obstacle->size && i+current_obstacle->x < LANE_WIDTH; i++) {
             switch (lane->type)
             {
             case GRASS:
@@ -90,15 +101,6 @@ void display_lane(lane* lane, int lane_count) {
             }
         }
         current_obstacle = current_obstacle->next;
-    }
-    
-    // Display the coins
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        if (lane->coins[i]) {
-            attron(COLOR_PAIR((lane->type) + 4));
-            mvprintw(screen_y, i, "$");
-            attroff(COLOR_PAIR((lane->type) + 4));
-        }
     }
 
     attroff(COLOR_PAIR(lane->type));
@@ -180,14 +182,19 @@ lane* random_lane(lane* prev_lane) {
     new_lane->obstacles->next = NULL;
     new_lane->obstacles->prev = NULL;
     new_lane->obstacles->x = (rand() % (LANE_WIDTH - UNPLAYABLE_WIDTH * 2)) + UNPLAYABLE_WIDTH ;
-    new_lane->obstacles->size = 1;
+    new_lane->type = (rand() % 4) + 1;
+
+    if (new_lane->type == WATER) {
+        new_lane->obstacles->size = 5;
+    } else {
+        new_lane->obstacles->size = 1;
+    }
 
 
     new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
     for (int i = 0; i < LANE_WIDTH; i++) {
         new_lane->coins[i] = !(rand() % 30); // for each tile, 1/30 chance of having a coin
     }
-    new_lane->type = (rand() % 4) + 1;
     new_lane->prev = prev_lane;
     new_lane->next = NULL;
     return new_lane;
