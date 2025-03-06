@@ -13,13 +13,13 @@ typedef struct obstacle {
     struct obstacle* next;
     struct obstacle* prev;
     float x; // position of the obstacle
-    int size; // size of the obstacle (log or vehicle length…)
 } obstacle;
 
 typedef struct lane {
     int y; // position of the lane
     float speed; // speed of the obstacles
     obstacle* obstacles; // array of obstacles present on the lane
+    int obst_size; // size of the obstacle (log or vehicle length…)
     bool* coins; // pointer to bools representing the position of coins present on the lane
     int type; // type of the lane (plains, road, tracks, river)
     struct lane* prev; // pointer to the previous lane
@@ -50,4 +50,6 @@ int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
+obstacle* generate_vehicule(void);
+void update_vehicules(lane* l);
 void displayLanes(lane* l);

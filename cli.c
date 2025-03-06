@@ -44,7 +44,7 @@ void display_lane(lane* lane, int lane_count) {
     obstacle* current_obstacle = lane->obstacles;
 
     while (current_obstacle != NULL) {
-        for (int i = 0; i < current_obstacle->size && i+current_obstacle->x < LANE_WIDTH; i++) {
+        for (int i = 0; i < lane->obst_size && i+current_obstacle->x < LANE_WIDTH; i++) {
             switch (lane->type)
             {
             case GRASS:
@@ -105,9 +105,9 @@ lane* random_lane(lane* prev_lane) {
     new_lane->type = (rand() % 4) + 1;
 
     if (new_lane->type == WATER) {
-        new_lane->obstacles->size = 5;
+        new_lane->obst_size = 5;
     } else {
-        new_lane->obstacles->size = 1;
+        new_lane->obst_size = 1;
     }
 
 
@@ -271,7 +271,7 @@ int main(void) {
                 // Check for collisions with obstacles
                 obstacle* current_obstacle = current_lane->obstacles;
                 while (current_obstacle != NULL) {
-                    if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_obstacle->size) {
+                    if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_lane->obst_size) {
                         switch (current_lane->type) {
                             case GRASS:
                             game.player.x = current_x;
