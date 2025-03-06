@@ -19,14 +19,14 @@ main.o: main.c
 
 
 # create executables
-main_only_core: main.o core.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_only_core main.o core.o
+main_only_core: core.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_only_core core.o
 
-main_cli: main.o core.o cli.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_cli main.o core.o cli.o
+main_cli: core.o cli.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o
 
-main_graphics: main.o core.o gui.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_graphcs main.o core.o gui.o
+main_graphics: core.o gui.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o
 
 cli_test: cli.o core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.o core.o -lncurses

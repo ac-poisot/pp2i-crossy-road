@@ -1,6 +1,14 @@
 #pragma once
 
 
+#define LANE_WIDTH 30 // width of the displayed area
+
+#define GRASS     1
+#define WATER     2
+#define TRACK     3
+#define ROAD      4
+
+
 typedef struct obstacle {
     struct obstacle* next;
     struct obstacle* prev;
@@ -38,3 +46,8 @@ typedef struct displayedData {
 
 void free_obstacles(obstacle* first_obstacle);
 void free_lanes(lane* first_lane);
+int biome(int* boules);
+int* probabilite_biomes(lane* l);
+lane* empty_lane(lane* prev_lane, int type);
+lane* initialLanes(void);
+void displayLanes(lane* l);

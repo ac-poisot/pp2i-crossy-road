@@ -7,7 +7,6 @@
 
 #include "core.h"
 
-#define LANE_WIDTH 30 // width of the displayed area
 #define GAME_HEIGHT 20 // height of the displayed area
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
@@ -15,12 +14,6 @@
 
 #define REFRESH_RATE 60 // refresh rate of the game in frames per second
 #define GAME_SPEED 20 // in frames, time between each move of the camera
-
-
-#define GRASS     1
-#define WATER     2
-#define TRACK     3
-#define ROAD      4
 
 // Game states
 #define MENU 0
@@ -91,28 +84,6 @@ void display(displayedData data) {
     // Display the score
     mvprintw(0, 0, "Score: %d", data.player.y);
     refresh();
-}
-
-
-lane* empty_lane(lane* prev_lane, int type) {
-    lane* new_lane = malloc(sizeof(lane));
-    if (prev_lane != NULL) {
-        new_lane->y = prev_lane->y + 1;
-        prev_lane->next = new_lane;
-    } else {
-        new_lane->y = 0;
-    }
-    new_lane->prev = prev_lane;
-    new_lane->speed = 0;
-    new_lane->obstacles = NULL;
-    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        new_lane->coins[i] = false;
-    }
-    new_lane->type = type;
-    new_lane->next = NULL;
-    
-    return new_lane;
 }
 
 
