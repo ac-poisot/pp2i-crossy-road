@@ -224,10 +224,11 @@ int main(void) {
     int move_timer;
     int current_y;
     int current_x;
+    bool drown_flag;
     displayedData game;
 
     while (true) {
-        int ch = getch();//Get the inputs from the keyboard
+        int ch = getch(); //Get the inputs from the keyboard
 
         switch (game_state) {
 
@@ -301,6 +302,12 @@ int main(void) {
                     }
                 }
 
+                if (current_lane->type == WATER) {
+                    drown_flag = true; // set this to false to disable drowning
+                } else {
+                    drown_flag = false;
+                }
+
                 // Check for collisions with obstacles
                 obstacle* current_obstacle = current_lane->obstacles;
                 while (current_obstacle != NULL) {
@@ -317,6 +324,7 @@ int main(void) {
                             game_state = GAME_OVER;
                             break;
                             case WATER:
+                            drown_flag = false;
                             break;
                             break;
                             default:
@@ -328,7 +336,7 @@ int main(void) {
 
             }
 
-            if (game.player.y < game.cameraY - GAME_HEIGHT) {
+            if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag) {
                 game_state = GAME_OVER;
             }
 
