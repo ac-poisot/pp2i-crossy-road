@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define LANE_WIDTH 20 // width of the displayed area
+#define LANE_WIDTH 30 // width of the displayed area
 #define GAME_HEIGHT 20 // height of the displayed area
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
@@ -132,16 +132,43 @@ void free_lanes(lane* first_lane) {
     }
 }
 
+lane* empty_lane(lane* prev_lane, int type) {
+    lane* new_lane = malloc(sizeof(lane));
+    if (prev_lane != NULL) {
+        new_lane->y = prev_lane->y + 1;
+        prev_lane->next = new_lane;
+    } else {
+        new_lane->y = 0;
+    }
+    new_lane->prev = prev_lane;
+    new_lane->speed = 0;
+    new_lane->obstacles = NULL;
+    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
+    for (int i = 0; i < LANE_WIDTH; i++) {
+        new_lane->coins[i] = false;
+    }
+    new_lane->type = type;
+    new_lane->next = NULL;
+    
+    return new_lane;
+}
+
+
 lane* random_lane(lane* prev_lane) {
     lane* new_lane = malloc(sizeof(lane));
-    new_lane->y = prev_lane->y + 1;
+    if (prev_lane == NULL) {
+        new_lane->y = 0;
+    } else {
+        prev_lane->next = new_lane;
+        new_lane->y = prev_lane->y + 1;
+    }
     new_lane->speed = 0;
 
     // Only one obstacle, for testing purposes
     new_lane->obstacles = malloc(sizeof(obstacle));
     new_lane->obstacles->next = NULL;
     new_lane->obstacles->prev = NULL;
-    new_lane->obstacles->x = rand() % LANE_WIDTH;
+    new_lane->obstacles->x = (rand() % (LANE_WIDTH - UNPLAYABLE_WIDTH * 2)) + UNPLAYABLE_WIDTH ;
     new_lane->obstacles->size = 1;
 
 
@@ -151,7 +178,6 @@ lane* random_lane(lane* prev_lane) {
     }
     new_lane->type = (rand() % 4) + 1;
     new_lane->prev = prev_lane;
-    prev_lane->next = new_lane;
     new_lane->next = NULL;
     return new_lane;
 }
@@ -171,25 +197,21 @@ displayedData move_camera(displayedData data) {
     return data;
 }
 
+
 displayedData init_game(void) {
     player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0};
 
     // Initialize the first lane
-    lane* l = malloc(sizeof(lane));
-    l->y = 0;
-    l->obstacles = NULL;
-    l->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        l->coins[i] = false;
-    }
-    l->type = (rand() % 4) + 1;
-    l->prev = NULL;
-    l->next = NULL;
-
+    lane* l = empty_lane(NULL, GRASS);
     lane* first_lane = l;
 
     // Generate the first lanes
-    for (int i = 0; i < GAME_HEIGHT + 5; i++) {
+
+    for (int i = 0; i < 10; i++) {
+         l = empty_lane(l, GRASS);
+    }
+
+    for (int i = 0; i < GAME_HEIGHT + 4; i++) {
         l = random_lane(l);
     }
 
