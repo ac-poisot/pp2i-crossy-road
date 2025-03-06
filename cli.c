@@ -4,6 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
+
 #include "core.h"
 
 #define LANE_WIDTH 30 // width of the displayed area

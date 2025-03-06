@@ -6,6 +6,6 @@
 int main(void) {
     //test_core();
     //test_cli();
-    test_gui();
+    //test_gui();
     return 0;
 }

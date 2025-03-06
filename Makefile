@@ -1,4 +1,4 @@
-CFLAGS = -std=c99 -Wall -Wextra -g -pedantic
+CFLAGS = -Wall -Wextra -g -pedantic
 CSANI = -fsanitize=address,undefined
 CC = clang
 
@@ -7,7 +7,7 @@ CC = clang
 core.o: core.c core.h
 	$(CC) -c $(CFLAGS) $(CSANI) core.c
 
-cli.o: cli.c cli.h
+cli.o: cli.c cli.h core.h
 	$(CC) -c $(CFLAGS) $(CSANI) cli.c
 
 gui.o: gui.c gui.h
@@ -28,11 +28,11 @@ main_cli: main.o core.o cli.o
 main_graphics: main.o core.o gui.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_graphcs main.o core.o gui.o
 
+cli_test: cli.o core.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.o core.o -lncurses
+
 
 # executions
-
-cli_test:
-	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.c -lncurses
 
 clean:
 	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics
