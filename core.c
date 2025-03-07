@@ -136,22 +136,38 @@ obstacle* generate_vehicules(void) {
 
 void update_vehicules(lane* l) {
     obstacle* c = l->obstacles;
+    if (l->speed > 0 && c->x+l->speed > 6) {
+        obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
+        float new_x = c->x - (float)(6*(rand()%2)+6);
+        new_obst-> prev = NULL;
+        new_obst-> next = c;
+        new_obst->x = new_x;
+        c->prev = new_obst;
+        l->obstacles = new_obst;
+        c = new_obst;
+    }
     while (c != NULL) {
-        printf("ceci est x : %f\n", c->x);
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){
             c-> prev ->next = NULL;
-            printf("%f\n",l->obstacles->x);
-            printf("bouh\n");
             free(c);
             break;
-        } else if ((c->x + l->speed < l->obst_size) && (l->speed < 0)){
+        } else if ((c->x + l->speed + l->obst_size < 1) && (l->speed < 0)){
             c->next->prev = NULL;
-            printf("pat\n");
             obstacle* nc = c->next;
             free(c);
             c = nc;
+            l->obstacles = c;
+        } else if (c->next == NULL && l->speed < 0 && c->x+l->speed < LANE_WIDTH) {
+            c->x = c->x + l->speed;
+            obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
+            float current_x = c->x + (float)(6*(rand()%2)+6);
+            next_obst->x = current_x;
+            next_obst->next = NULL;
+            next_obst->prev = c;
+            c->next = next_obst;
+            c = c->next;
+            break;
         } else {
-            printf("pop\n");
             c->x = c->x + l->speed;
             c = c ->next;
         }
@@ -207,20 +223,21 @@ void generateNNewLanes(lane* l, int n) {
 int main(void) {
     srand(time(NULL));
     lane* firstLane = initialLanes();
-    firstLane->speed = -1;
+    firstLane->speed = -2;
     //generateNNewLanes(firstLane->next->next->next, 100);
     
     //displayLanes(firstLane);
 
-    obstacle* v1 = generate_vehicules();
-    firstLane->obstacles = v1;
-    firstLane->obst_size = 2;
-    for(int i=0; i<1; i=i+1) {
-        display_obstacles(firstLane->obstacles);
-        update_vehicules(firstLane);
-        display_obstacles(firstLane->obstacles);
-        printf("\n");
-    }
+    //obstacle* v1 = generate_vehicules();
+    //firstLane->obstacles = v1;
+    //firstLane->obst_size = -2;
+    //display_obstacles(firstLane->obstacles);
+    //printf("\n");
+    //for(int i=0; i<5; i=i+1) {
+    //    update_vehicules(firstLane);
+    //    display_obstacles(firstLane->obstacles);
+    //    printf("\n");
+    //}
     //free_obstacles(v1);
 
     free_lanes(firstLane);
