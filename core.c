@@ -8,6 +8,7 @@ int tick;
 
 
 void free_obstacles(obstacle* first_obstacle) {
+    /* frees recursively obstacles */
     obstacle* current_obstacle = first_obstacle;
     obstacle* next_obstacle;
     while (current_obstacle != NULL) {
@@ -18,6 +19,7 @@ void free_obstacles(obstacle* first_obstacle) {
 }
 
 void free_lanes(lane* first_lane) {
+    /* frees recursively lanes */
     lane* current_lane = first_lane;
     lane* next_lane;
     while (current_lane != NULL) {
@@ -31,6 +33,7 @@ void free_lanes(lane* first_lane) {
 
 
 int biome(int* boules){// Sa prend les boules de chaque couleur, et renvoit la couleur pioché
+    /* chooses randomly a number */
     int nbr_de_boule= boules[1] + boules[2] + boules[3] + boules[0];
     int boule_choisi =rand()%nbr_de_boule;
     //return boule_choisi;
@@ -50,10 +53,12 @@ int biome(int* boules){// Sa prend les boules de chaque couleur, et renvoit la c
 }
 
 int weight(int index) {
+    /* weigth for probabilities depending on time */
     return (4-index) * tick;
 }
 
 int* probabilite_biomes(lane* l) {// prend les 4 lignes et renvoie les probabilité dans le panier
+    /* creates the urn for the generation of biomes */
     int a = 1000;
     int b = 1000;
     int c = 1000;
@@ -83,6 +88,7 @@ int* probabilite_biomes(lane* l) {// prend les 4 lignes et renvoie les probabili
 
 
 lane* empty_lane(lane* prev_lane, int type) {
+    /* creates an empty lane */
     lane* new_lane = malloc(sizeof(lane));
     if (prev_lane != NULL) {
         new_lane->y = prev_lane->y + 1;
@@ -105,6 +111,7 @@ lane* empty_lane(lane* prev_lane, int type) {
 }
 
 lane* initialLanes(void) {
+    /* initializes the four first lanes */
     lane* l = empty_lane(NULL, GRASS);
     lane* firstLane = l;
     for (int i = 0; i < 4; i++) {
@@ -114,7 +121,8 @@ lane* initialLanes(void) {
 }
 
 
-obstacle* generate_vehicules(void) {
+obstacle* generate_vehicles(void) {
+    /* generates vehicles */
     float x = (float)(rand()%12);
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
@@ -134,7 +142,8 @@ obstacle* generate_vehicules(void) {
     return first_obst;
 }
 
-void update_vehicules(lane* l) {
+void update_vehicles(lane* l) {
+    /* updates the position of the vehicles and add a new one when the next displayed vehicle doesn't exist */
     obstacle* c = l->obstacles;
     if (l->speed > 0 && c->x+l->speed > 6) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
@@ -175,6 +184,7 @@ void update_vehicules(lane* l) {
 }
 
 void display_obstacles(obstacle* o) {
+    /* displays the position of the vehicles -- debbug function */
     while (o != NULL) {
         printf("%f\n", o->x);
         o = o->next;
@@ -182,6 +192,7 @@ void display_obstacles(obstacle* o) {
 }
 
 void displayLanes(lane* l) {
+    /* displays the lanes */
     while (l != NULL) {
         for (int i = 0; i < LANE_WIDTH; i++) {
             
@@ -207,6 +218,7 @@ void displayLanes(lane* l) {
 }
 
 lane* fourLastLanes(lane* l) {
+    /* gets the four previous lanes */
     lane* lastLane = l;
     for (int i = 0; i < 3; i++) {
         lastLane = lastLane->prev;
@@ -215,6 +227,7 @@ lane* fourLastLanes(lane* l) {
 }
 
 void generateNNewLanes(lane* l, int n) {
+    /* generates n lanes based on the four previous lanes */
     for (int i = 0; i < n; i++) {
         l = empty_lane(l, biome(probabilite_biomes(fourLastLanes(l))));
     }
@@ -223,22 +236,22 @@ void generateNNewLanes(lane* l, int n) {
 int main(void) {
     srand(time(NULL));
     lane* firstLane = initialLanes();
-    firstLane->speed = -2;
+    firstLane->speed = 2;
     //generateNNewLanes(firstLane->next->next->next, 100);
     
     //displayLanes(firstLane);
 
-    //obstacle* v1 = generate_vehicules();
-    //firstLane->obstacles = v1;
-    //firstLane->obst_size = -2;
-    //display_obstacles(firstLane->obstacles);
-    //printf("\n");
-    //for(int i=0; i<5; i=i+1) {
-    //    update_vehicules(firstLane);
-    //    display_obstacles(firstLane->obstacles);
-    //    printf("\n");
-    //}
-    //free_obstacles(v1);
+    obstacle* v1 = generate_vehicles();
+    firstLane->obstacles = v1;
+    firstLane->obst_size = -2;
+    display_obstacles(firstLane->obstacles);
+    printf("\n");
+    for(int i=0; i<5; i=i+1) {
+        update_vehicles(firstLane);
+        display_obstacles(firstLane->obstacles);
+        printf("\n");
+    }
+    //free_obstacles(v1); // ne pas free si v1 lie a firstLane
 
     free_lanes(firstLane);
     return 0;
