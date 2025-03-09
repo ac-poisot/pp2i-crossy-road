@@ -16,6 +16,8 @@ gui.o: gui.c gui.h
 main.o: main.c
 	$(CC) -c $(CFLAGS) $(CSANI) main.c
 
+core_test.o: core_test.c core.h
+	$(CC) -c $(CFLAGS) $(CSANI) core_test.c
 
 
 # create executables
@@ -28,6 +30,9 @@ main_cli: core.o cli.o
 main_graphics: core.o gui.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o
 
+core_test: core.o core_test.o
+	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o
+
 cli_test: cli.o core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.o core.o -lncurses
 
@@ -35,7 +40,7 @@ cli_test: cli.o core.o
 # executions
 
 clean:
-	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics
+	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics core_test core_test.o
 
 run_only_core: main_only_core
 	./main_only_core

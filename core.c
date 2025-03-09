@@ -177,6 +177,9 @@ lane* generate_lane(lane* prev_lane, int type) {
 
 void update_vehicles(lane* l) {
     /* updates the position of the vehicles and add a new one when the next displayed vehicle doesn't exist */
+    if(l->obstacles == NULL) {
+        return;
+    }
     obstacle* c = l->obstacles;
     if (l->speed > 0 && c->x+l->speed > 6) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
@@ -281,6 +284,7 @@ void generateNNewLanes(lane* l, int n) {
     }
 }
 
+#ifdef TEST
 int main(void) {
     srand(time(NULL));
     lane* firstLane = initialLanes();
@@ -304,3 +308,4 @@ int main(void) {
     free_lanes(firstLane);
     return 0;
 }
+#endif

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 
 #define LANE_WIDTH 30 // width of the displayed area
@@ -50,6 +51,8 @@ int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
-obstacle* generate_vehicule(void);
-void update_vehicules(lane* l);
+obstacle* generate_vehicle(void);
+lane* generate_lane(lane* prev_lane, int type);
+void update_vehicles(lane* l);
+void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
