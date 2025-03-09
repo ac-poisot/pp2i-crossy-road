@@ -110,6 +110,7 @@ lane* empty_lane(lane* prev_lane, int type) {
     return new_lane;
 }
 
+
 lane* initialLanes(void) {
     /* initializes the four first lanes */
     lane* l = empty_lane(NULL, GRASS);
@@ -141,6 +142,38 @@ obstacle* generate_vehicles(void) {
     }
     return first_obst;
 }
+
+
+lane* generate_lane(lane* prev_lane, int type) {
+    /* creates an empty lane */
+    lane* new_lane = malloc(sizeof(lane));
+    if (prev_lane != NULL) {
+        new_lane->y = prev_lane->y + 1;
+        prev_lane->next = new_lane;
+    } else {
+        new_lane->y = 0;
+    }
+    new_lane->prev = prev_lane;
+    switch (type) {
+        case GRASS:
+        case WATER:
+        case TRACK:
+        case ROAD:
+            new_lane->obstacles = generate_vehicles();
+            new_lane->speed = 2;
+            break;
+    }
+    new_lane->obst_size = 1+rand()%2;
+    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
+    for (int i = 0; i < LANE_WIDTH; i++) {
+        new_lane->coins[i] = false;
+    }
+    new_lane->type = type;
+    new_lane->next = NULL;
+    
+    return new_lane;
+}
+
 
 void update_vehicles(lane* l) {
     /* updates the position of the vehicles and add a new one when the next displayed vehicle doesn't exist */
@@ -194,21 +227,36 @@ void display_obstacles(obstacle* o) {
 void displayLanes(lane* l) {
     /* displays the lanes */
     while (l != NULL) {
+        obstacle* current = NULL;
+        if(l->obstacles != NULL) {
+            current = l->obstacles;
+        }
         for (int i = 0; i < LANE_WIDTH; i++) {
-            
-            switch (l->type) {
-                case GRASS:
-                    printf("🟩");
-                    break;
-                case WATER:
-                    printf("🟦");
-                    break;
-                case TRACK:
-                    printf("⬜️");
-                    break;
-                case ROAD:
-                    printf("⬛️");
-                    break;
+            if(current != NULL && current->x == (float)i) {
+                for(int j = 0; j < l->obst_size; j++) {
+                    if(i >= LANE_WIDTH) {
+                        break;
+                    }
+                    printf("🟥");
+                    i++;
+                }
+                i--;
+                current = current->next;
+            } else {
+                switch (l->type) {
+                    case GRASS:
+                        printf("🟩");
+                        break;
+                    case WATER:
+                        printf("🟦");
+                        break;
+                    case TRACK:
+                        printf("⬜️");
+                        break;
+                    case ROAD:
+                        printf("⬛️");
+                        break;
+                }
             }
 
         }
@@ -229,7 +277,7 @@ lane* fourLastLanes(lane* l) {
 void generateNNewLanes(lane* l, int n) {
     /* generates n lanes based on the four previous lanes */
     for (int i = 0; i < n; i++) {
-        l = empty_lane(l, biome(probabilite_biomes(fourLastLanes(l))));
+        l = generate_lane(l, biome(probabilite_biomes(fourLastLanes(l))));
     }
 }
 
