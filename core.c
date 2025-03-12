@@ -122,7 +122,7 @@ lane* initialLanes(void) {
 }
 
 
-obstacle* generate_vehicles(void) {
+obstacle* generate_vehicles(lane* l) {
     /* generates vehicles */
     float x = (float)(rand()%12);
     float current_x = x;
@@ -130,6 +130,7 @@ obstacle* generate_vehicles(void) {
     first_obst->x = current_x;
     first_obst->prev = NULL;
     first_obst->next = NULL;
+    first_obst->size = l->obst_size;
     obstacle *last_generated = first_obst;
     while (current_x < LANE_WIDTH) {
         current_x += (float)(6*(rand()%2)+6);
@@ -137,6 +138,7 @@ obstacle* generate_vehicles(void) {
         obst->x = current_x;
         obst->next = NULL;
         obst->prev = last_generated;
+        obst->size = l->obst_size;
         last_generated->next = obst;
         last_generated = obst;
     }
@@ -159,7 +161,7 @@ lane* generate_lane(lane* prev_lane, int type) {
         case WATER:
         case TRACK:
         case ROAD:
-            new_lane->obstacles = generate_vehicles();
+            new_lane->obstacles = generate_vehicles(new_lane);
             new_lane->speed = 2;
             break;
     }
@@ -187,6 +189,7 @@ void update_vehicles(lane* l) {
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
+        new_obst->size = l->obst_size;
         c->prev = new_obst;
         l->obstacles = new_obst;
         c = new_obst;
@@ -207,6 +210,7 @@ void update_vehicles(lane* l) {
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
             float current_x = c->x + (float)(6*(rand()%2)+6);
             next_obst->x = current_x;
+            next_obst->size = l->obst_size;
             next_obst->next = NULL;
             next_obst->prev = c;
             c->next = next_obst;
@@ -293,7 +297,7 @@ int main(void) {
     
     //displayLanes(firstLane);
 
-    obstacle* v1 = generate_vehicles();
+    obstacle* v1 = generate_vehicles(firstLane);
     firstLane->obstacles = v1;
     firstLane->obst_size = -2;
     display_obstacles(firstLane->obstacles);

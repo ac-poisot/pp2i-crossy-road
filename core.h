@@ -14,6 +14,7 @@ typedef struct obstacle {
     struct obstacle* next;
     struct obstacle* prev;
     float x; // position of the obstacle
+    int size;
 } obstacle;
 
 typedef struct lane {
@@ -51,7 +52,7 @@ int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
-obstacle* generate_vehicle(void);
+obstacle* generate_vehicle(lane* l);
 lane* generate_lane(lane* prev_lane, int type);
 void update_vehicles(lane* l);
 void display_obstacles(obstacle* l);
