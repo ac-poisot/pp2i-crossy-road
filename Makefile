@@ -50,3 +50,13 @@ run_cli: cli_test
 
 run_graphics: main_graphics
 	./main_graphics
+
+run_core_test: core_test
+	./core_test
+
+run_cli_test: cli_test
+	./main_cli
+
+run_all_tests: core_test cli_test
+	./core_test
+	./main_cli

@@ -124,7 +124,7 @@ lane* initialLanes(void) {
 
 obstacle* generate_vehicles(lane* l) {
     /* generates vehicles */
-    float x = (float)(rand()%12);
+    float x = - (float)(rand()%12);
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
@@ -145,6 +145,29 @@ obstacle* generate_vehicles(lane* l) {
     return first_obst;
 }
 
+obstacle* generate_drowning_slots(void) {
+    /* generates the slots where the player would drown */
+    float x = (float)(rand()%5 - 8);
+    float current_x = x;
+    obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
+    first_obst->x = current_x;
+    first_obst->prev = NULL;
+    first_obst->next = NULL;
+    first_obst->size = 1 + (rand()%3);
+    obstacle *last_generated = first_obst;
+    while(current_x < LANE_WIDTH) {
+        current_x += (float)last_generated->size + (float)(rand()%5);
+        obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
+        obst->x = current_x;
+        obst->next = NULL;
+        obst->prev = last_generated;
+        obst->size = 1 + (rand()%3);
+        last_generated-> next = obst;
+        last_generated = obst;
+    }
+    return first_obst;
+}
+
 
 lane* generate_lane(lane* prev_lane, int type) {
     /* creates an empty lane */
@@ -156,16 +179,19 @@ lane* generate_lane(lane* prev_lane, int type) {
         new_lane->y = 0;
     }
     new_lane->prev = prev_lane;
+    new_lane->obst_size = 1+rand()%2;
     switch (type) {
         case GRASS:
         case WATER:
+            new_lane->obstacles = generate_drowning_slots();
+            new_lane->speed = 3;
+            break;
         case TRACK:
         case ROAD:
             new_lane->obstacles = generate_vehicles(new_lane);
-            new_lane->speed = 2;
+            new_lane->speed = -2;
             break;
     }
-    new_lane->obst_size = 1+rand()%2;
     new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
     for (int i = 0; i < LANE_WIDTH; i++) {
         new_lane->coins[i] = false;
@@ -183,7 +209,7 @@ void update_vehicles(lane* l) {
         return;
     }
     obstacle* c = l->obstacles;
-    if (l->speed > 0 && c->x+l->speed > 6) {
+    if (l->speed > 0 && c->x+l->speed+c->size > 6) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
         float new_x = c->x - (float)(6*(rand()%2)+6);
         new_obst-> prev = NULL;
@@ -197,6 +223,17 @@ void update_vehicles(lane* l) {
     while (c != NULL) {
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){
             c-> prev ->next = NULL;
+            if(c->next != NULL) {
+                obstacle* current = c->next;
+                while(current != NULL) {
+                    obstacle* next = current->next;
+                    free(current);
+                    current = next;
+                    if(next != NULL) {
+                        next = next->next;
+                    }
+                }
+            }
             free(c);
             break;
         } else if ((c->x + l->speed + l->obst_size < 1) && (l->speed < 0)){
@@ -223,6 +260,63 @@ void update_vehicles(lane* l) {
     }
 }
 
+void update_drowning_slots(lane* l) {
+    /* updates the position of the drowning slots*/
+    if(l->obstacles == NULL) {
+        return;
+    }
+    obstacle* c = l->obstacles;
+    if (l->speed > 0 && c->x+l->speed +c->size> 0) {
+        obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
+        new_obst->size = 1 + (rand()%3);
+        float new_x = c->x - (float)(new_obst->size + (rand()%5));
+        new_obst-> prev = NULL;
+        new_obst-> next = c;
+        new_obst->x = new_x;
+        c->prev = new_obst;
+        l->obstacles = new_obst;
+        c = new_obst;
+    }
+    while (c != NULL) {
+        if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){
+            c-> prev ->next = NULL;
+            if(c->prev != NULL) {
+                obstacle* current = c->next;
+                while(current != NULL) {
+                    obstacle* next = current->next;
+                    free(current);
+                    current = next;
+                    if(next != NULL) {
+                        next = next->next;
+                    }
+                }
+            }
+            free(c);
+            break;
+        } else if ((c->x + l->speed + c->size < 1) && (l->speed < 0)){
+            c->next->prev = NULL;
+            obstacle* nc = c->next;
+            free(c);
+            c = nc;
+            l->obstacles = c;
+        } else if (c->next == NULL && l->speed < 0 && c->x+l->speed < LANE_WIDTH) {
+            c->x = c->x + l->speed;
+            obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
+            next_obst->size = 1 + (rand()%3);
+            float current_x = c->x + (float)(next_obst->size + (rand()%5));
+            next_obst->x = current_x;
+            next_obst->next = NULL;
+            next_obst->prev = c;
+            c->next = next_obst;
+            c = c->next;
+            break;
+        } else {
+            c->x = c->x + l->speed;
+            c = c ->next;
+        }
+    }
+}
+
 void display_obstacles(obstacle* o) {
     /* displays the position of the vehicles -- debbug function */
     while (o != NULL) {
@@ -233,14 +327,25 @@ void display_obstacles(obstacle* o) {
 
 void displayLanes(lane* l) {
     /* displays the lanes */
+    int i = 0;
     while (l != NULL) {
         obstacle* current = NULL;
         if(l->obstacles != NULL) {
             current = l->obstacles;
+            while(current != NULL && (int)current->x + current->size <= 0) {
+                current = current->next;
+            }
+            if(current != NULL && current->x < 0) {
+                for(int i = 0; i < current->x + current->size; i++) {
+                    printf("🟥");
+                }
+                i = current->x + current->size;
+                current = current->next;
+            }
         }
-        for (int i = 0; i < LANE_WIDTH; i++) {
+        for (; i < LANE_WIDTH; i++) {
             if(current != NULL && current->x == (float)i) {
-                for(int j = 0; j < l->obst_size; j++) {
+                for(int j = 0; j < current->size; j++) {
                     if(i >= LANE_WIDTH) {
                         break;
                     }
