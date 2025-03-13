@@ -28,7 +28,7 @@ bool* generateObtaclePresenceArray(lane* l) {
     return obstacle_positions;
 }
 
-void test_road_obstacles(void) {
+void test_vehicles(void) {
     lane* l = generate_lane(NULL, ROAD);
     displayLanes(l);
     bool* obstacle_positions = generateObtaclePresenceArray(l);
@@ -49,7 +49,7 @@ void test_road_obstacles(void) {
     }
     free(obstacle_positions);
     free(new_obstacle_positions);
-    assert(((int)l->obstacles->x == (int)first_x + (int)l->speed) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 6) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 12) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 18) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 24) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +6) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +12) || ((int) l->obstacles->x == (int)first_x + (int)l->speed + 18));
+    assert(((int)l->obstacles->x == (int)first_x + (int)l->speed) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 6) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 12) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +6) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +12) || ((int) l->obstacles->x == (int)first_x + (int)l->speed + 18));
     last_obst = l->obstacles;
     while (last_obst->next != NULL) {
         last_obst = last_obst->next;
@@ -66,6 +66,7 @@ void test_drowning_slots(void) {
     bool* obstacle_positions = generateObtaclePresenceArray(l);
     update_drowning_slots(l);
     displayLanes(l);
+    printf("\n");
     assert(l->obstacles != NULL);
     bool* new_obstacle_positions = generateObtaclePresenceArray(l);
     for(int i = 0; i < LANE_WIDTH; i++) {
@@ -79,9 +80,29 @@ void test_drowning_slots(void) {
 
 }
 
+void test_trains(void) {
+    lane* l = generate_lane(NULL, TRACK);
+    displayLanes(l);
+    bool* obstacle_positions = generateObtaclePresenceArray(l);
+    update_vehicles(l);
+    displayLanes(l);
+    printf("\n");
+    assert(l->obstacles != NULL);
+    bool* new_obstacle_positions = generateObtaclePresenceArray(l);
+    for(int i = 0; i < LANE_WIDTH; i++) {
+        if(i+l->speed >= 0 && i+l->speed < LANE_WIDTH) {
+            assert(obstacle_positions[i] == new_obstacle_positions[i+(int)l->speed]);
+        }
+    }
+    free(obstacle_positions);
+    free(new_obstacle_positions);
+    free_lanes(l);
+}
+
 int main(void) {
     srand(time(NULL));
-    test_road_obstacles();
+    test_vehicles();
     test_drowning_slots();
+    test_trains();
     return 0;
 }
