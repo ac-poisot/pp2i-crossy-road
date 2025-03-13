@@ -9,6 +9,9 @@
 #define TRACK     3
 #define ROAD      4
 
+#define TRAIN_LENGTH 10
+#define TRAIN_SPEED 10
+
 
 typedef struct obstacle {
     struct obstacle* next;
@@ -54,8 +57,10 @@ lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
 obstacle* generate_vehicle(lane* l);
 obstacle* generate_drowning_slots(void);
+obstacle* generate_trains(void);
 lane* generate_lane(lane* prev_lane, int type);
 void update_vehicles(lane* l);
 void update_drowning_slots(lane* l);
+void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
