@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdbool.h>
 
 #include "core.h"
@@ -159,6 +158,10 @@ displayedData init_game(void) {
 }
 
 int main(void) {
+
+    struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
+
+
     srand(time(NULL));
     initscr();
     keypad(stdscr, TRUE);
@@ -326,8 +329,7 @@ int main(void) {
             mvprintw(0, 0, "ERROR");
             break;
         }
-
-        usleep(1000000 / REFRESH_RATE); // ~1 frame at REFRESH_RATE fps
+        nanosleep(&request, &remaining); 
     }
 
     endwin();
