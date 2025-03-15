@@ -63,8 +63,5 @@ void display(displayedData data);
 void free_obstacles(obstacle* first_obstacle);
 void free_lanes(lane* first_lane);
 lane* empty_lane(lane* prev_lane, int type);
-lane* random_lane(lane* prev_lane);
-displayedData move_camera(displayedData data);
-displayedData init_game(void);
 
 #endif // CLI_H

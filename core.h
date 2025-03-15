@@ -3,6 +3,9 @@
 
 
 #define LANE_WIDTH 30 // width of the displayed area
+#define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
+
+#define PLAYER_START_Y 5 // starting position of the player
 
 #define GRASS     1
 #define WATER     2
@@ -55,6 +58,7 @@ int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
+lane* random_lane(lane* prev_lane);
 obstacle* generate_vehicle(lane* l);
 obstacle* generate_drowning_slots(void);
 obstacle* generate_trains(void);
@@ -64,3 +68,6 @@ void update_drowning_slots(lane* l);
 void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
+bool collides(lane *current_lane, displayedData game);
+displayedData move_camera(displayedData data);
+displayedData init_game(int game_height);

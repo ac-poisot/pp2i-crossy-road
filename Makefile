@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -g -pedantic
+CFLAGS = -Wall -Wextra -g -pedantic -std=gnu99
 CSANI = -fsanitize=address,undefined
 CC = clang
 

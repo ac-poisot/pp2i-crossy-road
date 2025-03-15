@@ -121,6 +121,38 @@ lane* initialLanes(void) {
     return firstLane;
 }
 
+lane* random_lane(lane* prev_lane) {
+    lane* new_lane = malloc(sizeof(lane));
+    if (prev_lane == NULL) {
+        new_lane->y = 0;
+    } else {
+        prev_lane->next = new_lane;
+        new_lane->y = prev_lane->y + 1;
+    }
+    new_lane->speed = 0;
+
+    // Only one obstacle, for testing purposes
+    new_lane->obstacles = malloc(sizeof(obstacle));
+    new_lane->obstacles->next = NULL;
+    new_lane->obstacles->prev = NULL;
+    new_lane->obstacles->x = (rand() % (LANE_WIDTH - UNPLAYABLE_WIDTH * 2)) + UNPLAYABLE_WIDTH ;
+    new_lane->type = (rand() % 4) + 1;
+
+    if (new_lane->type == WATER) {
+        new_lane->obst_size = 5;
+    } else {
+        new_lane->obst_size = 1;
+    }
+
+
+    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
+    for (int i = 0; i < LANE_WIDTH; i++) {
+        new_lane->coins[i] = !(rand() % 30); // for each tile, 1/30 chance of having a coin
+    }
+    new_lane->prev = prev_lane;
+    new_lane->next = NULL;
+    return new_lane;
+}
 
 obstacle* generate_vehicles(lane* l) {
     /* generates vehicles */
@@ -473,6 +505,57 @@ void generateNNewLanes(lane* l, int n) {
         l = generate_lane(l, biome(probabilite_biomes(fourLastLanes(l))));
     }
 }
+
+bool collides(lane *current_lane, displayedData game) {
+    obstacle* current_obstacle = current_lane->obstacles;
+    while (current_obstacle != NULL) {
+        if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_lane->obst_size) {
+            return true;
+        }
+        current_obstacle = current_obstacle->next;
+    }
+    return false;
+}
+
+displayedData move_camera(displayedData data) {
+    // Move the camera
+    data.cameraY++;
+    data.camera_first_lane = data.camera_first_lane->next;
+
+    // Add a new lane
+    lane* current_lane = data.camera_first_lane;
+    while (current_lane->next != NULL) {
+        current_lane = current_lane->next;
+    }
+    random_lane(current_lane);
+
+    return data;
+}
+
+
+displayedData init_game(int game_height) {
+    // Initialize the game
+    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0};
+
+    // Initialize the first lane
+    lane* l = empty_lane(NULL, GRASS);
+    lane* first_lane = l;
+
+    // Generate the first lanes
+
+    for (int i = 0; i < 10; i++) {
+         l = empty_lane(l, GRASS);
+    }
+
+    for (int i = 0; i < game_height + 4; i++) {
+        l = random_lane(l);
+    }
+
+    displayedData res = {game_height, first_lane, first_lane, p, 0, 0};
+
+    return res;
+}
+
 
 #ifdef TEST
 int main(void) {

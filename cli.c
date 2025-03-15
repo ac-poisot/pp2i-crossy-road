@@ -7,9 +7,7 @@
 #include "core.h"
 
 #define GAME_HEIGHT 20 // height of the displayed area
-#define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
-#define PLAYER_START_Y 5 // starting position of the player
 
 #define REFRESH_RATE 60 // refresh rate of the game in frames per second
 #define GAME_SPEED 20 // in frames, time between each move of the camera
@@ -86,77 +84,6 @@ void display(displayedData data) {
 }
 
 
-lane* random_lane(lane* prev_lane) {
-    lane* new_lane = malloc(sizeof(lane));
-    if (prev_lane == NULL) {
-        new_lane->y = 0;
-    } else {
-        prev_lane->next = new_lane;
-        new_lane->y = prev_lane->y + 1;
-    }
-    new_lane->speed = 0;
-
-    // Only one obstacle, for testing purposes
-    new_lane->obstacles = malloc(sizeof(obstacle));
-    new_lane->obstacles->next = NULL;
-    new_lane->obstacles->prev = NULL;
-    new_lane->obstacles->x = (rand() % (LANE_WIDTH - UNPLAYABLE_WIDTH * 2)) + UNPLAYABLE_WIDTH ;
-    new_lane->type = (rand() % 4) + 1;
-
-    if (new_lane->type == WATER) {
-        new_lane->obst_size = 5;
-    } else {
-        new_lane->obst_size = 1;
-    }
-
-
-    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        new_lane->coins[i] = !(rand() % 30); // for each tile, 1/30 chance of having a coin
-    }
-    new_lane->prev = prev_lane;
-    new_lane->next = NULL;
-    return new_lane;
-}
-
-displayedData move_camera(displayedData data) {
-    // Move the camera
-    data.cameraY++;
-    data.camera_first_lane = data.camera_first_lane->next;
-
-    // Add a new lane
-    lane* current_lane = data.camera_first_lane;
-    while (current_lane->next != NULL) {
-        current_lane = current_lane->next;
-    }
-    random_lane(current_lane);
-
-    return data;
-}
-
-
-displayedData init_game(void) {
-    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0};
-
-    // Initialize the first lane
-    lane* l = empty_lane(NULL, GRASS);
-    lane* first_lane = l;
-
-    // Generate the first lanes
-
-    for (int i = 0; i < 10; i++) {
-         l = empty_lane(l, GRASS);
-    }
-
-    for (int i = 0; i < GAME_HEIGHT + 4; i++) {
-        l = random_lane(l);
-    }
-
-    displayedData res = {GAME_HEIGHT, first_lane, first_lane, p, 0, 0};
-
-    return res;
-}
-
 int main(void) {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
@@ -208,7 +135,7 @@ int main(void) {
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
-                game = init_game();
+                game = init_game(GAME_HEIGHT);
             }
             break;
 
@@ -272,29 +199,25 @@ int main(void) {
                 }
 
                 // Check for collisions with obstacles
-                obstacle* current_obstacle = current_lane->obstacles;
-                while (current_obstacle != NULL) {
-                    if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_lane->obst_size) {
-                        switch (current_lane->type) {
-                            case GRASS:
-                            game.player.x = current_x;
-                            game.player.y = current_y;
-                            break;
-                            case TRACK:
-                            game_state = GAME_OVER;
-                            break;
-                            case ROAD:
-                            game_state = GAME_OVER;
-                            break;
-                            case WATER:
-                            drown_flag = false;
-                            break;
-                            break;
-                            default:
-                            break;
-                        }
+                if(collides(current_lane, game)) {
+                    switch (current_lane->type) {
+                        case GRASS:
+                        game.player.x = current_x;
+                        game.player.y = current_y;
+                        break;
+                        case TRACK:
+                        game_state = GAME_OVER;
+                        break;
+                        case ROAD:
+                        game_state = GAME_OVER;
+                        break;
+                        case WATER:
+                        drown_flag = false;
+                        break;
+                        break;
+                        default:
+                        break;
                     }
-                    current_obstacle = current_obstacle->next;
                 }
 
             }
