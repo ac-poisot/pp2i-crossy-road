@@ -72,12 +72,16 @@ void display(displayedData data) {
     int lane_count = 0;
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
+        if (lane_count==data.player.y-data.camera_first_lane->y) {
+            // Display the player
+            attron(COLOR_PAIR(current_lane->type+12));//test
+            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "0");
+            attroff(COLOR_PAIR(current_lane->type+12));//test
+        }        
         current_lane = current_lane->next;
         lane_count++;
     }
 
-    // Display the player
-    mvprintw(data.cameraY - data.player.y + 1, data.player.x, "P");
     // Display the score
     mvprintw(0, 0, "Score: %d", data.player.y);
     refresh();
@@ -107,6 +111,12 @@ int main(void) {
     init_pair(WATER + 4, COLOR_YELLOW, COLOR_BLUE);
     init_pair(TRACK + 4, COLOR_YELLOW, COLOR_WHITE);
     init_pair(ROAD + 4, COLOR_YELLOW, COLOR_BLACK);
+
+    // Initialisation Player Colors
+    init_pair(GRASS + 12, COLOR_BLACK, COLOR_GREEN);//test
+    init_pair(WATER + 12, COLOR_BLACK, COLOR_BLUE);
+    init_pair(TRACK + 12, COLOR_BLACK, COLOR_WHITE);
+    init_pair(ROAD + 12, COLOR_WHITE, COLOR_BLACK);//test
 
     int game_state = MENU;
     int high_score = 0;
