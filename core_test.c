@@ -59,13 +59,28 @@ void test_vehicles(void) {
     free_lanes(l);
 }
 
+void test_trees(void) {
+    lane* l = generate_lane(NULL, GRASS);
+    //printf("size : %d, x : %f\n", l->obstacles->size, l->obstacles->x);
+    displayLanes(l);
+    display_obstacles(l->obstacles);
+    printf("\n");
+    free_lanes(l);
+}
+
 
 void test_drowning_slots(void) {
     lane* l = generate_lane(NULL, WATER);
+    if (l->speed == 0) {
+        printf("waterlilies\n");
+    } else {
+        printf("trunks\n");
+    }
     displayLanes(l);
     bool* obstacle_positions = generateObtaclePresenceArray(l);
     update_drowning_slots(l);
     displayLanes(l);
+    display_obstacles(l->obstacles);
     printf("\n");
     assert(l->obstacles != NULL);
     bool* new_obstacle_positions = generateObtaclePresenceArray(l);
@@ -102,6 +117,7 @@ void test_trains(void) {
 int main(void) {
     srand(time(NULL));
     test_vehicles();
+    test_trees();
     test_drowning_slots();
     test_trains();
     return 0;

@@ -177,6 +177,73 @@ obstacle* generate_vehicles(lane* l) {
     return first_obst;
 }
 
+obstacle* generate_trees(void) {
+    /* generates trees */
+    /* generates a number of obtacles between 1 and 4 with x and adds it to obstacles*/
+    int nb = (int)(1+(rand()%3));
+    printf("%d\n", nb);
+    float x = (float)(rand()%(LANE_WIDTH/2));
+    float current_x = x;
+    obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
+    first_obst->x = current_x;
+    first_obst->prev = NULL;
+    first_obst->next = NULL;
+    first_obst->size = 1;
+    printf("%d\n", first_obst->size);
+    obstacle *last_generated = first_obst;
+    for (int i=0; i<nb-1 && (LANE_WIDTH-(int)current_x != 0); i=i+1) {
+        current_x = current_x + 1 + (float)(rand()%(LANE_WIDTH-(int)current_x));
+        obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
+        obst->x = current_x;
+        obst->next = NULL;
+        obst->prev = last_generated;
+        obst->size = 1;
+        last_generated->next = obst;
+        last_generated = obst;
+    }
+    return first_obst;
+}
+
+
+obstacle* generate_waterlilies(void) {
+    /* generates waterlilies */
+    /* generates a number of obtacles between 1 and 4 with x and adds it to obstacles*/
+    int nb = (int)(2+rand()%3);
+    float water_length = (float)(rand()%LANE_WIDTH-2); // taille de l'eau
+    float current_x = 0;
+    obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
+    first_obst->x = current_x;
+    first_obst->prev = NULL;
+    first_obst->next = NULL;
+    first_obst->size = water_length;
+    obstacle *last_generated = first_obst;
+    current_x = current_x + water_length;
+    for (int i=0; i<nb-1 && (LANE_WIDTH-(int)current_x != 0) ; i=i+1) {
+        water_length = (float)(rand()%(LANE_WIDTH-(int)current_x));
+        obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
+        obst->x = current_x+1;
+        obst->next = NULL;
+        obst->prev = last_generated;
+        obst->size = water_length;
+        last_generated->next = obst;
+        last_generated = obst;
+        current_x = current_x + water_length+1;
+        if (i==nb-2 && current_x<LANE_WIDTH) {
+            // creates a last obstacle to avoid to many waterlilies
+            water_length = (float)(LANE_WIDTH-current_x-1);
+            obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
+            obst->x = current_x+1;
+            obst->next = NULL;
+            obst->prev = last_generated;
+            obst->size = water_length;
+            last_generated->next = obst;
+            last_generated = obst;
+        }
+    }
+    return first_obst;
+}
+
+
 obstacle* generate_drowning_slots(void) {
     /* generates the slots where the player would drown */
     float x = (float)(rand()%5 - 8);
@@ -236,9 +303,19 @@ lane* generate_lane(lane* prev_lane, int type) {
     new_lane->obst_size = 1+rand()%2;
     switch (type) {
         case GRASS:
+            new_lane->obstacles = generate_trees();
+            new_lane->speed = 0;
+            break;
         case WATER:
-            new_lane->obstacles = generate_drowning_slots();
-            new_lane->speed = 3;
+            if ((int)(rand()%3) == 0) {
+                new_lane->obstacles = generate_waterlilies();
+                new_lane->speed = 0;
+            } else {
+                new_lane->obstacles = generate_drowning_slots();
+                new_lane->speed = 3;
+            }
+            //new_lane->obstacles = generate_waterlilies();
+            //new_lane->speed = 0;
             break;
         case TRACK:
             new_lane->obstacles = generate_trains();
@@ -433,7 +510,7 @@ void update_trains(lane* l) {
 void display_obstacles(obstacle* o) {
     /* displays the position of the vehicles -- debbug function */
     while (o != NULL) {
-        printf("%f\n", o->x);
+        printf("x : %f, size : %d\n", o->x, o->size);
         o = o->next;
     }
 }
@@ -449,7 +526,7 @@ void displayLanes(lane* l) {
                 current = current->next;
             }
             if(current != NULL && current->x < 0) {
-                for(int i = 0; i < current->x + current->size; i++) {
+                for(int j = 0; j < current->x + current->size; j++) {
                     printf("🟥");
                 }
                 i = current->x + current->size;

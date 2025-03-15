@@ -60,6 +60,8 @@ lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
 lane* random_lane(lane* prev_lane);
 obstacle* generate_vehicle(lane* l);
+obstacle* generate_trees(void);
+obstacle* generate_waterlilies(void);
 obstacle* generate_drowning_slots(void);
 obstacle* generate_trains(void);
 lane* generate_lane(lane* prev_lane, int type);
