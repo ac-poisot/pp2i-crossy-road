@@ -16,8 +16,14 @@
 #define TRAIN_SPEED 2
 #define TRAIN_SPACING_MIN 200
 #define TRAIN_SPACING_MAX 500
-#define LOG_SPEED 0.05
+
 #define VEHICLE_SPEED_MIN 0.05
+#define VEHICLE_SPACING_MIN 6
+#define VEHICLE_SPACING_MAX 12
+
+#define LOG_SPEED 0.05
+#define MAX_LOG_SIZE 4
+#define LOG_SPACING_MAX 5
 
 
 typedef struct obstacle {

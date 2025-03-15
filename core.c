@@ -157,7 +157,7 @@ lane* random_lane(lane* prev_lane) {
 
 obstacle* generate_vehicles(lane* l) {
     /* generates vehicles */
-    float x = - (float)(rand()%12);
+    float x = - (float)(rand()%VEHICLE_SPACING_MAX);
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
@@ -166,7 +166,7 @@ obstacle* generate_vehicles(lane* l) {
     first_obst->size = l->obst_size;
     obstacle *last_generated = first_obst;
     while (current_x < LANE_WIDTH) {
-        current_x += (float)(6*(rand()%2)+6);
+        current_x += (float)(VEHICLE_SPACING_MIN + rand()%(VEHICLE_SPACING_MAX-VEHICLE_SPACING_MIN));
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x;
         obst->next = NULL;
@@ -247,21 +247,21 @@ obstacle* generate_waterlilies(void) {
 
 obstacle* generate_drowning_slots(void) {
     /* generates the slots where the player would drown */
-    float x = (float)(rand()%5 - 8);
+    float x = (float)(rand()%LOG_SPACING_MAX - 8);
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
     first_obst->prev = NULL;
     first_obst->next = NULL;
-    first_obst->size = 1 + (rand()%3);
+    first_obst->size = 1 + (rand()%MAX_LOG_SIZE);
     obstacle *last_generated = first_obst;
     while(current_x < LANE_WIDTH) {
-        current_x += (float)last_generated->size + (float)(rand()%5);
+        current_x += (float)last_generated->size + (float)(rand()%LOG_SPACING_MAX);
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x;
         obst->next = NULL;
         obst->prev = last_generated;
-        obst->size = 1 + (rand()%3);
+        obst->size = 1 + (rand()%MAX_LOG_SIZE);
         last_generated-> next = obst;
         last_generated = obst;
     }
@@ -278,7 +278,7 @@ obstacle* generate_trains(void) {
     first_obst->size = TRAIN_LENGTH;
     obstacle *last_generated = first_obst;
     while (current_x < LANE_WIDTH) {
-        current_x += (float)(TRAIN_LENGTH + TRAIN_SPEED + 50);
+        current_x += (float)(TRAIN_LENGTH + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x;
         obst->next = NULL;
@@ -354,9 +354,9 @@ void update_vehicles(lane* l) {
         return;
     }
     obstacle* c = l->obstacles;
-    if (l->speed > 0 && c->x+l->speed+c->size > 6) {
+    if (l->speed > 0 && c->x+l->speed+c->size > VEHICLE_SPACING_MIN) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
-        float new_x = c->x - (float)(6*(rand()%2)+6);
+        float new_x = c->x - VEHICLE_SPACING_MIN - (float)(rand()%(VEHICLE_SPACING_MAX-VEHICLE_SPACING_MIN));
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
@@ -390,7 +390,7 @@ void update_vehicles(lane* l) {
         } else if (c->next == NULL && l->speed < 0 && c->x+l->speed < LANE_WIDTH) {
             c->x = c->x + l->speed;
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
-            float current_x = c->x + (float)(6*(rand()%2)+6);
+            float current_x = c->x + VEHICLE_SPACING_MIN + (float)(rand()%(VEHICLE_SPACING_MAX-VEHICLE_SPACING_MIN));
             next_obst->x = current_x;
             next_obst->size = l->obst_size;
             next_obst->next = NULL;
@@ -413,8 +413,8 @@ void update_drowning_slots(lane* l) {
     obstacle* c = l->obstacles;
     if (l->speed > 0 && c->x+l->speed +c->size> 0) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
-        new_obst->size = 1 + (rand()%3);
-        float new_x = c->x - (float)(new_obst->size + (rand()%5));
+        new_obst->size = 1 + (rand()%MAX_LOG_SIZE);
+        float new_x = c->x - (float)(new_obst->size + (rand()%LOG_SPACING_MAX));
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
@@ -447,8 +447,8 @@ void update_drowning_slots(lane* l) {
         } else if (c->next == NULL && l->speed < 0 && c->x+l->speed < LANE_WIDTH) {
             c->x = c->x + l->speed;
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
-            next_obst->size = 1 + (rand()%3);
-            float current_x = c->x + (float)(next_obst->size + (rand()%5));
+            next_obst->size = 1 + (rand()%MAX_LOG_SIZE);
+            float current_x = c->x + (float)(next_obst->size + (rand()%LOG_SPACING_MAX));
             next_obst->x = current_x;
             next_obst->next = NULL;
             next_obst->prev = c;
@@ -470,7 +470,7 @@ void update_trains(lane* l) {
     if (l->speed > 0 && c->x+l->speed +c->size> 0) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
         new_obst->size = TRAIN_LENGTH;
-        float new_x = c->x - (float)(TRAIN_LENGTH + TRAIN_SPEED + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
+        float new_x = c->x - (float)(TRAIN_LENGTH + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
@@ -504,7 +504,7 @@ void update_trains(lane* l) {
             c->x = c->x + l->speed;
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
             next_obst->size = TRAIN_LENGTH;
-            float current_x = c->x + (float)(TRAIN_LENGTH + TRAIN_SPEED + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
+            float current_x = c->x + (float)(TRAIN_LENGTH + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
             next_obst->x = current_x;
             next_obst->next = NULL;
             next_obst->prev = c;
