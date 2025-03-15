@@ -215,7 +215,7 @@ obstacle* generate_waterlilies(void) {
     first_obst->x = current_x;
     first_obst->prev = NULL;
     first_obst->next = NULL;
-    first_obst->size = water_length;
+    first_obst->size = 1;
     obstacle *last_generated = first_obst;
     current_x = current_x + water_length;
     for (int i=0; i<nb-1 && (LANE_WIDTH-(int)current_x != 0) ; i=i+1) {
@@ -224,7 +224,7 @@ obstacle* generate_waterlilies(void) {
         obst->x = current_x+1;
         obst->next = NULL;
         obst->prev = last_generated;
-        obst->size = water_length;
+        obst->size = 1;
         last_generated->next = obst;
         last_generated = obst;
         current_x = current_x + water_length+1;
@@ -312,7 +312,7 @@ lane* generate_lane(lane* prev_lane, int type) {
                 new_lane->speed = 0;
             } else {
                 new_lane->obstacles = generate_drowning_slots();
-                new_lane->speed = 3;
+                new_lane->speed = 0.1;
             }
             //new_lane->obstacles = generate_waterlilies();
             //new_lane->speed = 0;
@@ -323,7 +323,7 @@ lane* generate_lane(lane* prev_lane, int type) {
             break;
         case ROAD:
             new_lane->obstacles = generate_vehicles(new_lane);
-            new_lane->speed = -2;
+            new_lane->speed = -0.1;
             break;
     }
     new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
@@ -586,7 +586,7 @@ void generateNNewLanes(lane* l, int n) {
 bool collides(lane *current_lane, displayedData game) {
     obstacle* current_obstacle = current_lane->obstacles;
     while (current_obstacle != NULL) {
-        if (game.player.x >= current_obstacle->x && game.player.x < current_obstacle->x + current_lane->obst_size) {
+        if (game.player.x >= (int) current_obstacle->x && game.player.x < (int) current_obstacle->x + (current_obstacle->size)) {
             return true;
         }
         current_obstacle = current_obstacle->next;
@@ -604,7 +604,7 @@ displayedData move_camera(displayedData data) {
     while (current_lane->next != NULL) {
         current_lane = current_lane->next;
     }
-    random_lane(current_lane);
+    generateNNewLanes(current_lane, 1);
 
     return data;
 }
@@ -624,9 +624,7 @@ displayedData init_game(int game_height) {
          l = empty_lane(l, GRASS);
     }
 
-    for (int i = 0; i < game_height + 4; i++) {
-        l = random_lane(l);
-    }
+    generateNNewLanes(l, game_height + 4);
 
     displayedData res = {game_height, first_lane, first_lane, p, 0, 0};
 

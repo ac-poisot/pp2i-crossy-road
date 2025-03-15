@@ -7,16 +7,52 @@
 #include "core.h"
 
 #define GAME_HEIGHT 20 // height of the displayed area
-
-
 #define REFRESH_RATE 60 // refresh rate of the game in frames per second
-#define GAME_SPEED 20 // in frames, time between each move of the camera
+#define GAME_SPEED 60 // in frames, time between each move of the camera
 
 // Game states
 #define MENU 0
 #define GAME 1
 #define GAME_OVER 2
 
+// Color pairs
+enum {
+    COLOR_PAIR_GRASS = 1,
+    COLOR_PAIR_WATER,
+    COLOR_PAIR_TRACK,
+    COLOR_PAIR_ROAD,
+    COLOR_PAIR_GRASS_COIN,
+    COLOR_PAIR_WATER_COIN,
+    COLOR_PAIR_TRACK_COIN,
+    COLOR_PAIR_ROAD_COIN,
+    COLOR_PAIR_GRASS_PLAYER,
+    COLOR_PAIR_WATER_PLAYER,
+    COLOR_PAIR_TRACK_PLAYER,
+    COLOR_PAIR_ROAD_PLAYER
+};
+
+void init_colors(int PLAYER_COLOR) {
+    if (has_colors() == FALSE) {
+        endwin();
+        printf("Your terminal does not support color\n");
+        exit(1);
+    }
+
+    start_color();
+    init_pair(COLOR_PAIR_GRASS, COLOR_BLACK, COLOR_GREEN);
+    init_pair(COLOR_PAIR_WATER, COLOR_BLACK, COLOR_BLUE);
+    init_pair(COLOR_PAIR_TRACK, COLOR_RED, COLOR_WHITE);
+    init_pair(COLOR_PAIR_ROAD, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(COLOR_PAIR_GRASS_COIN, COLOR_YELLOW, COLOR_GREEN);
+    init_pair(COLOR_PAIR_WATER_COIN, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(COLOR_PAIR_TRACK_COIN, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(COLOR_PAIR_ROAD_COIN, COLOR_YELLOW, COLOR_BLACK);
+
+    init_pair(COLOR_PAIR_GRASS_PLAYER, PLAYER_COLOR, COLOR_GREEN);
+    init_pair(COLOR_PAIR_WATER_PLAYER, PLAYER_COLOR, COLOR_BLUE);
+    init_pair(COLOR_PAIR_TRACK_PLAYER, PLAYER_COLOR, COLOR_WHITE);
+    init_pair(COLOR_PAIR_ROAD_PLAYER, PLAYER_COLOR, COLOR_BLACK);
+}
 
 void display_lane(lane* lane, int lane_count) {
     attron(COLOR_PAIR(lane->type));
@@ -41,7 +77,7 @@ void display_lane(lane* lane, int lane_count) {
     obstacle* current_obstacle = lane->obstacles;
 
     while (current_obstacle != NULL) {
-        for (int i = 0; i < lane->obst_size && i+current_obstacle->x < LANE_WIDTH; i++) {
+        for (int i = 0; i < current_obstacle->size && i+current_obstacle->x < LANE_WIDTH; i++) {
             switch (lane->type)
             {
             case GRASS:
@@ -63,6 +99,7 @@ void display_lane(lane* lane, int lane_count) {
         current_obstacle = current_obstacle->next;
     }
 
+
     attroff(COLOR_PAIR(lane->type));
 }
 
@@ -72,12 +109,11 @@ void display(displayedData data) {
     int lane_count = 0;
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
-        if (lane_count==data.player.y-data.camera_first_lane->y) {
-            // Display the player
-            attron(COLOR_PAIR(current_lane->type+12));//test
-            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "0");
-            attroff(COLOR_PAIR(current_lane->type+12));//test
-        }        
+        if (current_lane->y == data.player.y) {
+            attron(COLOR_PAIR(current_lane->type + 8));
+            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "-");
+            attroff(COLOR_PAIR(current_lane->type + 8));
+        }
         current_lane = current_lane->next;
         lane_count++;
     }
@@ -87,11 +123,27 @@ void display(displayedData data) {
     refresh();
 }
 
+void display_title_animation() {
+    const char* title[] = {
+        "*********************",
+        "*                   *",
+        "*  ~ CROSSY ROAD ~  *",
+        "*                   *",
+        "*********************"
+    };
+
+    int title_length = sizeof(title) / sizeof(title[0]);
+
+    for (int i = 0; i < title_length; i++) {
+        mvprintw(GAME_HEIGHT/4 - 3 + i, 2, "%s", title[i]);
+        refresh();
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL); // 100ms delay
+    }
+}
 
 int main(void) {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
-
 
     srand(time(NULL));
     initscr();
@@ -100,17 +152,7 @@ int main(void) {
     curs_set(0);
 
     // Initialize colors
-    start_color();
-    init_pair(GRASS, COLOR_BLACK, COLOR_GREEN);
-    init_pair(WATER, COLOR_GREEN, COLOR_BLUE);
-    init_pair(TRACK, COLOR_RED, COLOR_WHITE);
-    init_pair(ROAD, COLOR_MAGENTA, COLOR_BLACK);
-
-    // Initialize coin colors
-    init_pair(GRASS + 4, COLOR_YELLOW, COLOR_GREEN);
-    init_pair(WATER + 4, COLOR_YELLOW, COLOR_BLUE);
-    init_pair(TRACK + 4, COLOR_YELLOW, COLOR_WHITE);
-    init_pair(ROAD + 4, COLOR_YELLOW, COLOR_BLACK);
+    init_colors(COLOR_RED);
 
     // Initialisation Player Colors
     init_pair(GRASS + 12, COLOR_BLACK, COLOR_GREEN);//test
@@ -127,6 +169,9 @@ int main(void) {
     bool drown_flag;
     displayedData game;
 
+    int menu_anim = true;
+    
+
     while (true) {
         int ch = getch(); //Get the inputs from the keyboard
 
@@ -134,9 +179,15 @@ int main(void) {
 
             case MENU:
             mvprintw(0, 0, "High score: %d", high_score);
-            mvprintw(GAME_HEIGHT/4, 5, "~ CROSSY ROAD :3 ~");
+
+            if (menu_anim) {
+                display_title_animation();
+                menu_anim = false;
+            }
+
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
             mvprintw(GAME_HEIGHT/4 + 4, 7, "Press q to quit");
+
             if (ch == 'q') {
                 endwin();
                 return 0;
@@ -175,54 +226,77 @@ int main(void) {
                 default:
                 break;
             }
-    
-            if (move_timer == 0) {
+
+            // Camera movement, automatic or if player is in the top quarter of the game
+
+            if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4)) { 
                 game = move_camera(game);
                 move_timer = GAME_SPEED;
             } else {
                 move_timer--;
             }
-        
 
             // Check if the player is colliding with something
 
             lane* current_lane = game.camera_first_lane;
+            lane* player_lane;
 
-            while (current_lane->y != game.player.y && current_lane->next != NULL) {
+            while (current_lane->next != NULL) {
+
+                // Update lanes
+
+                switch (current_lane->type) {
+                    case ROAD:
+                    update_vehicles(current_lane);
+                    break;
+                    case WATER:
+                    update_drowning_slots(current_lane);
+                    break;
+                    case TRACK:
+                    update_trains(current_lane);
+                    break;
+                    default:
+                    break;
+                }
+
+                if (current_lane->y == game.player.y) {
+                    player_lane = current_lane;
+                }
                 current_lane = current_lane->next;
             }
 
-            if (current_lane != NULL) {
+            if (player_lane != NULL) {
 
                 // Check for collisions with coins
                 for (int i = 0; i < LANE_WIDTH; i++) {
-                    if (current_lane->coins[i] && game.player.x == i) {
+                    if (player_lane->coins[i] && game.player.x == i) {
                         purse++;
-                        current_lane->coins[i] = false;
+                        player_lane->coins[i] = false;
                     }
                 }
 
-                if (current_lane->type == WATER) {
+                if (player_lane->type == WATER) {
                     drown_flag = true; // set this to false to disable drowning
                 } else {
                     drown_flag = false;
                 }
 
                 // Check for collisions with obstacles
-                if(collides(current_lane, game)) {
-                    switch (current_lane->type) {
+                if(collides(player_lane, game)) {
+                    switch (player_lane->type) {
                         case GRASS:
                         game.player.x = current_x;
                         game.player.y = current_y;
                         break;
                         case TRACK:
-                        game_state = GAME_OVER;
+                        //game_state = GAME_OVER;
                         break;
                         case ROAD:
                         game_state = GAME_OVER;
                         break;
                         case WATER:
                         drown_flag = false;
+                        game.player.x += player_lane->speed; // to change to make sure player is on a slot
                         break;
                         break;
                         default:
