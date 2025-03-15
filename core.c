@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <math.h>
 #include "core.h"
 
 int tick;
@@ -235,7 +236,7 @@ obstacle* generate_waterlilies(void) {
             obst->x = current_x+1;
             obst->next = NULL;
             obst->prev = last_generated;
-            obst->size = water_length;
+            obst->size = 1;
             last_generated->next = obst;
             last_generated = obst;
         }
@@ -277,7 +278,7 @@ obstacle* generate_trains(void) {
     first_obst->size = TRAIN_LENGTH;
     obstacle *last_generated = first_obst;
     while (current_x < LANE_WIDTH) {
-        current_x += (float)(TRAIN_LENGTH + TRAIN_SPEED + rand()%TRAIN_SPEED);
+        current_x += (float)(TRAIN_LENGTH + TRAIN_SPEED + 50);
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x;
         obst->next = NULL;
@@ -312,18 +313,28 @@ lane* generate_lane(lane* prev_lane, int type) {
                 new_lane->speed = 0;
             } else {
                 new_lane->obstacles = generate_drowning_slots();
-                new_lane->speed = 0.1;
+                if (rand()%2) {
+                    new_lane->speed = -LOG_SPEED;
+                } else {
+                    new_lane->speed = LOG_SPEED;
+                }
             }
-            //new_lane->obstacles = generate_waterlilies();
-            //new_lane->speed = 0;
             break;
         case TRACK:
             new_lane->obstacles = generate_trains();
-            new_lane->speed = TRAIN_SPEED;
+            if (rand()%2) {
+                new_lane->speed = -TRAIN_SPEED;
+            } else {
+                new_lane->speed = TRAIN_SPEED;
+            }
             break;
         case ROAD:
             new_lane->obstacles = generate_vehicles(new_lane);
-            new_lane->speed = -0.1;
+            if (rand()%2) {
+                new_lane->speed = VEHICLE_SPEED_MIN + (float)(rand()%2)/10;
+            } else {
+                new_lane->speed = -VEHICLE_SPEED_MIN - (float)(rand()%2)/10;
+            }
             break;
     }
     new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
@@ -459,7 +470,7 @@ void update_trains(lane* l) {
     if (l->speed > 0 && c->x+l->speed +c->size> 0) {
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
         new_obst->size = TRAIN_LENGTH;
-        float new_x = c->x - (float)(TRAIN_LENGTH + TRAIN_SPEED + rand()%TRAIN_SPEED);
+        float new_x = c->x - (float)(TRAIN_LENGTH + TRAIN_SPEED + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
@@ -493,7 +504,7 @@ void update_trains(lane* l) {
             c->x = c->x + l->speed;
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
             next_obst->size = TRAIN_LENGTH;
-            float current_x = c->x + (float)(TRAIN_LENGTH + TRAIN_SPEED + rand()%TRAIN_SPEED);
+            float current_x = c->x + (float)(TRAIN_LENGTH + TRAIN_SPEED + TRAIN_SPACING_MIN + rand()%(TRAIN_SPACING_MAX-TRAIN_SPACING_MIN));
             next_obst->x = current_x;
             next_obst->next = NULL;
             next_obst->prev = c;
@@ -583,15 +594,15 @@ void generateNNewLanes(lane* l, int n) {
     }
 }
 
-bool collides(lane *current_lane, displayedData game) {
+obstacle* collides(lane *current_lane, displayedData game) {
     obstacle* current_obstacle = current_lane->obstacles;
     while (current_obstacle != NULL) {
-        if (game.player.x >= (int) current_obstacle->x && game.player.x < (int) current_obstacle->x + (current_obstacle->size)) {
-            return true;
+        if (ceil(game.player.x) >= floor(current_obstacle->x) && floor(game.player.x) < ceil(current_obstacle->x + (current_obstacle->size))) {
+            return current_obstacle;
         }
         current_obstacle = current_obstacle->next;
     }
-    return false;
+    return NULL;
 }
 
 displayedData move_camera(displayedData data) {
@@ -646,7 +657,7 @@ int main(void) {
     firstLane->obst_size = -2;
     display_obstacles(firstLane->obstacles);
     printf("\n");
-    for(int i=0; i<5; i=i+1) {
+    for(int i=0; i<5; i++) {
         update_vehicles(firstLane);
         display_obstacles(firstLane->obstacles);
         printf("\n");

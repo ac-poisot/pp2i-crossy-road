@@ -13,7 +13,11 @@
 #define ROAD      4
 
 #define TRAIN_LENGTH 10
-#define TRAIN_SPEED 10
+#define TRAIN_SPEED 2
+#define TRAIN_SPACING_MIN 200
+#define TRAIN_SPACING_MAX 500
+#define LOG_SPEED 0.05
+#define VEHICLE_SPEED_MIN 0.05
 
 
 typedef struct obstacle {
@@ -59,7 +63,7 @@ int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
 lane* random_lane(lane* prev_lane);
-obstacle* generate_vehicle(lane* l);
+obstacle* generate_vehicles(lane* l);
 obstacle* generate_trees(void);
 obstacle* generate_waterlilies(void);
 obstacle* generate_drowning_slots(void);
@@ -70,6 +74,6 @@ void update_drowning_slots(lane* l);
 void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
-bool collides(lane *current_lane, displayedData game);
+obstacle* collides(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data);
 displayedData init_game(int game_height);

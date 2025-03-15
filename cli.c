@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "core.h"
 
@@ -87,7 +88,7 @@ void display_lane(lane* lane, int lane_count) {
     obstacle* current_obstacle = lane->obstacles;
 
     while (current_obstacle != NULL) {
-        for (int i = 0; i < current_obstacle->size && i+current_obstacle->x < LANE_WIDTH; i++) {
+        for (int i = 0; i < current_obstacle->size && round(i+current_obstacle->x) < LANE_WIDTH; i++) {
             switch (lane->type)
             {
             case GRASS:
@@ -100,14 +101,18 @@ void display_lane(lane* lane, int lane_count) {
                     mvprintw(screen_y, i+current_obstacle->x, "O"); 
                     attroff(COLOR_PAIR(COLOR_PAIR_LILY));
                 } else {
-                    mvprintw(screen_y, i+current_obstacle->x, "=");   
+                    mvprintw(screen_y, round(i+current_obstacle->x), "=");   
                 }   
                 break;
             case TRACK:
-                mvprintw(screen_y, i+current_obstacle->x, ">");        
+                if (lane->speed > 0) {
+                    mvprintw(screen_y, round(i+current_obstacle->x), ">"); 
+                } else {
+                    mvprintw(screen_y, round(i+current_obstacle->x), "<"); 
+                }
                 break;
             case ROAD:
-                mvprintw(screen_y, i+current_obstacle->x, "V");   
+                mvprintw(screen_y, round(i+current_obstacle->x), "V");   
                 break;  
             default:
                 break;
@@ -133,7 +138,7 @@ void display(displayedData data) {
         display_lane(current_lane, lane_count);
         if (current_lane->y == data.player.y) {
             attron(COLOR_PAIR(current_lane->type + 8));
-            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "P");
+            mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "P");
             attroff(COLOR_PAIR(current_lane->type + 8));
         }
         current_lane = current_lane->next;
@@ -183,6 +188,7 @@ int main(void) {
     int current_y;
     int current_x;
     bool drown_flag;
+    bool on_log = false;
     displayedData game;
 
     int menu_anim = true;
@@ -212,6 +218,7 @@ int main(void) {
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
+                on_log = false;
                 game = init_game(GAME_HEIGHT);
             }
             break;
@@ -295,24 +302,35 @@ int main(void) {
                     drown_flag = true; // set this to false to disable drowning
                 } else {
                     drown_flag = false;
+                    on_log = false;
+                    game.player.x = round(game.player.x);
+                    game.player.y = round(game.player.y);
                 }
 
                 // Check for collisions with obstacles
-                if(collides(player_lane, game)) {
+                obstacle* collided_obstacle = collides(player_lane, game);
+                if(collided_obstacle != NULL) {
                     switch (player_lane->type) {
                         case GRASS:
                         game.player.x = current_x;
                         game.player.y = current_y;
                         break;
                         case TRACK:
-                        //game_state = GAME_OVER;
+                        game_state = GAME_OVER;
                         break;
                         case ROAD:
                         game_state = GAME_OVER;
                         break;
                         case WATER:
                         drown_flag = false;
-                        game.player.x += player_lane->speed; // to change to make sure player is on a slot
+                        if (player_lane->speed != 0) {
+                            if (on_log) {
+                                game.player.x += player_lane->speed;
+                            } else {
+                                on_log = true;
+                                game.player.x = collided_obstacle->x + abs((int) (game.player.x - collided_obstacle->x));
+                            }
+                        }
                         break;
                         break;
                         default:
@@ -339,7 +357,7 @@ int main(void) {
             mvprintw(0, 0, "Final score: %d", game.player.y);
             mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
-            if (ch != ERR) {
+            if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {
                 clear();
                 game_state = MENU;
                 if (game.player.y > high_score) {
