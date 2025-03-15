@@ -7,25 +7,26 @@
 
 #define PLAYER_START_Y 5 // starting position of the player
 
-#define LANE_TYPES 4
+#define LANE_TYPES 4 // amount of different types of lanes
 
 #define GRASS     1
 #define WATER     2
 #define TRACK     3
 #define ROAD      4
 
-#define TRAIN_LENGTH 10
-#define TRAIN_SPEED 2
-#define TRAIN_SPACING_MIN 200
-#define TRAIN_SPACING_MAX 500
+#define WARNING_TIME 90 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
+#define TRAIN_LENGTH 10 // in tiles, length of a train
+#define TRAIN_SPEED 2 // in tiles per frame, speed of a rightwards train
+#define TRAIN_SPACING_MIN 200 // in tiles, minimum of space between two trains
+#define TRAIN_SPACING_MAX 500 // in tiles, maximum of space between two trains
 
-#define VEHICLE_SPEED_MIN 0.05
-#define VEHICLE_SPACING_MIN 6
-#define VEHICLE_SPACING_MAX 12
+#define VEHICLE_SPEED_MIN 0.05 // in tiles per frame, minimum speed of a rightwards vehicle
+#define VEHICLE_SPACING_MIN 6 // in tiles, minimum of space between two vehicles
+#define VEHICLE_SPACING_MAX 12 // in tiles, maximum of space between two vehicles
 
-#define LOG_SPEED 0.05
-#define MAX_LOG_SIZE 4
-#define LOG_SPACING_MAX 5
+#define LOG_SPEED 0.05 // in tiles per frame, speed of a rightwards log
+#define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
+#define LOG_SPACING_MAX 5 // in tiles, maximum of space between two logs (minimum is always 1)
 
 
 typedef struct obstacle {

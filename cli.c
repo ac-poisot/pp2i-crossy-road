@@ -7,8 +7,8 @@
 
 #include "core.h"
 
-#define GAME_HEIGHT 20 // height of the displayed area
-#define REFRESH_RATE 60 // refresh rate of the game in frames per second
+#define GAME_HEIGHT 20 // in tiles, height of the displayed area
+#define REFRESH_RATE 60 // in frames per second, refresh rate of the game
 #define GAME_SPEED 60 // in frames, time between each move of the camera
 
 // Game states
@@ -106,7 +106,10 @@ void display_lane(lane* lane, int lane_count) {
                 break;
             case TRACK:
                 if (lane->speed > 0) {
-                    mvprintw(screen_y, round(i+current_obstacle->x), ">"); 
+                    mvprintw(screen_y, round(i+current_obstacle->x), ">");
+                    if (current_obstacle->x + current_obstacle->size > -WARNING_TIME*TRAIN_SPEED && current_obstacle->x + current_obstacle->size < 0) {
+                        mvprintw(screen_y, 0, "!");
+                    }
                 } else {
                     mvprintw(screen_y, round(i+current_obstacle->x), "<"); 
                 }
@@ -117,6 +120,11 @@ void display_lane(lane* lane, int lane_count) {
             default:
                 break;
             }
+
+        }
+        // Warning for leftwards trains
+        if (lane->type == TRACK && current_obstacle->x < LANE_WIDTH + WARNING_TIME*TRAIN_SPEED && current_obstacle->x > LANE_WIDTH) {
+            mvprintw(screen_y, LANE_WIDTH - 1, "!");
         }
         current_obstacle = current_obstacle->next;
     }
