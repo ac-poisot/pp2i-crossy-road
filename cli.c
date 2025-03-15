@@ -16,6 +16,8 @@
 #define GAME_OVER 2
 
 // Color pairs
+#define COLOR_PAIR_LILY 99
+
 enum {
     COLOR_PAIR_GRASS = 1,
     COLOR_PAIR_WATER,
@@ -39,6 +41,8 @@ void init_colors(int PLAYER_COLOR) {
     }
 
     start_color();
+    init_pair(COLOR_PAIR_LILY, COLOR_GREEN, COLOR_BLUE);
+
     init_pair(COLOR_PAIR_GRASS, COLOR_BLACK, COLOR_GREEN);
     init_pair(COLOR_PAIR_WATER, COLOR_BLACK, COLOR_BLUE);
     init_pair(COLOR_PAIR_TRACK, COLOR_RED, COLOR_WHITE);
@@ -72,7 +76,13 @@ void display_lane(lane* lane, int lane_count) {
     }
 
     // Display the obstacles
-    attron(COLOR_PAIR(lane->type));
+
+    if (lane->type == WATER && lane->speed == 0) {
+            attron(COLOR_PAIR(COLOR_PAIR_LILY));
+        }
+    else {
+        attron(COLOR_PAIR(lane->type));
+    }
 
     obstacle* current_obstacle = lane->obstacles;
 
@@ -84,7 +94,14 @@ void display_lane(lane* lane, int lane_count) {
                 mvprintw(screen_y, i+current_obstacle->x, "T");       
                 break;
             case WATER:
-                mvprintw(screen_y, i+current_obstacle->x, "O");      
+                if (lane->speed == 0) {
+                    attroff(COLOR_PAIR(lane->type));
+                    attron(COLOR_PAIR(COLOR_PAIR_LILY));
+                    mvprintw(screen_y, i+current_obstacle->x, "O"); 
+                    attroff(COLOR_PAIR(COLOR_PAIR_LILY));
+                } else {
+                    mvprintw(screen_y, i+current_obstacle->x, "=");   
+                }   
                 break;
             case TRACK:
                 mvprintw(screen_y, i+current_obstacle->x, ">");        
@@ -99,8 +116,13 @@ void display_lane(lane* lane, int lane_count) {
         current_obstacle = current_obstacle->next;
     }
 
+    if (lane->type == WATER && lane->speed == 0) {
+        attroff(COLOR_PAIR(COLOR_PAIR_LILY));
+    }
+    else {
+        attroff(COLOR_PAIR(lane->type));
+    }
 
-    attroff(COLOR_PAIR(lane->type));
 }
 
 void display(displayedData data) {
@@ -111,7 +133,7 @@ void display(displayedData data) {
         display_lane(current_lane, lane_count);
         if (current_lane->y == data.player.y) {
             attron(COLOR_PAIR(current_lane->type + 8));
-            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "-");
+            mvprintw(data.cameraY - data.player.y + 1, data.player.x, "P");
             attroff(COLOR_PAIR(current_lane->type + 8));
         }
         current_lane = current_lane->next;
@@ -153,12 +175,6 @@ int main(void) {
 
     // Initialize colors
     init_colors(COLOR_RED);
-
-    // Initialisation Player Colors
-    init_pair(GRASS + 12, COLOR_BLACK, COLOR_GREEN);//test
-    init_pair(WATER + 12, COLOR_BLACK, COLOR_BLUE);
-    init_pair(TRACK + 12, COLOR_BLACK, COLOR_WHITE);
-    init_pair(ROAD + 12, COLOR_WHITE, COLOR_BLACK);//test
 
     int game_state = MENU;
     int high_score = 0;
