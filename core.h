@@ -7,6 +7,8 @@
 
 #define PLAYER_START_Y 5 // starting position of the player
 
+#define LANE_TYPES 4
+
 #define GRASS     1
 #define WATER     2
 #define TRACK     3

@@ -70,9 +70,9 @@ void display_lane(lane* lane, int lane_count) {
     // Display the coins
     for (int i = 0; i < LANE_WIDTH; i++) {
         if (lane->coins[i]) {
-            attron(COLOR_PAIR((lane->type) + 4));
+            attron(COLOR_PAIR((lane->type) + LANE_TYPES));
             mvprintw(screen_y, i, "$");
-            attroff(COLOR_PAIR((lane->type) + 4));
+            attroff(COLOR_PAIR((lane->type) + LANE_TYPES));
         }
     }
 
@@ -92,13 +92,13 @@ void display_lane(lane* lane, int lane_count) {
             switch (lane->type)
             {
             case GRASS:
-                mvprintw(screen_y, i+current_obstacle->x, "T");       
+                mvprintw(screen_y, i+current_obstacle->x, "Y");       
                 break;
             case WATER:
                 if (lane->speed == 0) {
                     attroff(COLOR_PAIR(lane->type));
                     attron(COLOR_PAIR(COLOR_PAIR_LILY));
-                    mvprintw(screen_y, i+current_obstacle->x, "O"); 
+                    mvprintw(screen_y, i+current_obstacle->x, "0"); 
                     attroff(COLOR_PAIR(COLOR_PAIR_LILY));
                 } else {
                     mvprintw(screen_y, round(i+current_obstacle->x), "=");   
@@ -112,7 +112,7 @@ void display_lane(lane* lane, int lane_count) {
                 }
                 break;
             case ROAD:
-                mvprintw(screen_y, round(i+current_obstacle->x), "V");   
+                mvprintw(screen_y, round(i+current_obstacle->x), "#");   
                 break;  
             default:
                 break;
@@ -137,16 +137,16 @@ void display(displayedData data) {
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
         if (current_lane->y == data.player.y) {
-            attron(COLOR_PAIR(current_lane->type + 8));
-            mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "P");
-            attroff(COLOR_PAIR(current_lane->type + 8));
+            attron(COLOR_PAIR(current_lane->type + LANE_TYPES*2));
+            mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
+            attroff(COLOR_PAIR(current_lane->type + LANE_TYPES*2));
         }
         current_lane = current_lane->next;
         lane_count++;
     }
 
     // Display the score
-    mvprintw(0, 0, "Score: %d", data.player.y);
+    mvprintw(0, 0, "Score: %d\n", data.player.y); // \n to not have issues going down from powers of 10
     refresh();
 }
 
