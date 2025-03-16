@@ -143,7 +143,7 @@ lane* random_lane(lane* prev_lane) {
 
 obstacle* generate_vehicles(lane* l) {
     /* generates vehicles */
-    float x = - (float)(rand()%VEHICLE_SPACING_MAX); // position of the first vehicle
+    float x = - (float)(rand()%VEHICLE_INTERVAL*2); // position of the first vehicle
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
@@ -152,7 +152,7 @@ obstacle* generate_vehicles(lane* l) {
     first_obst->size = l->obst_size;
     obstacle *last_generated = first_obst;
     while (current_x < LANE_WIDTH) { // generates vehicles until the end of the lane
-        current_x += (float)(6 + 6*(rand()%2)); // the distance is calculated randomly between the minimum and maximum distance between two vehicles
+        current_x += (float)(VEHICLE_INTERVAL + VEHICLE_INTERVAL*(rand()%2)); // the distance is calculated randomly between the minimum and maximum distance between two vehicles
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x;
         obst->next = NULL;
@@ -195,9 +195,9 @@ obstacle* generate_trees(void) {
 obstacle* generate_waterlilies(void) {
     /* generates waterlilies */
     /* generates a number of obtacles between 1 and 4 with x and adds it to obstacles*/
-    int nb = (int)(2+rand()%3);
+    int nb = (int)(3+rand()%3);
     float water_length = (float)(rand()%LANE_WIDTH-2); // taille de l'eau
-    float current_x = 0;
+    float current_x = -1;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
     first_obst->prev = NULL;
@@ -205,7 +205,7 @@ obstacle* generate_waterlilies(void) {
     first_obst->size = 1;
     obstacle *last_generated = first_obst;
     current_x = current_x + water_length;
-    for (int i=0; i<nb-1 && (LANE_WIDTH-(int)current_x != 0) ; i=i+1) {
+    for (int i=0; i<nb-1 && ((int)current_x < LANE_WIDTH-UNPLAYABLE_WIDTH+1) ; i=i+1) {
         water_length = (float)(rand()%(LANE_WIDTH-(int)current_x));
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x+1;
@@ -215,9 +215,9 @@ obstacle* generate_waterlilies(void) {
         last_generated->next = obst;
         last_generated = obst;
         current_x = current_x + water_length+1;
-        if (i==nb-2 && current_x<LANE_WIDTH) {
+        if (i==nb-2 && current_x<LANE_WIDTH-UNPLAYABLE_WIDTH+1) {
             // creates a last obstacle to avoid to many waterlilies
-            water_length = (float)(LANE_WIDTH-current_x-1);
+            water_length = (float)(LANE_WIDTH-UNPLAYABLE_WIDTH-current_x);
             obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
             obst->x = current_x+1;
             obst->next = NULL;
@@ -340,9 +340,9 @@ void update_vehicles(lane* l) {
         return;
     }
     obstacle* c = l->obstacles;
-    if (l->speed > 0 && c->x+l->speed+c->size > VEHICLE_SPACING_MIN) { // if we can add a vehicle to the left of the first vehicle, we create one
+    if (l->speed > 0 && c->x+l->speed+c->size > VEHICLE_INTERVAL) { // if we can add a vehicle to the left of the first vehicle, we create one
         obstacle* new_obst = (obstacle*)malloc(sizeof(obstacle));
-        float new_x = c->x - (float)(6 + 6*(rand()%2));
+        float new_x = c->x - (float)(VEHICLE_INTERVAL + VEHICLE_INTERVAL*(rand()%2));
         new_obst-> prev = NULL;
         new_obst-> next = c;
         new_obst->x = new_x;
@@ -376,7 +376,7 @@ void update_vehicles(lane* l) {
         } else if (c->next == NULL && l->speed < 0 && c->x+l->speed < LANE_WIDTH) { // if we can add a vehicle to the right of the last vehicle, we create one
             c->x = c->x + l->speed;
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
-            float current_x = c->x + (float)(6 + 6*(rand()%2));
+            float current_x = c->x + (float)(VEHICLE_INTERVAL + VEHICLE_INTERVAL*(rand()%2));
             next_obst->x = current_x;
             next_obst->size = l->obst_size;
             next_obst->next = NULL;

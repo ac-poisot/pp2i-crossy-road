@@ -348,7 +348,7 @@ int main(void) {
 
             }
 
-            if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag) {
+            if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag || game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
                 game_state = GAME_OVER;
             }
 

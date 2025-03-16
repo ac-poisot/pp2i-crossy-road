@@ -14,15 +14,14 @@
 #define TRACK     3
 #define ROAD      4
 
-#define WARNING_TIME 90 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
-#define TRAIN_LENGTH 10 // in tiles, length of a train
-#define TRAIN_SPEED 2 // in tiles per frame, speed of a rightwards train
-#define TRAIN_SPACING_MIN 200 // in tiles, minimum of space between two trains
-#define TRAIN_SPACING_MAX 500 // in tiles, maximum of space between two trains
+#define WARNING_TIME 60 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
+#define TRAIN_LENGTH LANE_WIDTH*3 // in tiles, length of a train
+#define TRAIN_SPEED 3 // in tiles per frame, speed of a rightwards train
+#define TRAIN_SPACING_MIN 300 // in tiles, minimum of space between two trains
+#define TRAIN_SPACING_MAX 900 // in tiles, maximum of space between two trains
 
 #define VEHICLE_SPEED_MIN 0.05 // in tiles per frame, minimum speed of a rightwards vehicle
-#define VEHICLE_SPACING_MIN 6 // in tiles, minimum of space between two vehicles
-#define VEHICLE_SPACING_MAX 12 // in tiles, maximum of space between two vehicles
+#define VEHICLE_INTERVAL 6 // in tiles, space between two vehicles (either that amount or twice that amount)
 
 #define LOG_SPEED 0.05 // in tiles per frame, speed of a rightwards log
 #define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
