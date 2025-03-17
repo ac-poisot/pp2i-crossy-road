@@ -158,7 +158,7 @@ void display(displayedData data) {
     refresh();
 }
 
-void display_title_animation() {
+void display_title_animation(void) {
     const char* title[] = {
         "*********************",
         "*                   *",

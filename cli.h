@@ -60,6 +60,7 @@ typedef struct displayedData {
 
 void display_lane(lane* lane, int lane_count);
 void display(displayedData data);
+void display_title_animation(void) ;
 void free_obstacles(obstacle* first_obstacle);
 void free_lanes(lane* first_lane);
 lane* empty_lane(lane* prev_lane, int type);

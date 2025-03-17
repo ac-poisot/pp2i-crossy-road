@@ -25,7 +25,7 @@ main_only_core: core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_only_core core.o
 
 main_cli: core.o cli.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o -lncurses
 
 main_graphics: core.o gui.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o
@@ -33,8 +33,6 @@ main_graphics: core.o gui.o
 core_test: core.o core_test.o
 	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o
 
-cli_test: cli.o core.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_cli cli.o core.o -lncurses
 
 
 # executions
@@ -45,7 +43,7 @@ clean:
 run_only_core: main_only_core
 	./main_only_core
 
-run_cli: cli_test
+run_cli: main_cli
 	./main_cli
 
 run_graphics: main_graphics
@@ -53,9 +51,6 @@ run_graphics: main_graphics
 
 run_core_test: core_test
 	./core_test
-
-run_cli_test: cli_test
-	./main_cli
 
 run_all_tests: core_test cli_test
 	./core_test
