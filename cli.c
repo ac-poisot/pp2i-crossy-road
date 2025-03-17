@@ -15,26 +15,18 @@
 #define MENU 0
 #define GAME 1
 #define GAME_OVER 2
+#define SHOP 3
+
+// Shop colors
+#define PLAYER_COLORS 4
+#define UNLOCKABLE_COLORS (int[PLAYER_COLORS]){COLOR_RED, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW}
+#define PRICE 5
 
 // Color pairs
+#define RED_TEXT 66
 #define COLOR_PAIR_LILY 99
 
-enum {
-    COLOR_PAIR_GRASS = 1,
-    COLOR_PAIR_WATER,
-    COLOR_PAIR_TRACK,
-    COLOR_PAIR_ROAD,
-    COLOR_PAIR_GRASS_COIN,
-    COLOR_PAIR_WATER_COIN,
-    COLOR_PAIR_TRACK_COIN,
-    COLOR_PAIR_ROAD_COIN,
-    COLOR_PAIR_GRASS_PLAYER,
-    COLOR_PAIR_WATER_PLAYER,
-    COLOR_PAIR_TRACK_PLAYER,
-    COLOR_PAIR_ROAD_PLAYER
-};
-
-void init_colors(int PLAYER_COLOR) {
+void init_colors() {
     if (has_colors() == FALSE) {
         endwin();
         printf("Your terminal does not support color\n");
@@ -42,21 +34,29 @@ void init_colors(int PLAYER_COLOR) {
     }
 
     start_color();
+    init_pair(RED_TEXT, COLOR_RED, COLOR_BLACK);
+
     init_pair(COLOR_PAIR_LILY, COLOR_GREEN, COLOR_BLUE);
 
-    init_pair(COLOR_PAIR_GRASS, COLOR_BLACK, COLOR_GREEN);
-    init_pair(COLOR_PAIR_WATER, COLOR_BLACK, COLOR_BLUE);
-    init_pair(COLOR_PAIR_TRACK, COLOR_RED, COLOR_WHITE);
-    init_pair(COLOR_PAIR_ROAD, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(COLOR_PAIR_GRASS_COIN, COLOR_YELLOW, COLOR_GREEN);
-    init_pair(COLOR_PAIR_WATER_COIN, COLOR_YELLOW, COLOR_BLUE);
-    init_pair(COLOR_PAIR_TRACK_COIN, COLOR_YELLOW, COLOR_WHITE);
-    init_pair(COLOR_PAIR_ROAD_COIN, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(GRASS, COLOR_BLACK, COLOR_GREEN);
+    init_pair(WATER, COLOR_BLACK, COLOR_BLUE);
+    init_pair(TRACK, COLOR_RED, COLOR_WHITE);
+    init_pair(ROAD, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(GRASS+LANE_TYPES, COLOR_YELLOW, COLOR_GREEN);
+    init_pair(WATER+LANE_TYPES, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(TRACK+LANE_TYPES, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(ROAD+LANE_TYPES, COLOR_YELLOW, COLOR_BLACK);
 
-    init_pair(COLOR_PAIR_GRASS_PLAYER, PLAYER_COLOR, COLOR_GREEN);
-    init_pair(COLOR_PAIR_WATER_PLAYER, PLAYER_COLOR, COLOR_BLUE);
-    init_pair(COLOR_PAIR_TRACK_PLAYER, PLAYER_COLOR, COLOR_WHITE);
-    init_pair(COLOR_PAIR_ROAD_PLAYER, PLAYER_COLOR, COLOR_BLACK);
+
+
+    for (int i=0; i<PLAYER_COLORS; i++) {
+        init_pair(100+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLACK);
+
+        init_pair(100+GRASS+(10*i), UNLOCKABLE_COLORS[i], COLOR_GREEN);
+        init_pair(100+WATER+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLUE);
+        init_pair(100+TRACK+(10*i), UNLOCKABLE_COLORS[i], COLOR_WHITE);
+        init_pair(100+ROAD+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLACK);
+    }
 }
 
 void display_lane(lane* lane, int lane_count) {
@@ -145,9 +145,9 @@ void display(displayedData data) {
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
         if (current_lane->y == data.player.y) {
-            attron(COLOR_PAIR(current_lane->type + LANE_TYPES*2));
+            attron(COLOR_PAIR(100 + current_lane->type + 10*data.player.skin));
             mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
-            attroff(COLOR_PAIR(current_lane->type + LANE_TYPES*2));
+            attroff(COLOR_PAIR(100 + current_lane->type + 10*data.player.skin));
         }
         current_lane = current_lane->next;
         lane_count++;
@@ -176,6 +176,21 @@ void display_title_animation(void) {
     }
 }
 
+void display_shop(void) {
+    const char* title[] = {
+        "************",
+        "* THE SHOP *",
+        "************"
+    };
+
+    int title_length = sizeof(title) / sizeof(title[0]);
+    for (int i = 0; i < title_length; i++) {
+        mvprintw(GAME_HEIGHT/4 - 3 + i, 30, "%s", title[i]);
+    }
+
+
+}
+
 int main(void) {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
@@ -187,11 +202,14 @@ int main(void) {
     curs_set(0);
 
     // Initialize colors
-    init_colors(COLOR_RED);
+    init_colors();
 
     int game_state = MENU;
     int high_score = 0;
-    int purse = 0;
+    int player_color = 0;
+    bool unlocked_colors[PLAYER_COLORS] = {false};
+    unlocked_colors[0] = true;
+    int purse = 13;
     int move_timer;
     int current_y;
     int current_x;
@@ -224,19 +242,80 @@ int main(void) {
             }
 
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
-            mvprintw(GAME_HEIGHT/4 + 4, 7, "Press q to quit");
+            mvprintw(GAME_HEIGHT/4 + 4, 2, "Press s to go to the shop");
 
-            if (ch == 'q') {
+            mvprintw(GAME_HEIGHT/4 + 7, 7, "Press q to quit");
+            
+
+            switch (ch){
+                case 'q':
                 endwin();
                 return 0;
-            }
-            if (ch != ERR) {
+
+                case 's':
+                clear();
+                game_state = SHOP;
+                break;
+                case ERR:
+                break;
+                default:
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
                 on_log = NULL;
                 game = init_game(GAME_HEIGHT);
+                game.player.skin = player_color;
+                break;
+
             }
+            break;
+
+            case SHOP:
+            display_shop();
+            mvprintw(6, 35, "%d$", purse);
+            mvprintw(0, 23, "Press m to return to menu");
+
+            for (int i=0; i<PLAYER_COLORS; i++) {
+                attron(COLOR_PAIR(100+10*i));
+                mvprintw(GAME_HEIGHT/4 + 7, 5+(i*20), "*");
+                attroff(COLOR_PAIR(100+10*i));
+
+                if (unlocked_colors[i]) {
+                    if (player_color == i) {
+                        mvprintw(GAME_HEIGHT/4 + 9, 2+(i*20), "EQUIPPED");
+                    } else {
+                        mvprintw(GAME_HEIGHT/4 + 9, 1+(i*20), "%d - EQUIP", i);     
+                    } 
+                } else {
+                    if (PRICE > purse) {
+                        attron(COLOR_PAIR(RED_TEXT));
+                    }
+                    mvprintw(GAME_HEIGHT/4 + 9, 3+(i*20), "%d - %d$", i, PRICE);
+                    attroff(COLOR_PAIR(RED_TEXT));  
+                }
+            }
+
+            if (ch == 'm') {
+                clear();
+                menu_anim = true;
+                game_state = MENU;
+            }
+
+            for (int i=0; i<PLAYER_COLORS; i++) {
+                if (ch == i+'0') {
+                    if (unlocked_colors[i]) {
+                        player_color = i;
+                        clear();
+                    } else {
+                        if (PRICE <= purse) {
+                            purse -= PRICE;
+                            unlocked_colors[i] = true;
+                            clear();
+                        }
+                    }
+                }
+            }
+
             break;
 
             case GAME:

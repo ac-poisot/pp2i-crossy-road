@@ -576,7 +576,9 @@ lane* fourLastLanes(lane* l) {
 void generateNNewLanes(lane* l, int n) {
     /* generates n lanes based on the four previous lanes */
     for (int i = 0; i < n; i++) {
-        l = generate_lane(l, biome(probabilite_biomes(fourLastLanes(l))));
+        int* boules = probabilite_biomes(fourLastLanes(l));
+        l = generate_lane(l, biome(boules));
+        free(boules);
     }
 }
 
