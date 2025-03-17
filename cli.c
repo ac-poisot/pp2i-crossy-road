@@ -196,10 +196,11 @@ int main(void) {
     int current_y;
     int current_x;
     bool drown_flag;
-    bool on_log = false;
+    obstacle* on_log = NULL; // pointer to the log the player is currently on, if any
     displayedData game;
 
-    int menu_anim = true;
+    bool menu_anim = true;
+    int star = 0;
     
 
     while (true) {
@@ -213,6 +214,13 @@ int main(void) {
             if (menu_anim) {
                 display_title_animation();
                 menu_anim = false;
+            } else {
+                mvprintw(GAME_HEIGHT/4 - 3, (star/2)+2, "*");
+                mvprintw(GAME_HEIGHT/4 - 3, (star/2)+3, " ");
+
+                mvprintw(GAME_HEIGHT/4 + 1, 22-(star/2), "*");
+                mvprintw(GAME_HEIGHT/4 + 1, 21-(star/2), " ");
+                star = (star + 1) % (21*2);
             }
 
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
@@ -226,7 +234,7 @@ int main(void) {
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
-                on_log = false;
+                on_log = NULL;
                 game = init_game(GAME_HEIGHT);
             }
             break;
@@ -308,12 +316,21 @@ int main(void) {
 
                 if (player_lane->type == WATER) {
                     drown_flag = true; // set this to false to disable drowning
-                } else {
+                    }
+                else {
                     drown_flag = false;
-                    on_log = false;
+                    }
+                
+                if (player_lane->type == WATER && player_lane->speed != 0) {
+                    if (on_log != NULL) {
+                        game.player.x += player_lane->speed;
+                    }
+                } else {
+                    on_log = NULL;
                     game.player.x = round(game.player.x);
                     game.player.y = round(game.player.y);
                 }
+                
 
                 // Check for collisions with obstacles
                 obstacle* collided_obstacle = collides(player_lane, game);
@@ -332,11 +349,9 @@ int main(void) {
                         case WATER:
                         drown_flag = false;
                         if (player_lane->speed != 0) {
-                            if (on_log) {
-                                game.player.x += player_lane->speed;
-                            } else {
-                                on_log = true;
-                                game.player.x = collided_obstacle->x + abs((int) (game.player.x - collided_obstacle->x));
+                            if (on_log != collided_obstacle) {
+                                on_log = collided_obstacle;
+                                game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
                             }
                         }
                         break;
@@ -367,6 +382,7 @@ int main(void) {
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {
                 clear();
+                menu_anim = true;
                 game_state = MENU;
                 if (game.player.y > high_score) {
                     high_score = game.player.y;

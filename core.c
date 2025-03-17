@@ -36,7 +36,7 @@ void free_lanes(lane* first_lane) {
 int biome(int* boules){// Sa prend les boules de chaque couleur, et renvoit la couleur pioché
     /* chooses randomly a number */
     int nbr_de_boule= boules[1] + boules[2] + boules[3] + boules[0];
-    int boule_choisi =rand()%nbr_de_boule;
+    int boule_choisi =rand()%(nbr_de_boule+1);
     //return boule_choisi;
     tick++;
     if (boule_choisi < boules[0]) {
@@ -584,7 +584,7 @@ obstacle* collides(lane *current_lane, displayedData game) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
     while (current_obstacle != NULL) {
-        if (ceil(game.player.x) >= floor(current_obstacle->x) && floor(game.player.x) < ceil(current_obstacle->x + (current_obstacle->size))) {
+        if (game.player.x+1 > current_obstacle->x && game.player.x < current_obstacle->x + (current_obstacle->size)) {
             return current_obstacle;
         }
         current_obstacle = current_obstacle->next;
@@ -602,6 +602,8 @@ displayedData move_camera(displayedData data) {
     while (current_lane->next != NULL) {
         current_lane = current_lane->next;
     }
+
+    //current_lane = generate_lane(current_lane, WATER);
     generateNNewLanes(current_lane, 1);
 
     return data;
@@ -622,6 +624,10 @@ displayedData init_game(int game_height) {
          l = empty_lane(l, GRASS);
     }
 
+
+    // for (int i = 0; i < game_height + 4; i++) {
+    //     l = generate_lane(l, WATER);
+    // }
     generateNNewLanes(l, game_height + 4);
 
     displayedData res = {game_height, first_lane, first_lane, p, 0, 0};
