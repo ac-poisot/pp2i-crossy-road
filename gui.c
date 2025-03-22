@@ -7,28 +7,32 @@
 #define WIDTH 640
 #define HEIGHT 480
 
-#define GAME_HEIGHT 7
-#define TILE_SIDE 64
+#define TILE_SIDE 20
+#define GAME_HEIGHT (WIDTH/TILE_SIDE)
+#define GAME_SPEED 0.03 // In pixels per frame, speed of the scrolling
 
 #define REFRESH_RATE 60
 
+SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, int height) {
+    SDL_Surface *surface = IMG_Load(filename);
+    SDL_Surface *resizedSurface = SDL_CreateRGBSurface(0, width, height, surface->format->BitsPerPixel,
+        surface->format->Rmask, surface->format->Gmask,
+        surface->format->Bmask, surface->format->Amask);
+
+    SDL_BlitScaled(surface, NULL, resizedSurface, NULL);
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, resizedSurface);
+    SDL_FreeSurface(surface);
+    SDL_FreeSurface(resizedSurface);
+
+    return texture;
+}
+
 void load_textures(SDL_Renderer* renderer, SDL_Texture** lane_textures) {
-    SDL_Surface *spriteSurface = IMG_Load("sprites/grass.png");
-    lane_textures[GRASS] = SDL_CreateTextureFromSurface(renderer, spriteSurface);
-    SDL_FreeSurface(spriteSurface);
-
-    spriteSurface = IMG_Load("sprites/water.png");
-    lane_textures[WATER] = SDL_CreateTextureFromSurface(renderer, spriteSurface);
-    SDL_FreeSurface(spriteSurface);
-
-    spriteSurface = IMG_Load("sprites/road.png");
-    lane_textures[ROAD] = SDL_CreateTextureFromSurface(renderer, spriteSurface);
-    SDL_FreeSurface(spriteSurface);
-
-    spriteSurface = IMG_Load("sprites/track.png");
-    lane_textures[TRACK] = SDL_CreateTextureFromSurface(renderer, spriteSurface);
-    SDL_FreeSurface(spriteSurface);
-
+    lane_textures[GRASS] = create_texture(renderer, "sprites/grass.png", TILE_SIDE, TILE_SIDE);
+    lane_textures[WATER] = create_texture(renderer, "sprites/water.png", TILE_SIDE, TILE_SIDE);
+    lane_textures[ROAD] = create_texture(renderer, "sprites/road.png", TILE_SIDE, TILE_SIDE);   
+    lane_textures[TRACK] = create_texture(renderer, "sprites/track.png", TILE_SIDE, TILE_SIDE);
 }
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** lane_textures) {
@@ -95,10 +99,10 @@ int main() {
 
         display(data_test, renderer, lane_textures);
 
-        data_test = move_camera(data_test, 0.03);
+        data_test = move_camera(data_test, GAME_SPEED);
 
         SDL_RenderPresent(renderer);
-
+        
         nanosleep(&request, &remaining); 
     }
 
