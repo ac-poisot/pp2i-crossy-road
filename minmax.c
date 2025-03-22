@@ -6,26 +6,40 @@
 
 #include "minmax.h"
 
+#define LANE_WIDTH 24 // width of the displayed area
+#define UNPLAYABLE_WIDTH 2
+
+#define NOT_POSSIBLE 0
+#define GO_AHEAD 1
+#define GO_DOWN  2
+#define GO_RIGHT 3
+#define GO_LEFT  4
+#define STAY     5
+
 obstacle* copy_obstacle(obstacle* o) {
     // deep copy of the obstacles
-    obstacle* copy = (obstacle*)malloc(sizeof(obstacle));
-    copy->x = o->x;
-    copy->size = o->size;
-    copy->next = NULL;
-    copy->prev = NULL;
-    obstacle* last_copy = copy;
-    obstacle* o_cp = o;
-    while (o_cp != NULL) {
-        obstacle* new = (obstacle*)malloc(sizeof(obstacle));
-        new->x = o->x;
-        new->size = o->size;
-        new->next = NULL;
-        last_copy->next = new;
-        new->prev = last_copy;
-        last_copy = new;
-        o_cp = o_cp->next;
+    if (o == NULL) {
+        return NULL;
+    } else {
+        obstacle* copy = (obstacle*)malloc(sizeof(obstacle));
+        copy->x = o->x;
+        copy->size = o->size;
+        copy->next = NULL;
+        copy->prev = NULL;
+        obstacle* last_copy = copy;
+        obstacle* o_cp = o;
+        while (o_cp != NULL) {
+            obstacle* new = (obstacle*)malloc(sizeof(obstacle));
+            new->x = o->x;
+            new->size = o->size;
+            new->next = NULL;
+            last_copy->next = new;
+            new->prev = last_copy;
+            last_copy = new;
+            o_cp = o_cp->next;
+        }
+        return copy;
     }
-    return copy;
 }
 
 lane* copy_lane(lane* l, int p) {
@@ -83,4 +97,129 @@ lane* copy_lane(lane* l, int p) {
     return copy;
     }
     
+}
+
+obstacle* collides_without_game(lane *current_lane, player p) {
+    /* checks if the player collides with an obstacle */
+    obstacle* current_obstacle = current_lane->obstacles;
+    printf("bele\n");
+    while (current_obstacle != NULL) {
+        printf("dehe\n");
+        if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            return current_obstacle;
+        } else {
+            current_obstacle = current_obstacle->next;
+        }
+    }
+    return NULL;
+}
+
+
+couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p) {
+    couple c;
+    // returns a couple composed of the highscore and the move
+    if (deep < 0) {
+        c.score = high_score;
+        c.move = previous_move;
+        return c;
+    } else {
+        //update the map then do the five case
+        lane* current_lane = copy_lane(l,deep);
+        lane* player_lane;
+        while (current_lane->next != NULL) {
+            // Update lanes
+            switch (current_lane->type) {
+                case ROAD:
+                update_vehicles(current_lane);
+                break;
+                case WATER:
+                update_drowning_slots(current_lane);
+                break;
+                case TRACK:
+                update_trains(current_lane);
+                break;
+                default:
+                break;
+            }
+            if (current_lane->y == p.y) {
+                player_lane = current_lane;
+            }
+            current_lane = current_lane->next;
+
+            // Check for collisions with obstacles
+            obstacle* collided_obstacle = collides_without_game(player_lane, p);
+            bool drown_flag = false;
+            obstacle* on_log = NULL;
+            if(collided_obstacle != NULL) {
+                switch (player_lane->type) {
+                    case GRASS:
+                    break;
+                    case TRACK:
+                    c.score = high_score;
+                    c.move = NOT_POSSIBLE;
+                    return c;
+                    break;
+                    case ROAD:
+                    c.score = high_score;
+                    c.move = NOT_POSSIBLE;
+                    return c;
+                    break;
+                    case WATER:
+                    drown_flag = false;
+                    if (player_lane->speed != 0) {
+                        if (on_log != collided_obstacle) {
+                            on_log = collided_obstacle;
+                            p.x = collided_obstacle->x + abs((int) round(p.x - collided_obstacle->x));
+                        }
+                    }
+                    break;
+                    default:
+                    break;
+                }
+            }
+
+            if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
+                c.score = high_score;
+                c.move = NOT_POSSIBLE;
+                return c;
+            }
+        }
+
+        // case
+        couple c_up = minmax_rec(l->next, deep-1, high_score+1, GO_AHEAD, p);
+        couple c_down = minmax_rec(l->prev, deep-1, high_score, GO_DOWN, p);
+        couple c_left = minmax_rec(l, deep-1, high_score, GO_LEFT, p);
+        couple c_right = minmax_rec(l, deep-1, high_score, GO_RIGHT, p);
+        couple c_stay = minmax_rec(l, deep-1, high_score, STAY, p);
+
+        int m = fmax(c_stay.score,fmax(fmax(c_up.score, c_down.score), fmax(c_left.score, c_right.score)));
+        int move = NOT_POSSIBLE;
+
+        if (c_up.move != NOT_POSSIBLE && c_up.score==m) {
+            m = c_up.score;
+            move = GO_AHEAD;
+        }
+        if (c_down.move != NOT_POSSIBLE && c_down.score==m) {
+            m = c_down.score;
+            move = GO_DOWN;
+        }
+        if (c_left.move != NOT_POSSIBLE && c_left.score==m) {
+            m = c_left.score;
+            move = GO_LEFT;
+        }
+        if (c_right.move != NOT_POSSIBLE && c_right.score==m) {
+            m = c_right.score;
+            move = GO_RIGHT;
+        }
+        if (c_stay.move != NOT_POSSIBLE && c_stay.score==m) {
+            m = c_stay.score;
+            move = STAY;
+        }
+
+        couple res;
+        res.score = m;
+        res.move = move;
+        return res;
+
+    }
 }

@@ -8,6 +8,17 @@
 
 #include "minmax.h"
 
+
+#define LANE_WIDTH 24 // width of the displayed area
+#define UNPLAYABLE_WIDTH 2
+
+#define NOT_POSSIBLE 0
+#define GO_AHEAD 1
+#define GO_DOWN  2
+#define GO_RIGHT 3
+#define GO_LEFT  4
+#define STAY     5
+
 void test_copy_obstacle(void) {
     obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
     o1->next = NULL;
@@ -62,8 +73,25 @@ void test_copy_lane(void) {
     free_lanes(l4->next);
 }
 
+void test_minmax_rec_begining(void) {
+    // define the game
+    player p;
+    p.y=0;
+    p.x=LANE_WIDTH/2;
+    p.orientation=0;
+    p.skin=0;
+    lane* l = initialLanes();
+    
+    couple c = minmax_rec(l, 2, 0, STAY, p);
+    assert(c.score == 2);
+    assert(c.move == GO_AHEAD);
+
+    free_lanes(l);
+}
+
 int main(void) {
     test_copy_obstacle();
     test_copy_lane();
+    test_minmax_rec_begining();
     return 0;
 }
