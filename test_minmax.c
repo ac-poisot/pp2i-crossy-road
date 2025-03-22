@@ -46,20 +46,24 @@ void test_copy_lane(void) {
 
     lane* l4 = copy_lane(l1,2);
     assert(l4->prev == NULL);
-    assert(l4->next->next == NULL);
+    assert(l4 != l1); // must have different pointers
+    assert(l4->next != l2);
+    assert(l4->next->next != l3);
+    assert(l4->next->next->next == NULL);
     l4->speed = 4; // normally never obtains
     assert(l1->speed == s1);
-    l4->next->speed = 4;
+    l4->next->speed = 5;
     assert(l1->next->speed == s2);
     assert(l2->speed == s2);
     assert(l3->speed == s3);
     assert(l1->next->next->speed == s3);
 
     free_lanes(l1);
-    free_lanes(l4);
+    free_lanes(l4->next);
 }
 
 int main(void) {
     test_copy_obstacle();
+    test_copy_lane();
     return 0;
 }

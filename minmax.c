@@ -29,53 +29,58 @@ obstacle* copy_obstacle(obstacle* o) {
 }
 
 lane* copy_lane(lane* l, int p) {
-    // deep copy of the p lanes in front of and behind the player
-    lane* copy = (lane*)malloc(sizeof(lane));
-    copy->y = l->y;
-    copy->speed = l->speed;
-    copy->obst_size = l->obst_size;
-    copy->type = l->type;
-    copy->prev = NULL;
-    copy->next = NULL;
-    copy->obstacles = copy_obstacle(l->obstacles);
-    copy->coins = l->coins; // coins don't change for the moment, possible futur bug
-    lane* sauv = l;
-    lane* last_copied = copy;
-    int k = p;
-    // copies the next p lanes or stops before
-    while (k > 0 && sauv != NULL) {
-        lane* new_lane = (lane*)malloc(sizeof(lane));
-        new_lane->y = sauv->y;
-        new_lane->speed = sauv->speed;
-        new_lane->obst_size = sauv->obst_size;
-        new_lane->type = sauv->type;
-        new_lane->next = NULL;
-        new_lane->obstacles = copy_obstacle(sauv->obstacles);
-        new_lane->coins = sauv->coins;
-        new_lane->prev = last_copied;
-        last_copied->next = new_lane;
-        last_copied = new_lane;
-        sauv = sauv->next;
-        k = k - 1;
-    }
-    sauv = l;
-    last_copied = copy;
-    k = p;
-    // copies the previous p lanes or stops befores
-    while (k > 0 && sauv != NULL) {
-        lane* new_lane = (lane*)malloc(sizeof(lane));
-        new_lane->y = sauv->y;
-        new_lane->speed = sauv->speed;
-        new_lane->obst_size = sauv->obst_size;
-        new_lane->type = sauv->type;
-        new_lane->prev = NULL;
-        new_lane->obstacles = copy_obstacle(sauv->obstacles);
-        new_lane->coins = sauv->coins;
-        new_lane->next = last_copied;
-        last_copied->prev = new_lane;
-        last_copied = new_lane;
-        sauv = sauv->prev;
-        k = k - 1;
-    }
+    // deep copy of the p lanes in front of and behind the player but without coins
+    if (l == NULL) {
+        return NULL;
+    } else {
+        lane* copy = (lane*)malloc(sizeof(lane));
+        copy->y = l->y;
+        copy->speed = l->speed;
+        copy->obst_size = l->obst_size;
+        copy->type = l->type;
+        copy->prev = NULL;
+        copy->next = NULL;
+        copy->obstacles = copy_obstacle(l->obstacles);
+        copy->coins = NULL; //NULL for the moment, possible futur bug
+        // copies the next p lanes or stops before
+        lane* sauv = l;
+        lane* last_copied = copy;
+        int k = p;
+        while (k > 0 && sauv != NULL) {
+            lane* new_lane = (lane*)malloc(sizeof(lane));
+            new_lane->y = sauv->y;
+            new_lane->speed = sauv->speed;
+            new_lane->obst_size = sauv->obst_size;
+            new_lane->type = sauv->type;
+            new_lane->next = NULL;
+            new_lane->obstacles = copy_obstacle(sauv->obstacles);
+            new_lane->coins = NULL; //NULL for the moment, possible futur bug
+            new_lane->prev = last_copied;
+            last_copied->next = new_lane;
+            last_copied = new_lane;
+            sauv = sauv->next;
+            k = k - 1;
+        }
+        // copies the previous p lanes or stops befores
+        sauv = l->prev;
+        last_copied = copy;
+        k = p;
+        while (k > 0 && sauv != NULL) {
+            lane* new_lane = (lane*)malloc(sizeof(lane));
+            new_lane->y = sauv->y;
+            new_lane->speed = sauv->speed;
+            new_lane->obst_size = sauv->obst_size;
+            new_lane->type = sauv->type;
+            new_lane->prev = NULL; //NULL for the moment, possible futur bug
+            new_lane->obstacles = copy_obstacle(sauv->obstacles);
+            new_lane->coins = NULL;
+            new_lane->next = last_copied;
+            last_copied->prev = new_lane;
+            last_copied = new_lane;
+            sauv = sauv->prev;
+            k = k - 1;
+        }
     return copy;
+    }
+    
 }
