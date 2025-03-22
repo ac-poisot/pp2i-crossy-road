@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 
-#define LANE_WIDTH 30 // width of the displayed area
+#define LANE_WIDTH 24 // width of the displayed area
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
 #define PLAYER_START_Y 5 // starting position of the player

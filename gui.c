@@ -4,7 +4,7 @@
 #include <time.h>
 #include "core.h"
 
-#define WIDTH 640
+#define WIDTH 480
 #define HEIGHT 480
 
 #define TILE_SIDE 20
