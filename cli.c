@@ -23,8 +23,8 @@
 #define PRICE 5
 
 // Color pairs
-#define RED_TEXT 66
-#define COLOR_PAIR_LILY 99
+#define RED_TEXT ((LANE_TYPES+2)*10)
+#define COLOR_PAIR_LILY (WATER*10 + 9)
 
 void init_colors() {
     if (has_colors() == FALSE) {
@@ -38,29 +38,29 @@ void init_colors() {
 
     init_pair(COLOR_PAIR_LILY, COLOR_GREEN, COLOR_BLUE);
 
-    init_pair(GRASS, COLOR_BLACK, COLOR_GREEN);
-    init_pair(WATER, COLOR_BLACK, COLOR_BLUE);
-    init_pair(TRACK, COLOR_RED, COLOR_WHITE);
-    init_pair(ROAD, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(GRASS+LANE_TYPES, COLOR_YELLOW, COLOR_GREEN);
-    init_pair(WATER+LANE_TYPES, COLOR_YELLOW, COLOR_BLUE);
-    init_pair(TRACK+LANE_TYPES, COLOR_YELLOW, COLOR_WHITE);
-    init_pair(ROAD+LANE_TYPES, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(GRASS*10, COLOR_BLACK, COLOR_GREEN);
+    init_pair(WATER*10, COLOR_BLACK, COLOR_BLUE);
+    init_pair(TRACK*10, COLOR_RED, COLOR_WHITE);
+    init_pair(ROAD*10, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(1+GRASS*10, COLOR_YELLOW, COLOR_GREEN);
+    init_pair(1+WATER*10, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(1+TRACK*10, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(1+ROAD*10, COLOR_YELLOW, COLOR_BLACK);
 
 
 
     for (int i=0; i<PLAYER_COLORS; i++) {
-        init_pair(100+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLACK);
+        init_pair((LANE_TYPES+1)*10+i, UNLOCKABLE_COLORS[i], COLOR_BLACK);
 
-        init_pair(100+GRASS+(10*i), UNLOCKABLE_COLORS[i], COLOR_GREEN);
-        init_pair(100+WATER+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLUE);
-        init_pair(100+TRACK+(10*i), UNLOCKABLE_COLORS[i], COLOR_WHITE);
-        init_pair(100+ROAD+(10*i), UNLOCKABLE_COLORS[i], COLOR_BLACK);
+        init_pair(10*GRASS+(i+2), UNLOCKABLE_COLORS[i], COLOR_GREEN);
+        init_pair(10*WATER+(i+2), UNLOCKABLE_COLORS[i], COLOR_BLUE);
+        init_pair(10*TRACK+(i+2), UNLOCKABLE_COLORS[i], COLOR_WHITE);
+        init_pair(10*ROAD+(i+2), UNLOCKABLE_COLORS[i], COLOR_BLACK);
     }
 }
 
 void display_lane(lane* lane, int lane_count) {
-    attron(COLOR_PAIR(lane->type));
+    attron(COLOR_PAIR(lane->type*10 + 1));
 
     int screen_y = GAME_HEIGHT - lane_count + 1; // + 1 to avoid displaying the lane on the first line
     for (int i = 0; i < LANE_WIDTH; i++) {
@@ -70,11 +70,11 @@ void display_lane(lane* lane, int lane_count) {
     // Display the coins
     for (int i = 0; i < LANE_WIDTH; i++) {
         if (lane->coins[i]) {
-            attron(COLOR_PAIR((lane->type) + LANE_TYPES));
             mvprintw(screen_y, i, "$");
-            attroff(COLOR_PAIR((lane->type) + LANE_TYPES));
         }
     }
+
+    attroff(COLOR_PAIR(lane->type*10 + 1));
 
     // Display the obstacles
 
@@ -82,7 +82,7 @@ void display_lane(lane* lane, int lane_count) {
             attron(COLOR_PAIR(COLOR_PAIR_LILY));
         }
     else {
-        attron(COLOR_PAIR(lane->type));
+        attron(COLOR_PAIR(lane->type*10));
     }
 
     obstacle* current_obstacle = lane->obstacles;
@@ -96,10 +96,7 @@ void display_lane(lane* lane, int lane_count) {
                 break;
             case WATER:
                 if (lane->speed == 0) {
-                    attroff(COLOR_PAIR(lane->type));
-                    attron(COLOR_PAIR(COLOR_PAIR_LILY));
                     mvprintw(screen_y, i+current_obstacle->x, "0"); 
-                    attroff(COLOR_PAIR(COLOR_PAIR_LILY));
                 } else {
                     mvprintw(screen_y, round(i+current_obstacle->x), "=");   
                 }   
@@ -133,7 +130,7 @@ void display_lane(lane* lane, int lane_count) {
         attroff(COLOR_PAIR(COLOR_PAIR_LILY));
     }
     else {
-        attroff(COLOR_PAIR(lane->type));
+        attroff(COLOR_PAIR(lane->type*10));
     }
 
 }
@@ -145,9 +142,9 @@ void display(displayedData data) {
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
         if (current_lane->y == data.player.y) {
-            attron(COLOR_PAIR(100 + current_lane->type + 10*data.player.skin));
+            attron(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
             mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
-            attroff(COLOR_PAIR(100 + current_lane->type + 10*data.player.skin));
+            attroff(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
         }
         current_lane = current_lane->next;
         lane_count++;
@@ -276,9 +273,9 @@ int main(void) {
             mvprintw(0, 23, "Press m to return to menu");
 
             for (int i=0; i<PLAYER_COLORS; i++) {
-                attron(COLOR_PAIR(100+10*i));
+                attron(COLOR_PAIR((LANE_TYPES+1)*10+i));
                 mvprintw(GAME_HEIGHT/4 + 7, 5+(i*20), "*");
-                attroff(COLOR_PAIR(100+10*i));
+                attroff(COLOR_PAIR((LANE_TYPES+1)*10+i));
 
                 if (unlocked_colors[i]) {
                     if (player_color == i) {
