@@ -168,7 +168,6 @@ obstacle* generate_trees(void) {
     /* generates trees */
     /* generates a number of obtacles between 1 and 4 with x and adds it to obstacles*/
     int nb = (int)(1+(rand()%3));
-    printf("%d\n", nb);
     float x = (float)(rand()%(LANE_WIDTH/2));
     float current_x = x;
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
@@ -176,7 +175,6 @@ obstacle* generate_trees(void) {
     first_obst->prev = NULL;
     first_obst->next = NULL;
     first_obst->size = 1;
-    printf("%d\n", first_obst->size);
     obstacle *last_generated = first_obst;
     for (int i=0; i<nb-1 && (LANE_WIDTH-(int)current_x != 0); i=i+1) {
         current_x = current_x + 1 + (float)(rand()%(LANE_WIDTH-(int)current_x));
@@ -594,20 +592,23 @@ obstacle* collides(lane *current_lane, displayedData game) {
     return NULL;
 }
 
-displayedData move_camera(displayedData data) {
+displayedData move_camera(displayedData data, float speed) {
     // Move the camera
-    data.cameraY++;
-    data.camera_first_lane = data.camera_first_lane->next;
 
-    // Add a new lane
-    lane* current_lane = data.camera_first_lane;
-    while (current_lane->next != NULL) {
-        current_lane = current_lane->next;
+    if ((int) (data.cameraY+speed) - (int) data.cameraY == 1) {
+        data.camera_first_lane = data.camera_first_lane->next;
+
+        // Add a new lane
+        lane* current_lane = data.camera_first_lane;
+        while (current_lane->next != NULL) {
+            current_lane = current_lane->next;
+        }
+
+        //current_lane = generate_lane(current_lane, WATER);
+        generateNNewLanes(current_lane, 1);
     }
 
-    //current_lane = generate_lane(current_lane, WATER);
-    generateNNewLanes(current_lane, 1);
-
+    data.cameraY += speed;
     return data;
 }
 

@@ -83,5 +83,5 @@ void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
 obstacle* collides(lane *current_lane, displayedData game);
-displayedData move_camera(displayedData data);
+displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);

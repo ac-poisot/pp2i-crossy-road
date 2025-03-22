@@ -345,7 +345,7 @@ int main(void) {
             // Camera movement, automatic or if player is in the top quarter of the game
 
             if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4)) { 
-                game = move_camera(game);
+                game = move_camera(game, 1);
                 move_timer = GAME_SPEED;
             } else {
                 move_timer--;
