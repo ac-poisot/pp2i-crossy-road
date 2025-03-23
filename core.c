@@ -365,7 +365,7 @@ void update_vehicles(lane* l) {
             }
             free(c);
             break;
-        } else if ((c->x + l->speed + l->obst_size < 1) && (l->speed < 0)){ // if the vehicle is going out of the lane at the left side, we delete it
+        } else if ((c->x + l->speed + l->obst_size < 0) && (l->speed < 0)){ // if the vehicle is going out of the lane at the left side, we delete it
             c->next->prev = NULL;
             obstacle* nc = c->next;
             free(c);
@@ -422,7 +422,7 @@ void update_drowning_slots(lane* l) {
             }
             free(c);
             break;
-        } else if ((c->x + l->speed + c->size < 1) && (l->speed < 0)){ // if the slot is going out of the lane at the left side, we delete it
+        } else if ((c->x + l->speed + c->size < 0) && (l->speed < 0)){ // if the slot is going out of the lane at the left side, we delete it
             c->next->prev = NULL;
             obstacle* nc = c->next;
             free(c);
@@ -478,7 +478,7 @@ void update_trains(lane* l) {
             }
             free(c);
             break;
-        } else if ((c->x + c->size < 1) && (l->speed < 0)){ // if the train is going out of the lane at the left side, we delete it
+        } else if ((c->x + c->size < 0) && (l->speed < 0)){ // if the train is going out of the lane at the left side, we delete it
             c->next->prev = NULL;
             obstacle* nc = c->next;
             free(c);
