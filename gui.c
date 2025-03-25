@@ -4,12 +4,25 @@
 #include <time.h>
 #include "core.h"
 
-#define WIDTH 480
-#define HEIGHT 480
+#define WIDTH 480*2
+#define HEIGHT 480*2
 
-#define TILE_SIDE 20
+#define TILE_SIDE 20*2
 #define GAME_HEIGHT (WIDTH/TILE_SIDE)
 #define GAME_SPEED 0.03 // In pixels per frame, speed of the scrolling
+
+enum {
+    TREE = LANE_TYPES + 1,
+    CAR1,
+    CAR2,
+    LILY,
+    LOG_SINGLE,
+    LOG_MID,
+    LOG_EDGE,
+    TRAIN_MID,
+    TRAIN_EDGE,
+    END_TEXTURES
+};
 
 #define REFRESH_RATE 60
 
@@ -28,30 +41,98 @@ SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, i
     return texture;
 }
 
-void load_textures(SDL_Renderer* renderer, SDL_Texture** lane_textures) {
-    lane_textures[GRASS] = create_texture(renderer, "sprites/grass.png", TILE_SIDE, TILE_SIDE);
-    lane_textures[WATER] = create_texture(renderer, "sprites/water.png", TILE_SIDE, TILE_SIDE);
-    lane_textures[ROAD] = create_texture(renderer, "sprites/road.png", TILE_SIDE, TILE_SIDE);   
-    lane_textures[TRACK] = create_texture(renderer, "sprites/track.png", TILE_SIDE, TILE_SIDE);
+void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
+    textures[GRASS] = create_texture(renderer, "sprites/grass.png", TILE_SIDE, TILE_SIDE);
+    textures[WATER] = create_texture(renderer, "sprites/water.png", TILE_SIDE, TILE_SIDE);
+    textures[ROAD] = create_texture(renderer, "sprites/road.png", TILE_SIDE, TILE_SIDE);   
+    textures[TRACK] = create_texture(renderer, "sprites/track.png", TILE_SIDE, TILE_SIDE);
+
+    textures[TREE] = create_texture(renderer, "sprites/tree.png", TILE_SIDE, TILE_SIDE);
+    textures[CAR1] = create_texture(renderer, "sprites/car1.png", TILE_SIDE, TILE_SIDE);
+    textures[CAR2] = create_texture(renderer, "sprites/car2.png", TILE_SIDE*2, TILE_SIDE);
+    textures[LILY] = create_texture(renderer, "sprites/lily.png", TILE_SIDE, TILE_SIDE);
+    textures[LOG_SINGLE] = create_texture(renderer, "sprites/log_single.png", TILE_SIDE, TILE_SIDE);
+    textures[LOG_EDGE] = create_texture(renderer, "sprites/log_edge.png", TILE_SIDE, TILE_SIDE);
+    textures[LOG_MID] = create_texture(renderer, "sprites/log_mid.png", TILE_SIDE, TILE_SIDE);
+    textures[TRAIN_EDGE] = create_texture(renderer, "sprites/train_edge.png", TILE_SIDE, TILE_SIDE);
+    textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 }
 
-void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** lane_textures) {
+void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
 
     float screen_y = GAME_HEIGHT - lane_count;
 
     for (int i = 0; i < LANE_WIDTH; i++) {
         SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
         SDL_Rect destRect = {i*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-        SDL_RenderCopy(renderer, lane_textures[lane->type], &spriteRect, &destRect);
+        SDL_RenderCopy(renderer, textures[lane->type], &spriteRect, &destRect);
+    }
+
+
+    // Display obstacles
+    obstacle* current_obstacle = lane->obstacles;
+    int flip = (lane->speed < 0);
+
+    if (current_obstacle != NULL) {
+        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+    
+        while (current_obstacle != NULL) {
+            SDL_Rect destRect = {current_obstacle->x*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+
+            switch (lane->type)
+            {
+            case GRASS:
+                SDL_RenderCopy(renderer, textures[TREE], &spriteRect, &destRect);
+                break;
+            case WATER:
+                if (lane->speed == 0) {
+                    SDL_RenderCopy(renderer, textures[LILY], &spriteRect, &destRect);
+                    } else {
+                        if (current_obstacle->size > 1) {
+                            SDL_RenderCopyEx(renderer, textures[LOG_EDGE], &spriteRect, &destRect, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+                            for (int i=1; i<(current_obstacle->size-1); i++) {
+                                SDL_Rect destRect2 = {(current_obstacle->x+i)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                                SDL_RenderCopy(renderer, textures[LOG_MID], &spriteRect, &destRect2);
+                            }
+                            SDL_Rect destRect3 = {(current_obstacle->x+current_obstacle->size-1)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                            SDL_RenderCopy(renderer, textures[LOG_EDGE], &spriteRect, &destRect3);
+                        } else {
+                            SDL_RenderCopy(renderer, textures[LOG_SINGLE], &spriteRect, &destRect);
+                        }
+                }   
+                break;
+            case TRACK:
+                SDL_RenderCopyEx(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect, 0.0, NULL, flip);
+                for (int i=1; i<(current_obstacle->size); i++) {
+                    SDL_Rect destRect2 = {(current_obstacle->x+i)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                    SDL_RenderCopy(renderer, textures[TRAIN_MID], &spriteRect, &destRect2);
+                }
+                SDL_Rect destRect3 = {(current_obstacle->x+current_obstacle->size-1)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                SDL_RenderCopy(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect3);
+                break;
+            case ROAD:
+                if (current_obstacle->size == 1) {
+                    SDL_RenderCopyEx(renderer, textures[CAR1], &spriteRect, &destRect, 0.0, NULL, flip);
+                } else {
+                    SDL_Rect spriteRect2 = {0, 0, TILE_SIDE*2, TILE_SIDE};
+                    SDL_Rect destRect2 = {current_obstacle->x*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE*2, TILE_SIDE};
+                    SDL_RenderCopyEx(renderer, textures[CAR2], &spriteRect2, &destRect2, 0.0, NULL, flip);
+                }
+                break;  
+            default:
+                break;
+            }
+        current_obstacle = current_obstacle->next;
+        }
     }
 }
 
-void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** lane_textures) {
+void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
     float lane_count = (int)(data.cameraY) - data.cameraY;
     while (lane_count <= GAME_HEIGHT+1) {
-        display_lane(current_lane, lane_count, renderer, lane_textures);
+        display_lane(current_lane, lane_count, renderer, textures);
         current_lane = current_lane->next;
         lane_count++;
     }
@@ -68,8 +149,8 @@ int main() {
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture** lane_textures = (SDL_Texture**) malloc((LANE_TYPES+1)*(sizeof(SDL_Texture*)));
-    load_textures(renderer, lane_textures);
+    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
+    load_textures(renderer, textures);
 
     SDL_Event event;
     int running = 1;
@@ -97,9 +178,31 @@ int main() {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
 
-        display(data_test, renderer, lane_textures);
+        display(data_test, renderer, textures);
 
         data_test = move_camera(data_test, GAME_SPEED);
+
+        lane* current_lane = data_test.camera_first_lane;
+        while (current_lane->next != NULL) {
+
+            // Update lanes
+
+            switch (current_lane->type) {
+                case ROAD:
+                update_vehicles(current_lane);
+                break;
+                case WATER:
+                update_drowning_slots(current_lane);
+                break;
+                case TRACK:
+                update_trains(current_lane);
+                break;
+                default:
+                break;
+            }
+
+            current_lane = current_lane->next;
+        }
 
         SDL_RenderPresent(renderer);
         
@@ -107,12 +210,12 @@ int main() {
     }
 
 
-    for (int i=0; i<LANE_TYPES; i++) {
-        SDL_DestroyTexture(lane_textures[i+1]);
+    for (int i=0; i<END_TEXTURES-1; i++) {
+        SDL_DestroyTexture(textures[i+1]);
     }
 
     free_lanes(data_test.first_lane);
-    free(lane_textures);
+    free(textures);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
