@@ -118,15 +118,19 @@ obstacle* collides_without_game(lane *current_lane, player p) {
 couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p) {
     couple c;
     // returns a couple composed of the highscore and the move
-    if (deep < 0) {
+    if (deep <= 0 || l == NULL ) {
         c.score = high_score;
         c.move = previous_move;
         return c;
     } else {
         //update the map then do the five case
         lane* current_lane = copy_lane(l,deep);
-        lane* player_lane;
-        while (current_lane->next != NULL) {
+        lane* very_first_of_current = current_lane;
+        while (very_first_of_current->prev != NULL) {
+            very_first_of_current = very_first_of_current->prev;
+        }
+        lane* player_lane = l;
+        while (current_lane != NULL && current_lane->next != NULL) {
             // Update lanes
             switch (current_lane->type) {
                 case ROAD:
@@ -157,11 +161,13 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
                     case TRACK:
                     c.score = high_score;
                     c.move = NOT_POSSIBLE;
+                    free_lanes(very_first_of_current);
                     return c;
                     break;
                     case ROAD:
                     c.score = high_score;
                     c.move = NOT_POSSIBLE;
+                    free_lanes(very_first_of_current);
                     return c;
                     break;
                     case WATER:
@@ -178,9 +184,12 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
                 }
             }
 
+
+
             if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
                 c.score = high_score;
                 c.move = NOT_POSSIBLE;
+                free_lanes(very_first_of_current);
                 return c;
             }
         }
@@ -219,6 +228,7 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
         couple res;
         res.score = m;
         res.move = move;
+        free_lanes(very_first_of_current);
         return res;
 
     }

@@ -70,7 +70,7 @@ void test_copy_lane(void) {
     assert(l1->next->next->speed == s3);
 
     free_lanes(l1);
-    free_lanes(l4->next);
+    free_lanes(l4);
 }
 
 void test_minmax_rec_begining(void) {
@@ -82,8 +82,8 @@ void test_minmax_rec_begining(void) {
     p.skin=0;
     lane* l = initialLanes();
     
-    couple c = minmax_rec(l, 2, 0, STAY, p);
-    assert(c.score == 2);
+    couple c = minmax_rec(l, 3, 0, STAY, p);
+    assert(c.score == 3);
     assert(c.move == GO_AHEAD);
 
     free_lanes(l);
