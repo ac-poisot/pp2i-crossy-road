@@ -47,7 +47,7 @@ typedef struct lane {
 } lane;
 
 typedef struct player {
-    int y; // position of the player
+    float y; // position of the player
     float x; // position of the player
     int orientation; // orientation of the player
     int skin; // skin of the player (?)

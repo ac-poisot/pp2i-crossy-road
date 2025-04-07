@@ -4,15 +4,33 @@
 #include <time.h>
 #include "core.h"
 
-#define WIDTH 480*2
-#define HEIGHT 480*2
+#define WIDTH 960
+#define HEIGHT 960
 
-#define TILE_SIDE 20*2
-#define GAME_HEIGHT (WIDTH/TILE_SIDE)
-#define GAME_SPEED 0.03 // In pixels per frame, speed of the scrolling
+#define TILE_SIDE 40
+
+#define GAME_HEIGHT (HEIGHT/TILE_SIDE)
+#define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
+#define ANIM_LENGTH 10 // In frames, time it takes for the player to get to the next tile
+#define PLAYER_SPEED (1.0f /ANIM_LENGTH) // In tiles per frame, speed of the player
+
+#define PLAYER_SKINS 1 // Number of skins available
+
+#define UP 1
+#define RIGHT 90
+#define DOWN 180
+#define LEFT 270
 
 enum {
-    TREE = LANE_TYPES + 1,
+    MENU,
+    GAME,
+    GAME_OVER,
+    SHOP
+};
+
+enum {
+    SKIN1 = LANE_TYPES + 1,
+    TREE,
     CAR1,
     CAR2,
     LILY,
@@ -56,6 +74,8 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[LOG_MID] = create_texture(renderer, "sprites/log_mid.png", TILE_SIDE, TILE_SIDE);
     textures[TRAIN_EDGE] = create_texture(renderer, "sprites/train_edge.png", TILE_SIDE, TILE_SIDE);
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
+
+    textures[SKIN1] = create_texture(renderer, "sprites/skin1.png", TILE_SIDE, TILE_SIDE);
 }
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
@@ -127,15 +147,25 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
     }
 }
 
+void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures) {
+    SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+    SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+    SDL_RenderCopyEx(renderer, textures[player.skin+SKIN1], &spriteRect, &destRect, player.orientation, NULL, false);
+}
+
 void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
+    
     float lane_count = (int)(data.cameraY) - data.cameraY;
     while (lane_count <= GAME_HEIGHT+1) {
         display_lane(current_lane, lane_count, renderer, textures);
         current_lane = current_lane->next;
         lane_count++;
     }
+
+    displayPlayer(data.player, data.cameraY, renderer, textures);
+
 }
 
 
@@ -154,54 +184,124 @@ int main() {
 
     SDL_Event event;
     int running = 1;
+    bool action = false;
 
 
     displayedData data_test = init_game(GAME_HEIGHT);
 
+    // Global variables
+    int game_state = GAME;
+    // int purse = 0;
+    // int high_score = 0;
+    // int player_skin = 0;
+    // bool unlocked_skins[PLAYER_SKINS] = {false};
+    // unlocked_skins[0] = true;
+
+    int player_anim = 0;
+    int buffer = 0;
+    bool buffer_key_flag = true;
+
+
     while (running) {
-        if (SDL_PollEvent(&event)) {
+        action = SDL_PollEvent(&event);
+
+        if (action) {
             switch (event.type) {
             case SDL_QUIT:
                 running = 0;
                 break;
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym) {
-                case SDLK_DOWN:
-                    break;
-                }
-                break;
-            case SDL_KEYUP:
+            default:
                 break;
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(renderer);
-
-        display(data_test, renderer, textures);
-
-        data_test = move_camera(data_test, GAME_SPEED);
-
-        lane* current_lane = data_test.camera_first_lane;
-        while (current_lane->next != NULL) {
-
-            // Update lanes
-
-            switch (current_lane->type) {
-                case ROAD:
-                update_vehicles(current_lane);
-                break;
-                case WATER:
-                update_drowning_slots(current_lane);
-                break;
-                case TRACK:
-                update_trains(current_lane);
-                break;
-                default:
-                break;
+        switch(game_state) {
+            case MENU:
+            break;
+            case GAME:
+            if (action) {
+                switch (event.type) {
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym) {
+                    case SDLK_DOWN:
+                        buffer = DOWN;
+                        break;
+                    case SDLK_UP:
+                        buffer = UP;
+                        break;
+                    case SDLK_LEFT:
+                        buffer = LEFT;
+                        break;
+                    case SDLK_RIGHT:
+                        buffer = RIGHT;
+                        break;
+                    }
+                    break;
+                case SDL_KEYUP:
+                    buffer_key_flag = true;
+                    break;
+                }
+            }
+    
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            SDL_RenderClear(renderer);
+    
+            display(data_test, renderer, textures);
+    
+            data_test = move_camera(data_test, GAME_SPEED);
+    
+            lane* current_lane = data_test.camera_first_lane;
+            while (current_lane->next != NULL) {
+    
+                // Update lanes
+    
+                switch (current_lane->type) {
+                    case ROAD:
+                    update_vehicles(current_lane);
+                    break;
+                    case WATER:
+                    update_drowning_slots(current_lane);
+                    break;
+                    case TRACK:
+                    update_trains(current_lane);
+                    break;
+                    default:
+                    break;
+                }
+    
+                current_lane = current_lane->next;
             }
 
-            current_lane = current_lane->next;
+            // Update player*
+            
+            if (!player_anim && buffer && buffer_key_flag) {
+                data_test.player.orientation = buffer;
+                player_anim = ANIM_LENGTH;
+                buffer_key_flag = false;
+                buffer = 0;
+            }
+
+            if (player_anim) {
+                switch (data_test.player.orientation) {
+                    case UP:
+                        data_test.player.y += PLAYER_SPEED;
+                        break;
+                    case DOWN:
+                        data_test.player.y -= PLAYER_SPEED;
+                        break;
+                    case RIGHT:
+                        data_test.player.x += PLAYER_SPEED;
+                        break;
+                    case LEFT:
+                        data_test.player.x -= PLAYER_SPEED;
+                        break;
+                }
+                player_anim--;
+            }
+    
+            break;
+            default:
+            break;
         }
 
         SDL_RenderPresent(renderer);
