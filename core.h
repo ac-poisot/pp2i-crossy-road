@@ -64,6 +64,9 @@ typedef struct displayedData {
 
 
 
+lane* cut_car(lane* l,int x);
+lane* cut_train(lane* l);
+lane* cut_tree(lane* l, int yet);
 void free_obstacles(obstacle* first_obstacle);
 void free_lanes(lane* first_lane);
 int biome(int* boules);

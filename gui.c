@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_keycode.h>
 #include <stdio.h>
 #include <time.h>
 #include "core.h"
@@ -139,7 +140,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
 }
 
 
-int main() {
+int main(void) {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
 
@@ -164,11 +165,22 @@ int main() {
             case SDL_QUIT:
                 running = 0;
                 break;
+
             case SDL_KEYDOWN:
                 switch (event.key.keysym.sym) {
                 case SDLK_DOWN:
                     break;
+                case SDLK_UP:
+                    break;
+                case SDLK_RIGHT:
+                    break;
+                case SDLK_LEFT:
+                    break;
+                case SDLK_q:
+                    running = 0;
+                    break;
                 }
+
                 break;
             case SDL_KEYUP:
                 break;

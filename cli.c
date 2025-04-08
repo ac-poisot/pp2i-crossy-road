@@ -188,9 +188,48 @@ void display_shop(void) {
 
 }
 
+displayedData power2 (displayedData data) {
+    return data;
+}
+displayedData power3 (displayedData data) {
+    return data;
+}
+
+displayedData power4 (displayedData data) {
+    lane* current_lane = data.camera_first_lane;
+    while (current_lane->y !=data.player.y) {
+        current_lane = current_lane->next;
+    }
+    lane* l1 = empty_lane(current_lane->prev, GRASS);
+    lane* l2 = empty_lane(l1, GRASS);
+    lane* l3 = empty_lane(l2, GRASS);
+    l1->next = l2;
+    l2->next = l3;
+    l3->next = current_lane->next->next->next;
+    current_lane->prev->next = l1;
+    current_lane->next->next->next->prev = l3;
+    current_lane->prev = NULL;
+    current_lane->next->next->next = NULL;
+    free_lanes(current_lane);
+    return data;
+}
+char* power_affichage(int num) {
+    if (num==0) {return "          ";}
+    if (num==1) {return " x        ";}
+    if (num==2) {return " x x      ";}
+    if (num==3) {return " x x x    ";}
+    if (num==4) {return " x x x x  ";}
+    if (num==5) {return " x x x x x";}
+    else {return "AAA";}
+}
+
+
+
+
 int main(void) {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
+    struct timespec remaining2, request2 = { 0, 3000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
 
     srand(time(NULL));
     initscr();
@@ -216,10 +255,20 @@ int main(void) {
 
     bool menu_anim = true;
     int star = 0;
-    
+    int time_powers = 0;
+    int time_powers3 = 0;
+    int time_powers2 = 0;
+    int time_powers4 = 0;
+    int tank = 0;
+    int jesus = 0;
 
+    int modif = 1;
+    int power = 0;
     while (true) {
         int ch = getch(); //Get the inputs from the keyboard
+
+        
+
 
         switch (game_state) {
 
@@ -316,28 +365,79 @@ int main(void) {
             break;
 
             case GAME:
-
+            if (time_powers !=0) {
+                time_powers--;
+            }
+            if (time_powers3 !=0) {
+                time_powers3 = time_powers3 - 1;
+            }
+            if (time_powers == 0) {
+                jesus = 0;
+            }
+            if ( time_powers3 == 0) {
+                tank = 0;
+            }
+            if (time_powers2 !=0) {
+                time_powers2 = time_powers2 - 1;
+            }
+    
+            if (time_powers4 !=0) {
+                time_powers4--;
+                if (time_powers4 == 0) {
+                    game = power4(game);
+                }
+            }
             current_y = game.player.y;
             current_x = game.player.x;
 
             switch (ch) {
                 case KEY_UP:
-                if (game.player.y < game.cameraY) {
-                    game.player.y++;
-                }
+                    if (game.player.y < game.cameraY) {
+                        game.player.y++;
+                    }
                 break;
                 case KEY_DOWN:
-                game.player.y--;
-                break;
+                    game.player.y--;
+                    break;
                 case KEY_LEFT:
-                if (game.player.x > UNPLAYABLE_WIDTH)
-                game.player.x--;
-                break;
+                    if (game.player.x > UNPLAYABLE_WIDTH)
+                    game.player.x--;
+                    break;
                 case KEY_RIGHT:
-                if (game.player.x < LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
-                    game.player.x++;
-                }
-                break;
+                    if (game.player.x < LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+                        game.player.x++;
+                    }
+                    break;
+                case 'a'://super_power
+                    if (power==1) {//Marcher sur l'eau
+                        jesus = 1;
+                        time_powers = 30 * REFRESH_RATE;
+                        power = 0;
+                    }
+                    if (power==2) {//ralentis le temps 
+                        time_powers2 = 30 * REFRESH_RATE;
+                        power = 0;
+                    }
+                    if (power==3) {// le tank
+                        tank = 1;
+                        time_powers3 = 30 * REFRESH_RATE;
+                        power = 0;
+                    }
+                    if (power==4) {// applatis les terrains
+                        time_powers4 = 5 * REFRESH_RATE;
+                        power = 0;
+                    }
+                    if (power==5) {//money gang
+                        modif++;
+                        power = 0;
+                    }
+                    break;
+                case 'z':
+                    power++;
+                    break;
+                case 'd'://debogage only
+                    game = power4(game);
+                    break;
                 default:
                 break;
             }
@@ -385,13 +485,18 @@ int main(void) {
                 // Check for collisions with coins
                 for (int i = 0; i < LANE_WIDTH; i++) {
                     if (player_lane->coins[i] && game.player.x == i) {
-                        purse++;
+                        purse = purse + modif; // easy miney
                         player_lane->coins[i] = false;
                     }
                 }
 
                 if (player_lane->type == WATER) {
-                    drown_flag = true; // set this to false to disable drowning
+                    if (jesus==0) {
+                        drown_flag = true; // set this to false to disable drowning
+                    }
+                    else {// if jesus is active, then the player don't collide to water
+                        drown_flag = false;
+                    }
                     }
                 else {
                     drown_flag = false;
@@ -413,14 +518,29 @@ int main(void) {
                 if(collided_obstacle != NULL) {
                     switch (player_lane->type) {
                         case GRASS:
-                        game.player.x = current_x;
-                        game.player.y = current_y;
+                        if (tank==1) {
+                            player_lane = cut_tree(player_lane,game.player.x);
+                        }
+                        else {
+                            game.player.x = current_x;
+                            game.player.y = current_y;
+                        }
                         break;
-                        case TRACK:
-                        game_state = GAME_OVER;
+                        case TRACK://PB : the train die only if collision from the front
+                        if (tank==1) {
+                            player_lane = cut_train(player_lane);
+                        }
+                        else {
+                            game_state = GAME_OVER;
+                        }
                         break;
                         case ROAD:
-                        game_state = GAME_OVER;
+                        if (tank==1) {
+                            player_lane = cut_car(player_lane,game.player.x);
+                        }
+                        else {
+                            game_state = GAME_OVER;
+                        }
                         break;
                         case WATER:
                         drown_flag = false;
@@ -447,12 +567,27 @@ int main(void) {
                 display(game);
                 // Display the purse
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
+                //mvprintw(23, 0,"%d / %d / %d / 0 / %d // %d" ,(time_powers/REFRESH_RATE), time_powers2/REFRESH_RATE, time_powers3/REFRESH_RATE , modif, power );
+                mvprintw(22, 0, "1 :%s",power_affichage(time_powers/(REFRESH_RATE*5)));
+                mvprintw(23, 0, "2 :%s",power_affichage(time_powers2/(REFRESH_RATE*5)));
+                mvprintw(24, 0, "3 :%s",power_affichage(time_powers3/(REFRESH_RATE*5)));
+                mvprintw(25, 0, "4 :%s",power_affichage(time_powers4/(REFRESH_RATE)));
+                mvprintw(26, 0, "5 :%d x 1$",modif);
+                mvprintw(27, 0, "power : %d", power);
+
                 refresh();
             }
         
             break;
 
             case GAME_OVER:
+            jesus = 0;
+            time_powers = 0;
+            time_powers2 = 0;
+            time_powers3 = 0;
+            time_powers4 = 0;
+            modif = 1;
+            power = 0;
             mvprintw(0, 0, "Final score: %d", game.player.y);
             mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
@@ -470,7 +605,12 @@ int main(void) {
             mvprintw(0, 0, "ERROR");
             break;
         }
-        nanosleep(&request, &remaining); 
+        if (time_powers2 ==0) {//to slow the time
+            nanosleep(&request, &remaining); 
+        }
+        else {
+            nanosleep(&request2, &remaining2);
+        }
     }
 
     endwin();

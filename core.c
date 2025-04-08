@@ -330,6 +330,55 @@ lane* generate_lane(lane* prev_lane, int type) {
     
     return new_lane;
 }
+lane* cut_tree(lane* l, int x) {
+    obstacle* temp = l->obstacles;
+    while (temp !=NULL && temp->x < x) {
+        temp = temp->next;
+    }
+    if (temp != NULL && temp->x == x) {
+        if (temp->prev == NULL) {
+            l->obstacles = temp->next;
+            if (temp->next != NULL) {
+                temp->next->prev = NULL;
+            }
+        }
+        else {
+            temp->prev->next = temp->next;
+            if (temp->next != NULL) {
+                temp->next->prev = temp->prev;
+            }
+        }
+        free(temp);
+    }
+    return l;
+}
+lane* cut_train(lane* l) {
+    free_obstacles(l->obstacles);
+    l->obstacles = NULL;
+    return l;
+}
+lane* cut_car(lane* l,int x) {
+    obstacle* temp = l->obstacles;
+    while (temp !=NULL && temp->x < x) {
+        temp = temp->next;
+    }
+    if (temp != NULL && temp->x <= x+1 && temp->x >= x-1) {
+        if (temp->prev == NULL) {
+            l->obstacles = temp->next;
+            if (temp->next != NULL) {
+                temp->next->prev = NULL;
+            }
+        }
+        else {
+            temp->prev->next = temp->next;
+            if (temp->next != NULL) {
+                temp->next->prev = temp->prev;
+            }
+        }
+        free(temp);
+    }
+    return l;
+}// possible bugs
 
 
 void update_vehicles(lane* l) {
