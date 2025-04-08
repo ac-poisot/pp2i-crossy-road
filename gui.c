@@ -172,7 +172,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
 int main() {
 
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
-
+    srand(time(NULL));
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);
 
@@ -191,15 +191,17 @@ int main() {
 
     // Global variables
     int game_state = GAME;
-    // int purse = 0;
+    int purse = 0;
+    bool drown_flag = false;
+    bool blocked_path = false;
     // int high_score = 0;
     // int player_skin = 0;
     // bool unlocked_skins[PLAYER_SKINS] = {false};
     // unlocked_skins[0] = true;
 
-    int player_anim = 0;
-    int buffer = 0;
-    bool buffer_key_flag = true;
+    int player_anim = 0; // Timer for player animation (0 = stopped, anything else = moving)
+    int buffer = 0; // Stores the next movement to be performed
+    bool buffer_key_flag = true; // Whether the key for the last movement has been released or not
 
 
     while (running) {
@@ -216,9 +218,9 @@ int main() {
         }
 
         switch(game_state) {
-            case MENU:
+        case MENU:
             break;
-            case GAME:
+        case GAME:
             if (action) {
                 switch (event.type) {
                 case SDL_KEYDOWN:
@@ -243,14 +245,15 @@ int main() {
                 }
             }
     
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-            SDL_RenderClear(renderer);
     
             display(data_test, renderer, textures);
     
             data_test = move_camera(data_test, GAME_SPEED);
     
             lane* current_lane = data_test.camera_first_lane;
+            lane* player_top_lane = NULL;
+            lane* player_bottom_lane = NULL;
+
             while (current_lane->next != NULL) {
     
                 // Update lanes
@@ -268,13 +271,134 @@ int main() {
                     default:
                     break;
                 }
-    
+                if (current_lane->y == ceil(data_test.player.y)) {
+                    player_top_lane = current_lane;
+                } else if (current_lane->y == floor(data_test.player.y)) {
+                    player_bottom_lane = current_lane;
+                }
                 current_lane = current_lane->next;
             }
 
-            // Update player*
+            // Collision check
+            blocked_path = false;
+
+            if (player_top_lane != NULL) {
+
+                // Check for collisions with coins
+                for (int i = 0; i < LANE_WIDTH; i++) {
+                    if (player_top_lane->coins[i] && data_test.player.x == i) {
+                        purse++;
+                        player_top_lane->coins[i] = false;
+                    }
+                }
+
+                if (player_top_lane->type == WATER) {
+                    drown_flag = true; // set this to false to disable drowning
+                    }
+                else {
+                    drown_flag = false;
+                    }
+                
+                // if (player_lane->type == WATER && player_lane->speed != 0) {
+                //     if (on_log != NULL) {
+                //         game.player.x += player_lane->speed;
+                //     }
+                // } else {
+                //     on_log = NULL;
+                //     game.player.x = round(game.player.x);
+                //     game.player.y = round(game.player.y);
+                // }
+
+                // Check for collisions with obstacles
+                obstacle* collided_obstacle = collides(player_top_lane, data_test);
+
+                if(collided_obstacle != NULL) {
+                    switch (player_top_lane->type) {
+                        case GRASS:
+                        blocked_path = true;
+                        break;
+                        case TRACK:
+                        game_state = GAME_OVER;
+                        break;
+                        case ROAD:
+                        game_state = GAME_OVER;
+                        break;
+                        case WATER:
+                        drown_flag = false;
+                        // if (player_lane->speed != 0) {
+                        //     if (on_log != collided_obstacle) {
+                        //         on_log = collided_obstacle;
+                        //         game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
+                        //     }
+                        // }
+                        break;
+                        default:
+                        break;
+                    }
+                }
+
+            }
+
+            if (player_bottom_lane != NULL) {
+
+                // Check for collisions with coins
+                for (int i = 0; i < LANE_WIDTH; i++) {
+                    if (player_bottom_lane->coins[i] && data_test.player.x == i) {
+                        purse++;
+                        player_bottom_lane->coins[i] = false;
+                    }
+                }
+
+                if (player_bottom_lane->type == WATER) {
+                    drown_flag = true; // set this to false to disable drowning
+                    }
+                else {
+                    drown_flag = false;
+                    }
+                
+                // if (player_lane->type == WATER && player_lane->speed != 0) {
+                //     if (on_log != NULL) {
+                //         game.player.x += player_lane->speed;
+                //     }
+                // } else {
+                //     on_log = NULL;
+                //     game.player.x = round(game.player.x);
+                //     game.player.y = round(game.player.y);
+                // }
+
+                // Check for collisions with obstacles
+                obstacle* collided_obstacle = collides(player_bottom_lane, data_test);
+
+                if(collided_obstacle != NULL) {
+                    switch (player_bottom_lane->type) {
+                        case GRASS:
+                        blocked_path = true;
+                        break;
+                        case TRACK:
+                        game_state = GAME_OVER;
+                        break;
+                        case ROAD:
+                        game_state = GAME_OVER;
+                        break;
+                        case WATER:
+                        drown_flag = false;
+                        // if (player_lane->speed != 0) {
+                        //     if (on_log != collided_obstacle) {
+                        //         on_log = collided_obstacle;
+                        //         game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
+                        //     }
+                        // }
+                        break;
+                        default:
+                        break;
+                    }
+                }
+
+            }
+
+            // Update player
             
-            if (!player_anim && buffer && buffer_key_flag) {
+            if (!player_anim && buffer && buffer_key_flag && !blocked_path) {
                 data_test.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;
                 buffer_key_flag = false;
@@ -282,30 +406,46 @@ int main() {
             }
 
             if (player_anim) {
-                switch (data_test.player.orientation) {
-                    case UP:
-                        data_test.player.y += PLAYER_SPEED;
-                        break;
-                    case DOWN:
-                        data_test.player.y -= PLAYER_SPEED;
-                        break;
-                    case RIGHT:
-                        data_test.player.x += PLAYER_SPEED;
-                        break;
-                    case LEFT:
-                        data_test.player.x -= PLAYER_SPEED;
-                        break;
+                if (blocked_path) {
+                    player_anim = 0;
+                } else {
+                    switch (data_test.player.orientation) {
+                        case UP:
+                            data_test.player.y += PLAYER_SPEED;
+                            break;
+                        case DOWN:
+                            data_test.player.y -= PLAYER_SPEED;
+                            break;
+                        case RIGHT:
+                            data_test.player.x += PLAYER_SPEED;
+                            break;
+                        case LEFT:
+                            data_test.player.x -= PLAYER_SPEED;
+                            break;
+                    }
+                    player_anim--;
                 }
-                player_anim--;
+
+                if (!player_anim) {
+                    data_test.player.y = round(data_test.player.y); // Recenter player position to avoid float drifting
+                    data_test.player.x = round(data_test.player.x); // Recenter player position to avoid float drifting
+                    buffer_key_flag = true;
+                }
+
+            }
+
+            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT || drown_flag || data_test.player.x < UNPLAYABLE_WIDTH || data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+                game_state = GAME_OVER;
             }
     
             break;
-            default:
+        case GAME_OVER:
+            break;
+        default:
             break;
         }
 
         SDL_RenderPresent(renderer);
-        
         nanosleep(&request, &remaining); 
     }
 
