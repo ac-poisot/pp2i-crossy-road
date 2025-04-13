@@ -194,6 +194,10 @@ int main() {
     int purse = 0;
     bool drown_flag = false;
     bool blocked_path = false;
+    obstacle* on_log = NULL; // the log on which the player is
+    float x_offset = 0; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
+    float liftboost = 0; // in tiles per frame, speed at which the player is being carried
+    bool log_hop = false; // whether the player is jumping from a log onto another log on the same lane
     // int high_score = 0;
     // int player_skin = 0;
     // bool unlocked_skins[PLAYER_SKINS] = {false};
@@ -281,6 +285,7 @@ int main() {
 
             // Collision check
             blocked_path = false;
+            log_hop = false;
 
             if (player_top_lane != NULL) {
 
@@ -298,24 +303,16 @@ int main() {
                 else {
                     drown_flag = false;
                     }
-                
-                // if (player_lane->type == WATER && player_lane->speed != 0) {
-                //     if (on_log != NULL) {
-                //         game.player.x += player_lane->speed;
-                //     }
-                // } else {
-                //     on_log = NULL;
-                //     game.player.x = round(game.player.x);
-                //     game.player.y = round(game.player.y);
-                // }
 
-                // Check for collisions with obstacles
+                //Check for collisions with obstacles
                 obstacle* collided_obstacle = collides(player_top_lane, data_test);
 
                 if(collided_obstacle != NULL) {
                     switch (player_top_lane->type) {
                         case GRASS:
-                        blocked_path = true;
+                        if (x_offset == 0) {
+                            blocked_path = true;
+                        }
                         break;
                         case TRACK:
                         game_state = GAME_OVER;
@@ -325,17 +322,38 @@ int main() {
                         break;
                         case WATER:
                         drown_flag = false;
-                        // if (player_lane->speed != 0) {
-                        //     if (on_log != collided_obstacle) {
-                        //         on_log = collided_obstacle;
-                        //         game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
-                        //     }
-                        // }
+                        if (player_top_lane->speed != 0) {
+                            if (on_log != collided_obstacle && data_test.player.orientation == UP) {
+                                float pos_on_log = abs((int) round(data_test.player.x - collided_obstacle->x)); // in tiles, position of the player relative to the log
+                                if (pos_on_log < collided_obstacle->size) {
+                                    if (pos_on_log == collided_obstacle->size) {
+                                        pos_on_log--;
+                                    }
+                                    on_log = collided_obstacle;
+                                    liftboost = player_top_lane->speed;
+                                    x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+                               } else {
+                                game_state = GAME_OVER;
+                               }
+                            }
+                        }
                         break;
                         default:
                         break;
                     }
                 }
+
+                if (on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && data_test.player.orientation == UP) {
+                    
+                    if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
+                        blocked_path = true;
+                    } else {
+                        liftboost = 0;
+                        x_offset = (round(data_test.player.x) - data_test.player.x)/ANIM_LENGTH;
+                        on_log = NULL;
+                    }
+                }
+
 
             }
 
@@ -355,16 +373,6 @@ int main() {
                 else {
                     drown_flag = false;
                     }
-                
-                // if (player_lane->type == WATER && player_lane->speed != 0) {
-                //     if (on_log != NULL) {
-                //         game.player.x += player_lane->speed;
-                //     }
-                // } else {
-                //     on_log = NULL;
-                //     game.player.x = round(game.player.x);
-                //     game.player.y = round(game.player.y);
-                // }
 
                 // Check for collisions with obstacles
                 obstacle* collided_obstacle = collides(player_bottom_lane, data_test);
@@ -372,7 +380,9 @@ int main() {
                 if(collided_obstacle != NULL) {
                     switch (player_bottom_lane->type) {
                         case GRASS:
-                        blocked_path = true;
+                        if (x_offset == 0) {
+                            blocked_path = true;
+                        }
                         break;
                         case TRACK:
                         game_state = GAME_OVER;
@@ -382,22 +392,48 @@ int main() {
                         break;
                         case WATER:
                         drown_flag = false;
-                        // if (player_lane->speed != 0) {
-                        //     if (on_log != collided_obstacle) {
-                        //         on_log = collided_obstacle;
-                        //         game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
-                        //     }
-                        // }
+                        if (player_bottom_lane->speed != 0) {
+                            if (on_log != collided_obstacle && data_test.player.orientation == DOWN) {
+                                float pos_on_log = abs((int) round(data_test.player.x - collided_obstacle->x)); // in tiles, position of the player relative to the log
+                                if (pos_on_log < collided_obstacle->size) {
+
+                                    if (pos_on_log == collided_obstacle->size) {
+                                        pos_on_log--;
+                                    }
+                                    x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+                                    on_log = collided_obstacle;
+                                    liftboost = player_bottom_lane->speed;
+    
+                                }  
+                            }
+                        }
                         break;
                         default:
                         break;
                     }
                 }
 
+                if (on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && data_test.player.orientation == DOWN) {                
+                    if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
+                        blocked_path = true;
+                    } else {
+                        liftboost = 0;
+                        x_offset = (round(data_test.player.x) - data_test.player.x)/ANIM_LENGTH;
+                        on_log = NULL;
+                    }
+                }
+            
+
             }
 
+            if (data_test.player.x < UNPLAYABLE_WIDTH || data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+                blocked_path = true;
+            } 
+
             // Update player
-            
+
+            data_test.player.x += liftboost; // apply liftboost
+
             if (!player_anim && buffer && buffer_key_flag && !blocked_path) {
                 data_test.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;
@@ -423,18 +459,31 @@ int main() {
                             data_test.player.x -= PLAYER_SPEED;
                             break;
                     }
+                    data_test.player.x += x_offset;
                     player_anim--;
                 }
 
                 if (!player_anim) {
                     data_test.player.y = round(data_test.player.y); // Recenter player position to avoid float drifting
-                    data_test.player.x = round(data_test.player.x); // Recenter player position to avoid float drifting
                     buffer_key_flag = true;
+                    x_offset = 0;
+
+                    if (!on_log) {
+                        data_test.player.x = round(data_test.player.x);  // Recenter player position to avoid float drifting
+                    }
                 }
 
             }
 
-            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT || drown_flag || data_test.player.x < UNPLAYABLE_WIDTH || data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT ||
+                (drown_flag && !player_anim) || 
+                (data_test.player.x < UNPLAYABLE_WIDTH && on_log != NULL) ||
+                (data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) 
+            {
+                game_state = GAME_OVER;
+            }
+
+            if (!player_anim && on_log != NULL && (data_test.player.x > on_log->x + on_log->size - 0.1 || data_test.player.x+0.1 < on_log->x)) {
                 game_state = GAME_OVER;
             }
     
