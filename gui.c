@@ -23,8 +23,10 @@
 
 enum {
     MENU,
+    MENU_TO_GAME,
     GAME,
     GAME_OVER,
+    GO_TO_MENU,
     SHOP
 };
 
@@ -39,8 +41,20 @@ enum {
     LOG_EDGE,
     TRAIN_MID,
     TRAIN_EDGE,
+    PLAY_BUTTON,
+    MENU_BUTTON,
+    TITLE_CARD,
+    GAME_OVER_CARD,
     END_TEXTURES
 };
+
+#define BUTTON_WIDTH 200
+#define BUTTON_HEIGHT 100
+
+#define CARD_WIDTH 400
+#define CARD_HEIGHT 200
+
+#define FADE_LENGTH 50 // in frames, duration of the transitions
 
 #define REFRESH_RATE 60
 
@@ -76,6 +90,12 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 
     textures[SKIN1] = create_texture(renderer, "sprites/skin1.png", TILE_SIDE, TILE_SIDE);
+
+    textures[PLAY_BUTTON] = create_texture(renderer, "sprites/menu/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[MENU_BUTTON] = create_texture(renderer, "sprites/menu/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+
+    textures[TITLE_CARD] = create_texture(renderer, "sprites/menu/title.png", CARD_WIDTH, CARD_HEIGHT);
+    textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/menu/game_over.png", CARD_WIDTH, CARD_HEIGHT);
 }
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
@@ -164,8 +184,9 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
         lane_count++;
     }
 
-    displayPlayer(data.player, data.cameraY, renderer, textures);
-
+    if (data.player.skin != -1) {
+        displayPlayer(data.player, data.cameraY, renderer, textures);
+    }
 }
 
 
@@ -187,10 +208,13 @@ int main() {
     bool action = false;
 
 
-    displayedData data_test = init_game(GAME_HEIGHT);
+    
 
-    // Global variables
-    int game_state = GAME;
+    int game_state = MENU;
+
+
+    // Game-specific variables
+    displayedData game = init_game(GAME_HEIGHT);
     int purse = 0;
     bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
     bool blocked_path = false; // whether the path is currently blocked by a tree or not
@@ -201,11 +225,14 @@ int main() {
     // int player_skin = 0;
     // bool unlocked_skins[PLAYER_SKINS] = {false};
     // unlocked_skins[0] = true;
-
     int player_anim = 0; // timer for player animation (0 = stopped, anything else = moving)
     int buffer = 0; // stores the next movement to be performed
     bool buffer_key_flag = true; // whether the key for the last movement has been released or not
-
+    
+    // Menu and transition variables
+    displayedData demo = init_game(GAME_HEIGHT);
+    demo.player.skin = -1;
+    int fade = FADE_LENGTH;
 
     while (running) {
         action = SDL_PollEvent(&event);
@@ -221,8 +248,90 @@ int main() {
         }
 
         switch(game_state) {
-        case MENU:
+        case MENU: {
+            // Demo background
+            display(demo, renderer, textures);
+    
+            demo = move_camera(demo, GAME_SPEED*5);
+    
+            lane* current_lane = demo.camera_first_lane;
+
+            while (current_lane->next != NULL) {
+                switch (current_lane->type) {
+                    case ROAD:
+                    update_vehicles(current_lane);
+                    break;
+                    case WATER:
+                    update_drowning_slots(current_lane);
+                    break;
+                    case TRACK:
+                    update_trains(current_lane);
+                    break;
+                    default:
+                    break;
+                }
+
+                current_lane = current_lane->next;
+            }
+
+            // Display buttons
+
+            SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
+            SDL_Rect destRect = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT};
+            SDL_RenderCopy(renderer, textures[PLAY_BUTTON], &spriteRect, &destRect);
+
+            switch (event.type) {
+                case SDL_MOUSEBUTTONUP:
+                    if (event.button.x > (WIDTH-BUTTON_WIDTH)/2
+                        && event.button.x <= (WIDTH+BUTTON_WIDTH)/2
+                        && event.button.y > (HEIGHT-BUTTON_HEIGHT)/2
+                        && event.button.y <= (HEIGHT+BUTTON_HEIGHT)/2) {
+                            game_state = MENU_TO_GAME;
+                        }
+                    break;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_RETURN) {
+                        game_state = MENU_TO_GAME;
+                    }
+            }
+
+            SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
+            SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+            SDL_RenderCopy(renderer, textures[TITLE_CARD], &spriteRect2, &destRect2);
+
             break;
+        }
+
+        case MENU_TO_GAME: {
+            if (fade) {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+
+                if (fade >= FADE_LENGTH/2) {
+                    SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
+                    SDL_RenderFillRect(renderer, &bg);
+
+                    if (fade == FADE_LENGTH/2) {
+                        game = init_game(GAME_HEIGHT);
+                        on_log = NULL;
+                        x_offset = 0;
+                        liftboost = 0;
+                        player_anim = 0;
+                        buffer = 0;
+                        buffer_key_flag = true;
+                    }
+                } else {
+                    display(game, renderer, textures);
+                    SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
+                    SDL_RenderFillRect(renderer, &bg);
+                }
+                fade--;
+            } else {
+                game_state = GAME;
+                fade = FADE_LENGTH;
+            }
+            break;
+        }
+
         case GAME:
             if (action) {
                 switch (event.type) {
@@ -249,11 +358,11 @@ int main() {
             }
     
     
-            display(data_test, renderer, textures);
+            display(game, renderer, textures);
     
-            data_test = move_camera(data_test, GAME_SPEED);
+            game = move_camera(game, GAME_SPEED);
     
-            lane* current_lane = data_test.camera_first_lane;
+            lane* current_lane = game.camera_first_lane;
             lane* player_top_lane = NULL; // lane on or above the player
             lane* player_bottom_lane = NULL; // lane below the player
 
@@ -275,9 +384,9 @@ int main() {
                     break;
                 }
                 // find the one or two lanes the player is colliding with
-                if (current_lane->y == ceil(data_test.player.y)) {
+                if (current_lane->y == ceil(game.player.y)) {
                     player_top_lane = current_lane;
-                } else if (current_lane->y == floor(data_test.player.y)) {
+                } else if (current_lane->y == floor(game.player.y)) {
                     player_bottom_lane = current_lane;
                 }
                 current_lane = current_lane->next;
@@ -290,7 +399,7 @@ int main() {
 
                 // Check for collisions with coins
                 for (int i = 0; i < LANE_WIDTH; i++) {
-                    if (player_top_lane->coins[i] && data_test.player.x == i) {
+                    if (player_top_lane->coins[i] && game.player.x == i) {
                         purse++;
                         player_top_lane->coins[i] = false;
                     }
@@ -304,7 +413,7 @@ int main() {
                     }
 
                 //Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_top_lane, data_test);
+                obstacle* collided_obstacle = collides(player_top_lane, game);
 
                 if(collided_obstacle != NULL) {
                     switch (player_top_lane->type) {
@@ -324,16 +433,16 @@ int main() {
                         if (player_top_lane->speed != 0) { // if logs are on the lane
 
                             // case where we are going up to different log than before or from ground
-                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && data_test.player.orientation == UP) {
-                                int pos_on_log = (int) round(data_test.player.x - collided_obstacle->x); // in tiles, position of the player relative to the log
+                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && game.player.orientation == UP) {
+                                int pos_on_log = (int) round(game.player.x - collided_obstacle->x); // in tiles, position of the player relative to the log
                                 on_log = collided_obstacle;
                                 liftboost = player_top_lane->speed;
-                                x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+                                x_offset = ((collided_obstacle->x + pos_on_log)-game.player.x)/(ANIM_LENGTH);
 
                                 // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
                                 if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
                                     on_log = collided_obstacle->next;
-                                    x_offset = (collided_obstacle->next->x - data_test.player.x)/(ANIM_LENGTH);
+                                    x_offset = (collided_obstacle->next->x - game.player.x)/(ANIM_LENGTH);
                                }
                             }
                         }
@@ -344,13 +453,13 @@ int main() {
                 }
 
                 // leaving a log
-                if (on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && data_test.player.orientation == UP) {
+                if (on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && game.player.orientation == UP) {
                     
                     if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
                         blocked_path = true;
                     } else {
                         liftboost = 0;
-                        x_offset = (round(data_test.player.x) - data_test.player.x)/ANIM_LENGTH;
+                        x_offset = (round(game.player.x) - game.player.x)/ANIM_LENGTH;
                         on_log = NULL;
                     }
                 }
@@ -360,14 +469,14 @@ int main() {
 
                 // Check for collisions with coins
                 for (int i = 0; i < LANE_WIDTH; i++) {
-                    if (player_bottom_lane->coins[i] && data_test.player.x == i) {
+                    if (player_bottom_lane->coins[i] && game.player.x == i) {
                         purse++;
                         player_bottom_lane->coins[i] = false;
                     }
                 }
 
                 // Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_bottom_lane, data_test);
+                obstacle* collided_obstacle = collides(player_bottom_lane, game);
 
                 if(collided_obstacle != NULL) {
                     switch (player_bottom_lane->type) {
@@ -386,16 +495,16 @@ int main() {
                         if (player_bottom_lane->speed != 0) {
 
                             // case where we are going down to different log than before or from ground
-                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && data_test.player.orientation == DOWN) {
-                                int pos_on_log = (int) round(data_test.player.x - collided_obstacle->x);
+                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && game.player.orientation == DOWN) {
+                                int pos_on_log = (int) round(game.player.x - collided_obstacle->x);
                                 on_log = collided_obstacle;
                                 liftboost = player_bottom_lane->speed;
-                                x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+                                x_offset = ((collided_obstacle->x + pos_on_log)-game.player.x)/(ANIM_LENGTH);
 
                                 // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
                                 if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
                                     on_log = collided_obstacle->next;
-                                    x_offset = (collided_obstacle->next->x - data_test.player.x)/(ANIM_LENGTH);
+                                    x_offset = (collided_obstacle->next->x - game.player.x)/(ANIM_LENGTH);
                                }
                             }
                         }
@@ -405,13 +514,13 @@ int main() {
                     }
                 }
 
-                if (on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && data_test.player.orientation == DOWN) {                
+                if (on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && game.player.orientation == DOWN) {                
                     
                     if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
                         blocked_path = true;
                     } else {
                         liftboost = 0;
-                        x_offset = (round(data_test.player.x) - data_test.player.x)/ANIM_LENGTH;
+                        x_offset = (round(game.player.x) - game.player.x)/ANIM_LENGTH;
                         on_log = NULL;
                     }
                 }
@@ -420,17 +529,17 @@ int main() {
             }
 
             // screen edges
-            if (data_test.player.x < UNPLAYABLE_WIDTH || data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+            if (game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
                 blocked_path = true;
             } 
 
             // Update player
 
-            data_test.player.x += liftboost; // apply liftboost
+            game.player.x += liftboost; // apply liftboost
 
             // a new action needs to be performed!
             if (!player_anim && buffer && buffer_key_flag && !blocked_path) {
-                data_test.player.orientation = buffer;
+                game.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;
                 buffer_key_flag = false;
                 buffer = 0;
@@ -441,35 +550,35 @@ int main() {
                 if (blocked_path) {
                     player_anim = 0;
                 } else {
-                    switch (data_test.player.orientation) {
+                    switch (game.player.orientation) {
                         case UP:
-                            data_test.player.y += PLAYER_SPEED;
-                            if (data_test.cameraY - data_test.player.y < (GAME_HEIGHT/4)) {
-                                data_test = move_camera(data_test, PLAYER_SPEED); // move the camera if the player is too high
+                            game.player.y += PLAYER_SPEED;
+                            if (game.cameraY - game.player.y < (GAME_HEIGHT/4)) {
+                                game = move_camera(game, PLAYER_SPEED); // move the camera if the player is too high
                             }
                             break;
                         case DOWN:
-                            data_test.player.y -= PLAYER_SPEED;
+                            game.player.y -= PLAYER_SPEED;
                             break;
                         case RIGHT:
-                            data_test.player.x += PLAYER_SPEED;
+                            game.player.x += PLAYER_SPEED;
                             break;
                         case LEFT:
-                            data_test.player.x -= PLAYER_SPEED;
+                            game.player.x -= PLAYER_SPEED;
                             break;
                     }
-                    data_test.player.x += x_offset;
+                    game.player.x += x_offset;
                     player_anim--;
                 }
 
                 // if action is ending, recenter the player and reset variables
                 if (!player_anim) {
-                    data_test.player.y = round(data_test.player.y); // Recenter player position to avoid float drifting
+                    game.player.y = round(game.player.y); // Recenter player position to avoid float drifting
                     buffer_key_flag = true;
                     x_offset = 0;
 
                     if (!on_log) {
-                        data_test.player.x = round(data_test.player.x);  // Recenter player position to avoid float drifting
+                        game.player.x = round(game.player.x);  // Recenter player position to avoid float drifting
                     }
                 }
 
@@ -477,23 +586,23 @@ int main() {
 
             // checking for game over
 
-            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT || // player is too low
+            if (game.player.y < game.cameraY - GAME_HEIGHT || // player is too low
                 (drown_flag && !player_anim) || // player is drowning
-                (data_test.player.x < UNPLAYABLE_WIDTH && on_log != NULL) || // player is being carried offscreen
-                (data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) // player is being carreid offscreen
+                (game.player.x < UNPLAYABLE_WIDTH && on_log != NULL) || // player is being carried offscreen
+                (game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) // player is being carreid offscreen
             {
                 game_state = GAME_OVER;
             }
 
             if (!player_anim && on_log != NULL) {
-                if (data_test.player.x > on_log->x + on_log->size - 0.1) { // check if player is too far right on the log it's currently on
+                if (game.player.x > on_log->x + on_log->size - 0.1) { // check if player is too far right on the log it's currently on
                     if (on_log->next != NULL && floor(on_log->x + on_log->size) == floor(on_log->next->x)) { // check if player can move right to a different adjacent log
                         on_log = on_log->next;
                     } else {
                         game_state = GAME_OVER; // if not, game over
                     }
                 }
-                else if (data_test.player.x+0.1 < on_log->x) { // check if player is too far left on the log it's currently on
+                else if (game.player.x+0.1 < on_log->x) { // check if player is too far left on the log it's currently on
                     if (on_log->prev != NULL && floor(on_log->prev->x + on_log->prev->size) == floor(on_log->x)) { // check if player can move left to a different adjacent log
                         on_log = on_log->prev;
                     } else {
@@ -501,10 +610,55 @@ int main() {
                     }
                 }
             }
-    
             break;
-        case GAME_OVER:
+        case GAME_OVER: {
+            SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
+            SDL_Rect destRect = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT};
+            SDL_RenderCopy(renderer, textures[MENU_BUTTON], &spriteRect, &destRect);
+
+            switch (event.type) {
+                case SDL_MOUSEBUTTONUP:
+                    if (event.button.x > (WIDTH-BUTTON_WIDTH)/2
+                        && event.button.x <= (WIDTH+BUTTON_WIDTH)/2
+                        && event.button.y > (HEIGHT-BUTTON_HEIGHT)/2
+                        && event.button.y <= (HEIGHT+BUTTON_HEIGHT)/2) {
+                            game_state = GO_TO_MENU;
+                        }
+                    break;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_RETURN) {
+                        game_state = GO_TO_MENU;
+                    }
+            }
+            SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
+            SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+            SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
             break;
+        }
+        case GO_TO_MENU: {
+            if (fade) {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+
+                if (fade >= FADE_LENGTH/2) {
+                    SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
+                    SDL_RenderFillRect(renderer, &bg);
+
+                    if (fade == FADE_LENGTH/2) {
+                        demo = init_game(GAME_HEIGHT);
+                        demo.player.skin = -1;
+                    }
+                } else {
+                    display(demo, renderer, textures);
+                    SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
+                    SDL_RenderFillRect(renderer, &bg);
+                }
+                fade--;
+            } else {
+                game_state = MENU;
+                fade = FADE_LENGTH;
+            }
+            break;
+        }
         default:
             break;
         }
@@ -518,7 +672,7 @@ int main() {
         SDL_DestroyTexture(textures[i+1]);
     }
 
-    free_lanes(data_test.first_lane);
+    free_lanes(game.first_lane);
     free(textures);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
