@@ -57,7 +57,7 @@ lane* copy_lane(lane* l, int p) {
         copy->obstacles = copy_obstacle(l->obstacles);
         copy->coins = NULL; //NULL for the moment, possible futur bug
         // copies the next p lanes or stops before
-        lane* sauv = l;
+        lane* sauv = l->next;
         lane* last_copied = copy;
         int k = p;
         while (k > 0 && sauv != NULL) {
@@ -99,12 +99,32 @@ lane* copy_lane(lane* l, int p) {
     
 }
 
+void printf_lane(lane* l, player p) {
+    // affiche les lanes, la ligne du haut est la premiere de la ligne aka la derniere en mode normal
+    lane* copyl = l;
+    printf("debut\n");
+    while (copyl != NULL) {
+        for (int i=0; i<LANE_WIDTH; i=i+1) {
+            if (copyl->y == p.y && p.x==i) {
+                printf("P");
+            }
+            else if (copyl->obstacles != NULL && (i>= copyl->obstacles->x && i<=copyl->obstacles->x+copyl->obst_size-1)) {
+                printf("#");
+            }
+            else {
+                printf(" ");
+            }
+        }
+        printf("\n");
+        copyl = copyl->next;
+    }
+    printf("fin\n");
+}
+
 obstacle* collides_without_game(lane *current_lane, player p) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
-    printf("bele\n");
     while (current_obstacle != NULL) {
-        printf("dehe\n");
         if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
             return current_obstacle;
         } else {
@@ -117,6 +137,7 @@ obstacle* collides_without_game(lane *current_lane, player p) {
 
 couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p) {
     couple c;
+    printf_lane(l, p);
     // returns a couple composed of the highscore and the move
     if (deep <= 0 || l == NULL ) {
         c.score = high_score;
@@ -130,68 +151,75 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
             very_first_of_current = very_first_of_current->prev;
         }
         lane* player_lane = l;
-        while (current_lane != NULL && current_lane->next != NULL) {
+        while (current_lane != NULL) {
+            printf("ici\n");
             // Update lanes
+            printf("la lane %d\n", current_lane->type);
             switch (current_lane->type) {
+                printf("je passe par la\n");
                 case ROAD:
                 update_vehicles(current_lane);
+                printf("fait\n");
                 break;
                 case WATER:
                 update_drowning_slots(current_lane);
+                printf("done\n");
                 break;
                 case TRACK:
                 update_trains(current_lane);
+                printf("effectuado\n");
                 break;
                 default:
+                printf("nooooooo\n");
                 break;
             }
             if (current_lane->y == p.y) {
                 player_lane = current_lane;
             }
             current_lane = current_lane->next;
+        }
 
-            // Check for collisions with obstacles
-            obstacle* collided_obstacle = collides_without_game(player_lane, p);
-            bool drown_flag = false;
-            obstacle* on_log = NULL;
-            if(collided_obstacle != NULL) {
-                switch (player_lane->type) {
-                    case GRASS:
-                    break;
-                    case TRACK:
-                    c.score = high_score;
-                    c.move = NOT_POSSIBLE;
-                    free_lanes(very_first_of_current);
-                    return c;
-                    break;
-                    case ROAD:
-                    c.score = high_score;
-                    c.move = NOT_POSSIBLE;
-                    free_lanes(very_first_of_current);
-                    return c;
-                    break;
-                    case WATER:
-                    drown_flag = false;
-                    if (player_lane->speed != 0) {
-                        if (on_log != collided_obstacle) {
-                            on_log = collided_obstacle;
-                            p.x = collided_obstacle->x + abs((int) round(p.x - collided_obstacle->x));
-                        }
-                    }
-                    break;
-                    default:
-                    break;
-                }
-            }
+        printf_lane(l, p);
 
 
-
-            if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
+        // Check for collisions with obstacles
+        obstacle* collided_obstacle = collides_without_game(player_lane, p);
+        bool drown_flag = false;
+        obstacle* on_log = NULL;
+        if(collided_obstacle != NULL) {
+            switch (player_lane->type) {
+                case GRASS:
+                break;
+                case TRACK:
                 c.score = high_score;
                 c.move = NOT_POSSIBLE;
                 free_lanes(very_first_of_current);
                 return c;
+                break;
+                case ROAD:
+                c.score = high_score;
+                c.move = NOT_POSSIBLE;
+                free_lanes(very_first_of_current);
+                return c;
+                break;
+                case WATER:
+                drown_flag = false;
+                if (player_lane->speed != 0) {
+                    if (on_log != collided_obstacle) {
+                        on_log = collided_obstacle;
+                        p.x = collided_obstacle->x + abs((int) round(p.x - collided_obstacle->x));
+                    }
+                }
+                break;
+                default:
+                break;
             }
+        }
+        if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
+            c.score = high_score;
+            c.move = NOT_POSSIBLE;
+            free_lanes(very_first_of_current);
+            return c;
         }
 
         // case

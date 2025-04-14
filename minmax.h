@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -23,5 +25,6 @@ typedef struct couple_s {
 
 obstacle* copy_obstacle(obstacle* o);
 lane* copy_lane(lane* l, int p);
+void printf_lane(lane* l, player p) ;
 obstacle* collides_without_game(lane *current_lane, player p);
 couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p);
