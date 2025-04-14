@@ -136,10 +136,13 @@ obstacle* collides_without_game(lane *current_lane, player p) {
 
 
 couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p) {
+    /*  applies minmax algorithm
+        high_score = the potential high score possible
+    */
     couple c;
     printf_lane(l, p);
     // returns a couple composed of the highscore and the move
-    if (deep <= 0 || l == NULL ) {
+    if (deep < 0 || l == NULL ) {
         c.score = high_score;
         c.move = previous_move;
         return c;
@@ -179,7 +182,7 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
             current_lane = current_lane->next;
         }
 
-        printf_lane(l, p);
+        printf_lane(very_first_of_current, p);
 
 
         // Check for collisions with obstacles
@@ -191,13 +194,14 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
                 case GRASS:
                 break;
                 case TRACK:
-                c.score = high_score;
+                c.score = -1;
                 c.move = NOT_POSSIBLE;
                 free_lanes(very_first_of_current);
+                printf("waaaaaaaaaaaaaak\n");
                 return c;
                 break;
                 case ROAD:
-                c.score = high_score;
+                c.score = -1;
                 c.move = NOT_POSSIBLE;
                 free_lanes(very_first_of_current);
                 return c;
@@ -216,18 +220,18 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
             }
         }
         if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
-            c.score = high_score;
+            c.score = -1;
             c.move = NOT_POSSIBLE;
             free_lanes(very_first_of_current);
             return c;
         }
 
-        // case
-        couple c_up = minmax_rec(l->next, deep-1, high_score+1, GO_AHEAD, p);
-        couple c_down = minmax_rec(l->prev, deep-1, high_score, GO_DOWN, p);
-        couple c_left = minmax_rec(l, deep-1, high_score, GO_LEFT, p);
-        couple c_right = minmax_rec(l, deep-1, high_score, GO_RIGHT, p);
-        couple c_stay = minmax_rec(l, deep-1, high_score, STAY, p);
+        // case P* LE TRUC SUR LEQUEL ON RAPELLE !
+        couple c_up = minmax_rec(player_lane->next, deep-1, high_score+1, GO_AHEAD, p);
+        couple c_down = minmax_rec(player_lane->prev, deep-1, high_score-1, GO_DOWN, p);
+        couple c_left = minmax_rec(player_lane, deep-1, high_score, GO_LEFT, p);
+        couple c_right = minmax_rec(player_lane, deep-1, high_score, GO_RIGHT, p);
+        couple c_stay = minmax_rec(player_lane, deep-1, high_score, STAY, p);
 
         int m = fmax(c_stay.score,fmax(fmax(c_up.score, c_down.score), fmax(c_left.score, c_right.score)));
         int move = NOT_POSSIBLE;
@@ -235,20 +239,16 @@ couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p
         if (c_up.move != NOT_POSSIBLE && c_up.score==m) {
             m = c_up.score;
             move = GO_AHEAD;
-        }
-        if (c_down.move != NOT_POSSIBLE && c_down.score==m) {
+        } else if (c_down.move != NOT_POSSIBLE && c_down.score==m) {
             m = c_down.score;
             move = GO_DOWN;
-        }
-        if (c_left.move != NOT_POSSIBLE && c_left.score==m) {
+        } else if (c_left.move != NOT_POSSIBLE && c_left.score==m) {
             m = c_left.score;
             move = GO_LEFT;
-        }
-        if (c_right.move != NOT_POSSIBLE && c_right.score==m) {
+        } else if (c_right.move != NOT_POSSIBLE && c_right.score==m) {
             m = c_right.score;
             move = GO_RIGHT;
-        }
-        if (c_stay.move != NOT_POSSIBLE && c_stay.score==m) {
+        } else if (c_stay.move != NOT_POSSIBLE && c_stay.score==m) {
             m = c_stay.score;
             move = STAY;
         }

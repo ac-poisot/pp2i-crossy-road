@@ -118,7 +118,6 @@ void test_one_stay(void) {
     p.orientation=0;
     p.skin=0;
     lane* l = initialLanes();
-    //printf_lane(l, p);
 
     obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
     o1->next = NULL;
@@ -139,14 +138,132 @@ void test_one_stay(void) {
     }
     l1->next = NULL;
 
+    couple c1 = minmax_rec(l->next->next->next,1,0,STAY,p);
+    printf("le score obtenu %d\n", c1.score);
+    printf("le mouvement obtenu %d\n", c1.move);
+    assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
+    assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
+    assert(p.y == 3);
+    assert(c1.score == 0);
+    assert(c1.move == STAY);
+
+    free_lanes(l);
+
+}
+
+
+void test_two_rigth(void) {
+    // define the game
+    player p;
+    p.y=3;
+    p.x=LANE_WIDTH/2;
+    p.orientation=0;
+    p.skin=0;
+    lane* l = initialLanes();
+
+    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
+    o1->next = NULL;
+    o1->prev = NULL;
+    o1->x = LANE_WIDTH/2+1;
+    o1->size = 2;
+    lane* l1 = (lane*)malloc(sizeof(lane));
+    l1->y = 4;
+    l1->speed = -1;
+    l1->obst_size = 2;
+    l1->type = 4;
+    l1->prev = l->next->next->next;
+    l->next->next->next->next = l1;
+    l1->obstacles = o1;
+    l1->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l1->coins[i] = false;
+    }
+    l1->next = NULL;
+
+    couple c2 = minmax_rec(l->next->next->next,2,0,STAY,p);
+    printf("le score obtenu %d\n", c2.score);
+    printf("le mouvement obtenu %d\n", c2.move);
+    assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
+    assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
+    assert(p.y == 3);
+    assert(c2.score == 1);
+    assert(c2.move == GO_RIGHT);
+}
+
+void test_three_stay(void) {
+    // define the game
+    player p;
+    p.y=3;
+    p.x=LANE_WIDTH/2;
+    p.orientation=0;
+    p.skin=0;
+    lane* l = initialLanes();
+
+    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
+    o1->next = NULL;
+    o1->prev = NULL;
+    o1->x = LANE_WIDTH/2;
+    o1->size = 2;
+    lane* l1 = (lane*)malloc(sizeof(lane));
+    l1->y = 4;
+    l1->speed = -1;
+    l1->obst_size = 4;
+    l1->type = 4;
+    l1->prev = l->next->next->next;
+    l->next->next->next->next = l1;
+    l1->obstacles = o1;
+    l1->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l1->coins[i] = false;
+    }
+    l1->next = NULL;
+
+    couple c3 = minmax_rec(l->next->next->next,3,0,STAY,p);
+    printf("le score obtenu %d\n", c3.score);
+    printf("le mouvement obtenu %d\n", c3.move);
+    assert(o1->x == LANE_WIDTH/2); // les obstacles ne doivent pas avoir bouge
+    assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
+    assert(p.y == 3);
+    assert(c3.score == 0);
+    assert(c3.move == STAY);
+}
+
+void test_two_down(void) {
+    // define the game
+    player p;
+    p.y=3;
+    p.x=1;
+    p.orientation=0;
+    p.skin=0;
+    lane* l = initialLanes();
+
+    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
+    o1->next = NULL;
+    o1->prev = NULL;
+    o1->x = 2;
+    o1->size = 2;
+    lane* l1 = (lane*)malloc(sizeof(lane));
+    l1->y = 4;
+    l1->speed = -1;
+    l1->obst_size = 2;
+    l1->type = 4;
+    l1->prev = l->next->next->next;
+    l->next->next->next->next = l1;
+    l1->obstacles = o1;
+    l1->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l1->coins[i] = false;
+    }
+    l1->next = NULL;
+
     obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
     o2->next = NULL;
     o2->prev = NULL;
-    o2->x = LANE_WIDTH/2-1;
+    o2->x = 1;
     o2->size = 2;
     lane* l2 = (lane*)malloc(sizeof(lane));
     l2->y = 5;
-    l2->speed = 1;
+    l2->speed = -1;
     l2->obst_size = 2;
     l2->type = 4;
     l2->prev = l1;
@@ -157,27 +274,27 @@ void test_one_stay(void) {
         l2->coins[i] = false;
     }
     l2->next = NULL;
+    
 
-    //printf_lane(l, p);
-
-    couple c = minmax_rec(l,1,0,STAY,p);
-    printf("le score obtenu %d\n", c.score);
-    printf("le mouvement obtenu %d\n", c.move);
-    assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
-    assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
+    couple c4 = minmax_rec(l->next->next->next,2,0,STAY,p);
+    printf("le score obtenu %d\n", c4.score);
+    printf("le mouvement obtenu %d\n", c4.move);
+    assert(o1->x == 2); // les obstacles ne doivent pas avoir bouge
+    assert(p.x == 1); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
-    assert(c.score == 1);
-    assert(c.move == STAY);
+    assert(c4.score == 0);
+    assert(c4.move == GO_DOWN);
 
     free_lanes(l);
-
 }
-
 
 int main(void) {
     //test_copy_obstacle();
     //test_copy_lane();
     //test_minmax_rec_begining();
     test_one_stay();
+    test_two_rigth();
+    test_three_stay();
+    test_two_down();
     return 0;
 }
