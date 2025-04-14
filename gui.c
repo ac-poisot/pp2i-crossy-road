@@ -192,20 +192,19 @@ int main() {
     // Global variables
     int game_state = GAME;
     int purse = 0;
-    bool drown_flag = false;
-    bool blocked_path = false;
+    bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
+    bool blocked_path = false; // whether the path is currently blocked by a tree or not
     obstacle* on_log = NULL; // the log on which the player is
     float x_offset = 0; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
-    float liftboost = 0; // in tiles per frame, speed at which the player is being carried
-    bool log_hop = false; // whether the player is jumping from a log onto another log on the same lane
+    float liftboost = 0; // in tiles per frame, speed at which the player is being carried (specifically for logs)
     // int high_score = 0;
     // int player_skin = 0;
     // bool unlocked_skins[PLAYER_SKINS] = {false};
     // unlocked_skins[0] = true;
 
-    int player_anim = 0; // Timer for player animation (0 = stopped, anything else = moving)
-    int buffer = 0; // Stores the next movement to be performed
-    bool buffer_key_flag = true; // Whether the key for the last movement has been released or not
+    int player_anim = 0; // timer for player animation (0 = stopped, anything else = moving)
+    int buffer = 0; // stores the next movement to be performed
+    bool buffer_key_flag = true; // whether the key for the last movement has been released or not
 
 
     while (running) {
@@ -255,8 +254,8 @@ int main() {
             data_test = move_camera(data_test, GAME_SPEED);
     
             lane* current_lane = data_test.camera_first_lane;
-            lane* player_top_lane = NULL;
-            lane* player_bottom_lane = NULL;
+            lane* player_top_lane = NULL; // lane on or above the player
+            lane* player_bottom_lane = NULL; // lane below the player
 
             while (current_lane->next != NULL) {
     
@@ -275,6 +274,7 @@ int main() {
                     default:
                     break;
                 }
+                // find the one or two lanes the player is colliding with
                 if (current_lane->y == ceil(data_test.player.y)) {
                     player_top_lane = current_lane;
                 } else if (current_lane->y == floor(data_test.player.y)) {
@@ -285,7 +285,6 @@ int main() {
 
             // Collision check
             blocked_path = false;
-            log_hop = false;
 
             if (player_top_lane != NULL) {
 
@@ -298,7 +297,7 @@ int main() {
                 }
 
                 if (player_top_lane->type == WATER) {
-                    drown_flag = true; // set this to false to disable drowning
+                    drown_flag = true; // only matters for the top lane, which is the lane the player is on or is going to
                     }
                 else {
                     drown_flag = false;
@@ -310,7 +309,7 @@ int main() {
                 if(collided_obstacle != NULL) {
                     switch (player_top_lane->type) {
                         case GRASS:
-                        if (x_offset == 0) {
+                        if (on_log == NULL) { // case where the player is on a log is handled lower
                             blocked_path = true;
                         }
                         break;
@@ -321,19 +320,20 @@ int main() {
                         game_state = GAME_OVER;
                         break;
                         case WATER:
-                        drown_flag = false;
-                        if (player_top_lane->speed != 0) {
-                            if (on_log != collided_obstacle && data_test.player.orientation == UP) {
-                                float pos_on_log = abs((int) round(data_test.player.x - collided_obstacle->x)); // in tiles, position of the player relative to the log
-                                if (pos_on_log < collided_obstacle->size) {
-                                    if (pos_on_log == collided_obstacle->size) {
-                                        pos_on_log--;
-                                    }
-                                    on_log = collided_obstacle;
-                                    liftboost = player_top_lane->speed;
-                                    x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
-                               } else {
-                                game_state = GAME_OVER;
+                        drown_flag = false; // an obstacle has been found, player now should not drown
+                        if (player_top_lane->speed != 0) { // if logs are on the lane
+
+                            // case where we are going up to different log than before or from ground
+                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && data_test.player.orientation == UP) {
+                                int pos_on_log = (int) round(data_test.player.x - collided_obstacle->x); // in tiles, position of the player relative to the log
+                                on_log = collided_obstacle;
+                                liftboost = player_top_lane->speed;
+                                x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+
+                                // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
+                                if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
+                                    on_log = collided_obstacle->next;
+                                    x_offset = (collided_obstacle->next->x - data_test.player.x)/(ANIM_LENGTH);
                                }
                             }
                         }
@@ -343,6 +343,7 @@ int main() {
                     }
                 }
 
+                // leaving a log
                 if (on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && data_test.player.orientation == UP) {
                     
                     if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
@@ -353,8 +354,6 @@ int main() {
                         on_log = NULL;
                     }
                 }
-
-
             }
 
             if (player_bottom_lane != NULL) {
@@ -366,13 +365,6 @@ int main() {
                         player_bottom_lane->coins[i] = false;
                     }
                 }
-
-                if (player_bottom_lane->type == WATER) {
-                    drown_flag = true; // set this to false to disable drowning
-                    }
-                else {
-                    drown_flag = false;
-                    }
 
                 // Check for collisions with obstacles
                 obstacle* collided_obstacle = collides(player_bottom_lane, data_test);
@@ -391,20 +383,20 @@ int main() {
                         game_state = GAME_OVER;
                         break;
                         case WATER:
-                        drown_flag = false;
                         if (player_bottom_lane->speed != 0) {
-                            if (on_log != collided_obstacle && data_test.player.orientation == DOWN) {
-                                float pos_on_log = abs((int) round(data_test.player.x - collided_obstacle->x)); // in tiles, position of the player relative to the log
-                                if (pos_on_log < collided_obstacle->size) {
 
-                                    if (pos_on_log == collided_obstacle->size) {
-                                        pos_on_log--;
-                                    }
-                                    x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
-                                    on_log = collided_obstacle;
-                                    liftboost = player_bottom_lane->speed;
-    
-                                }  
+                            // case where we are going down to different log than before or from ground
+                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && data_test.player.orientation == DOWN) {
+                                int pos_on_log = (int) round(data_test.player.x - collided_obstacle->x);
+                                on_log = collided_obstacle;
+                                liftboost = player_bottom_lane->speed;
+                                x_offset = ((collided_obstacle->x + pos_on_log)-data_test.player.x)/(ANIM_LENGTH);
+
+                                // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
+                                if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
+                                    on_log = collided_obstacle->next;
+                                    x_offset = (collided_obstacle->next->x - data_test.player.x)/(ANIM_LENGTH);
+                               }
                             }
                         }
                         break;
@@ -414,6 +406,7 @@ int main() {
                 }
 
                 if (on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && data_test.player.orientation == DOWN) {                
+                    
                     if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
                         blocked_path = true;
                     } else {
@@ -426,6 +419,7 @@ int main() {
 
             }
 
+            // screen edges
             if (data_test.player.x < UNPLAYABLE_WIDTH || data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
                 blocked_path = true;
             } 
@@ -434,6 +428,7 @@ int main() {
 
             data_test.player.x += liftboost; // apply liftboost
 
+            // a new action needs to be performed!
             if (!player_anim && buffer && buffer_key_flag && !blocked_path) {
                 data_test.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;
@@ -441,6 +436,7 @@ int main() {
                 buffer = 0;
             }
 
+            // player is currently moving, update everything accordingly
             if (player_anim) {
                 if (blocked_path) {
                     player_anim = 0;
@@ -448,6 +444,9 @@ int main() {
                     switch (data_test.player.orientation) {
                         case UP:
                             data_test.player.y += PLAYER_SPEED;
+                            if (data_test.cameraY - data_test.player.y < (GAME_HEIGHT/4)) {
+                                data_test = move_camera(data_test, PLAYER_SPEED); // move the camera if the player is too high
+                            }
                             break;
                         case DOWN:
                             data_test.player.y -= PLAYER_SPEED;
@@ -463,6 +462,7 @@ int main() {
                     player_anim--;
                 }
 
+                // if action is ending, recenter the player and reset variables
                 if (!player_anim) {
                     data_test.player.y = round(data_test.player.y); // Recenter player position to avoid float drifting
                     buffer_key_flag = true;
@@ -475,16 +475,31 @@ int main() {
 
             }
 
-            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT ||
-                (drown_flag && !player_anim) || 
-                (data_test.player.x < UNPLAYABLE_WIDTH && on_log != NULL) ||
-                (data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) 
+            // checking for game over
+
+            if (data_test.player.y < data_test.cameraY - GAME_HEIGHT || // player is too low
+                (drown_flag && !player_anim) || // player is drowning
+                (data_test.player.x < UNPLAYABLE_WIDTH && on_log != NULL) || // player is being carried offscreen
+                (data_test.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) // player is being carreid offscreen
             {
                 game_state = GAME_OVER;
             }
 
-            if (!player_anim && on_log != NULL && (data_test.player.x > on_log->x + on_log->size - 0.1 || data_test.player.x+0.1 < on_log->x)) {
-                game_state = GAME_OVER;
+            if (!player_anim && on_log != NULL) {
+                if (data_test.player.x > on_log->x + on_log->size - 0.1) { // check if player is too far right on the log it's currently on
+                    if (on_log->next != NULL && floor(on_log->x + on_log->size) == floor(on_log->next->x)) { // check if player can move right to a different adjacent log
+                        on_log = on_log->next;
+                    } else {
+                        game_state = GAME_OVER; // if not, game over
+                    }
+                }
+                else if (data_test.player.x+0.1 < on_log->x) { // check if player is too far left on the log it's currently on
+                    if (on_log->prev != NULL && floor(on_log->prev->x + on_log->prev->size) == floor(on_log->x)) { // check if player can move left to a different adjacent log
+                        on_log = on_log->prev;
+                    } else {
+                        game_state = GAME_OVER; // if not, game over
+                    }
+                }
             }
     
             break;
