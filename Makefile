@@ -28,7 +28,7 @@ main_cli: core.o cli.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o -lncurses
 
 main_graphics: core.o gui.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o -lSDL2  -lSDL2_image -lSDL2
+	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf
 
 core_test: core.o core_test.o
 	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o

@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <time.h>
 #include "core.h"
@@ -11,7 +12,7 @@
 
 #define GAME_HEIGHT (HEIGHT/TILE_SIDE)
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
-#define ANIM_LENGTH 10 // In frames, time it takes for the player to get to the next tile
+#define ANIM_LENGTH 5 // In frames, time it takes for the player to get to the next tile
 #define PLAYER_SPEED (1.0f /ANIM_LENGTH) // In tiles per frame, speed of the player
 
 #define PLAYER_SKINS 1 // Number of skins available
@@ -186,6 +187,24 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
 
     if (data.player.skin != -1) {
         displayPlayer(data.player, data.cameraY, renderer, textures);
+
+    // Display score
+    char scoreText[20];
+    sprintf(scoreText, "Score: %d", (int)data.player.y);
+
+    SDL_Color white = {255, 255, 255, 255};
+    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
+
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    
+
+    SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+    TTF_CloseFont(font);
     }
 }
 
@@ -195,6 +214,7 @@ int main() {
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
     srand(time(NULL));
     SDL_Init(SDL_INIT_EVERYTHING);
+    TTF_Init();
     IMG_Init(IMG_INIT_PNG);
 
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
@@ -221,7 +241,7 @@ int main() {
     obstacle* on_log = NULL; // the log on which the player is
     float x_offset = 0; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
     float liftboost = 0; // in tiles per frame, speed at which the player is being carried (specifically for logs)
-    // int high_score = 0;
+    int high_score = 0;
     // int player_skin = 0;
     // bool unlocked_skins[PLAYER_SKINS] = {false};
     // unlocked_skins[0] = true;
@@ -298,6 +318,23 @@ int main() {
             SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
             SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
             SDL_RenderCopy(renderer, textures[TITLE_CARD], &spriteRect2, &destRect2);
+
+            char scoreText[20];
+            sprintf(scoreText, "Best: %d", high_score);
+        
+            SDL_Color white = {255, 255, 255, 255};
+            TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
+        
+            SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
+        
+            SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+            
+        
+            SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
+            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+            SDL_FreeSurface(textSurface);
+            SDL_DestroyTexture(textTexture);
+            TTF_CloseFont(font);
 
             break;
         }
@@ -649,6 +686,9 @@ int main() {
                 }
                 fade--;
             } else {
+                if (high_score < (int) game.player.y) {
+                    high_score = (int) game.player.y;
+                }
                 free_lanes(game.first_lane);
                 game_state = MENU;
                 fade = FADE_LENGTH;
@@ -668,6 +708,7 @@ int main() {
         SDL_DestroyTexture(textures[i+1]);
     }
     
+    free_lanes(game.first_lane);
     free_lanes(demo.first_lane);
     free(textures);
     SDL_DestroyRenderer(renderer);
