@@ -214,7 +214,7 @@ int main() {
 
 
     // Game-specific variables
-    displayedData game = init_game(GAME_HEIGHT);
+    displayedData game;
     int purse = 0;
     bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
     bool blocked_path = false; // whether the path is currently blocked by a tree or not
@@ -642,11 +642,6 @@ int main() {
                 if (fade >= FADE_LENGTH/2) {
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
-
-                    if (fade == FADE_LENGTH/2) {
-                        demo = init_game(GAME_HEIGHT);
-                        demo.player.skin = -1;
-                    }
                 } else {
                     display(demo, renderer, textures);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
@@ -654,6 +649,7 @@ int main() {
                 }
                 fade--;
             } else {
+                free_lanes(game.first_lane);
                 game_state = MENU;
                 fade = FADE_LENGTH;
             }
@@ -671,8 +667,8 @@ int main() {
     for (int i=0; i<END_TEXTURES-1; i++) {
         SDL_DestroyTexture(textures[i+1]);
     }
-
-    free_lanes(game.first_lane);
+    
+    free_lanes(demo.first_lane);
     free(textures);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
