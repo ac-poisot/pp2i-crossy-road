@@ -629,7 +629,12 @@ displayedData init_game(int game_height) {
 
 
     // for (int i = 0; i < game_height + 4; i++) {
-    //     l = generate_lane(l, WATER);
+    //     if (rand()%2) {
+    //         l = generate_lane(l, WATER);
+    //     } else {
+    //         l = generate_lane(l, GRASS);
+    //     }
+        
     // }
     generateNNewLanes(l, game_height + 4);
 
