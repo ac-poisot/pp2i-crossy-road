@@ -121,143 +121,169 @@ void printf_lane(lane* l, player p) {
     printf("fin\n");
 }
 
-obstacle* collides_without_game(lane *current_lane, player p) {
+bool collides_without_game(lane *current_lane, player p) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
     while (current_obstacle != NULL) {
         if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
-            return current_obstacle;
+            return true;
         } else {
             current_obstacle = current_obstacle->next;
         }
     }
-    return NULL;
+    return false;
 }
 
+void update_lanes(lane* l) {
+    lane* current_lane = l;
+    while (current_lane != NULL) {
+        switch (current_lane->type) {;
+            case ROAD:
+            update_vehicles(current_lane);
+            break;
+            case WATER:
+            update_drowning_slots(current_lane);
+            break;
+            case TRACK:
+            update_trains(current_lane);
+            break;
+            default:
+            break;
+        }
 
-couple minmax_rec(lane* l, int deep, int high_score, int previous_move, player p) {
-    /*  applies minmax algorithm
-        high_score = the potential high score possible
+        current_lane = current_lane->next;
+    }
+}
+
+couple minmax_rec(lane* l, int deep, couple previous, player p) {
+    /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
+    le reste du temps
+    effectuer un mouvement, tester s'il est juste (collision ou eau)
+    s'il es juste, calculer le nouveau score (+1 si devant, -1 si derrière, 0 sinon) ?
+    remonter ce score à une variable globale à la boucle qu'on met à jour si c'est mieux
+    recommencer jusqu'à fin des mouvements possibles
+    -> le meilleur mouvement est celui permis par la boucle lors du premier appel
+    -> si on envoie un couple (score, mvt), c'est ce qu'on maintient à jour dans la boucle et qu'on renvoie
     */
-    couple c;
-    printf_lane(l, p);
-    // returns a couple composed of the highscore and the move
-    if (deep < 0 || l == NULL ) {
-        c.score = high_score;
-        c.move = previous_move;
-        return c;
+    if (deep <= 0) {
+        return previous;
     } else {
-        //update the map then do the five case
-        lane* current_lane = copy_lane(l,deep);
-        lane* very_first_of_current = current_lane;
-        while (very_first_of_current->prev != NULL) {
-            very_first_of_current = very_first_of_current->prev;
-        }
-        lane* player_lane = l;
-        while (current_lane != NULL) {
-            printf("ici\n");
-            // Update lanes
-            printf("la lane %d\n", current_lane->type);
-            switch (current_lane->type) {
-                printf("je passe par la\n");
-                case ROAD:
-                update_vehicles(current_lane);
-                printf("fait\n");
-                break;
-                case WATER:
-                update_drowning_slots(current_lane);
-                printf("done\n");
-                break;
-                case TRACK:
-                update_trains(current_lane);
-                printf("effectuado\n");
-                break;
-                default:
-                printf("nooooooo\n");
-                break;
-            }
-            if (current_lane->y == p.y) {
-                player_lane = current_lane;
-            }
-            current_lane = current_lane->next;
+        // on a state, want to know possibiities
+        couple res;
+        res.move = NOT_POSSIBLE;
+        res.score = previous.score;
+
+        // step 1 : update the map and do a move
+        lane* current_lane = copy_lane(l, deep);
+        lane* copy_current = current_lane;
+
+        lane* beginning_lane = copy_current;
+        while (copy_current->prev != NULL) {
+            beginning_lane = beginning_lane->prev;
+            copy_current= copy_current->prev;
         }
 
-        printf_lane(very_first_of_current, p);
+        displayLanes(beginning_lane);
+        displayLanes(beginning_lane->next);
+        displayLanes(beginning_lane->next->next);
 
+        printf("aaaa\n");
 
-        // Check for collisions with obstacles
-        obstacle* collided_obstacle = collides_without_game(player_lane, p);
-        bool drown_flag = false;
-        obstacle* on_log = NULL;
-        if(collided_obstacle != NULL) {
-            switch (player_lane->type) {
-                case GRASS:
+        update_lanes(beginning_lane);
+        copy_current = current_lane;
+
+        displayLanes(beginning_lane);
+        displayLanes(beginning_lane->next);
+        displayLanes(beginning_lane->next->next);
+
+        player copy_p;
+        copy_p.orientation = p.orientation;
+        copy_p.skin = p.skin;
+        for (int i=1; i<6; i=i+1) {
+            // couple linked to a mouv
+            couple c;
+            c.move = i;
+            c.score = previous.score;
+
+            switch (i) {
+                case GO_AHEAD:
+                if (l->next != NULL) {
+                    copy_p.x = p.x;
+                    copy_p.y = p.y + 1;
+                    current_lane = copy_current->next;
+                    c.score = c.score+1;
+                } else {
+                    c.move = NOT_POSSIBLE;
+                }
                 break;
-                case TRACK:
-                c.score = -1;
-                c.move = NOT_POSSIBLE;
-                free_lanes(very_first_of_current);
-                printf("waaaaaaaaaaaaaak\n");
-                return c;
+                case GO_DOWN:
+                if (l->prev != NULL) {
+                    copy_p.x = p.x;
+                    copy_p.y = p.y - 1;
+                    current_lane =  copy_current->prev;
+                    c.score = c.score-1;
+                } else {
+                    c.move = NOT_POSSIBLE;
+                }
                 break;
-                case ROAD:
-                c.score = -1;
-                c.move = NOT_POSSIBLE;
-                free_lanes(very_first_of_current);
-                return c;
+                case GO_LEFT:
+                if (p.x > 0) {
+                    copy_p.x = p.x - 1;
+                    copy_p.y = p.y;
+                    current_lane = copy_current;
+                } else {
+                    c.move = NOT_POSSIBLE;
+                }
                 break;
-                case WATER:
-                drown_flag = false;
-                if (player_lane->speed != 0) {
-                    if (on_log != collided_obstacle) {
-                        on_log = collided_obstacle;
-                        p.x = collided_obstacle->x + abs((int) round(p.x - collided_obstacle->x));
-                    }
+                case GO_RIGHT:
+                if (copy_p.x < LANE_WIDTH -1 ) {
+                    copy_p.x = p.x + 1;
+                    copy_p.y = p.y;
+                    current_lane = copy_current;
+                } else {
+                    c.move = NOT_POSSIBLE;
                 }
                 break;
                 default:
+                current_lane = copy_current;
+                copy_p.x = p.x;
+                copy_p.y = p.y;
                 break;
             }
+            
+
+            // step 2 : for each possible move, check the collision
+            bool coll = collides_without_game(current_lane, copy_p);
+            if (coll) {
+                printf("la collision %d\n", i);
+            }
+
+            // step 3 : if move possible and no collision, continu with this move
+            couple next;
+            if (c.move != NOT_POSSIBLE && !coll) {
+                next = minmax_rec(current_lane, deep-1, c, copy_p);
+            } else {
+                next.move = NOT_POSSIBLE;
+                next.score = -1;
+            }
+
+            // step 4 : update res if c better than him
+            if (next.move != NOT_POSSIBLE && next.score >= res.score) { //TODO si mvt autre pas possible sans mort pour down
+                res.move = c.move;
+                res.score = next.score;
+            }
+            printf("avec deep = %d et avec mouvement %d\n", deep, i);
+            printf("p.x = %f, p.y = %f\n", p.x, p.y);
+            printf("copy_p.x = %f, copy_p.y = %f\n", copy_p.x, copy_p.y);
+            //printf("vague tentative de connaitre la lane %f\n", current_lane->obstacles->x);
+            printf("res : score %d, move %d\n", res.score, res.move);
+            printf("c : score %d, move %d\n", c.score, c.move);
+            printf("next : score %d, move %d\n", next.score, next.move);
+            printf("\n");
+
         }
-        if (drown_flag || p.x < UNPLAYABLE_WIDTH || p.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) { // manque le cas ou on est hors champ en bas
-            c.score = -1;
-            c.move = NOT_POSSIBLE;
-            free_lanes(very_first_of_current);
-            return c;
-        }
-
-        // case P* LE TRUC SUR LEQUEL ON RAPELLE !
-        couple c_up = minmax_rec(player_lane->next, deep-1, high_score+1, GO_AHEAD, p);
-        couple c_down = minmax_rec(player_lane->prev, deep-1, high_score-1, GO_DOWN, p);
-        couple c_left = minmax_rec(player_lane, deep-1, high_score, GO_LEFT, p);
-        couple c_right = minmax_rec(player_lane, deep-1, high_score, GO_RIGHT, p);
-        couple c_stay = minmax_rec(player_lane, deep-1, high_score, STAY, p);
-
-        int m = fmax(c_stay.score,fmax(fmax(c_up.score, c_down.score), fmax(c_left.score, c_right.score)));
-        int move = NOT_POSSIBLE;
-
-        if (c_up.move != NOT_POSSIBLE && c_up.score==m) {
-            m = c_up.score;
-            move = GO_AHEAD;
-        } else if (c_down.move != NOT_POSSIBLE && c_down.score==m) {
-            m = c_down.score;
-            move = GO_DOWN;
-        } else if (c_left.move != NOT_POSSIBLE && c_left.score==m) {
-            m = c_left.score;
-            move = GO_LEFT;
-        } else if (c_right.move != NOT_POSSIBLE && c_right.score==m) {
-            m = c_right.score;
-            move = GO_RIGHT;
-        } else if (c_stay.move != NOT_POSSIBLE && c_stay.score==m) {
-            m = c_stay.score;
-            move = STAY;
-        }
-
-        couple res;
-        res.score = m;
-        res.move = move;
-        free_lanes(very_first_of_current);
+        free_lanes(beginning_lane);
+        //free_lanes(current_lane);
         return res;
-
     }
 }
