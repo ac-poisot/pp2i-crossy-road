@@ -29,3 +29,5 @@ void printf_lane(lane* l, player p) ;
 bool collides_without_game(lane *current_lane, player p);
 void update_lanes(lane* lane);
 couple minmax_rec(lane* l, int deep, couple previous, player p);
+lane** n_update(int n, lane* l);
+void free_update(lane** tab, int n);

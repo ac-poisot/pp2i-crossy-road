@@ -183,13 +183,8 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
             copy_current= copy_current->prev;
         }
 
-        //displayLanes(beginning_lane);
-        //printf("aaaa\n");
-
         update_lanes(beginning_lane);
         copy_current = current_lane;
-
-        //displayLanes(beginning_lane);
 
         player copy_p;
         copy_p.orientation = p.orientation;
@@ -249,9 +244,6 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
 
             // step 2 : for each possible move, check the collision
             bool coll = collides_without_game(current_lane, copy_p);
-            //if (coll) {
-            //    printf("la collision %d\n", i);
-            //}
 
             // step 3 : if move possible and no collision, continu with this move
             couple next;
@@ -263,22 +255,40 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
             }
 
             // step 4 : update res if c better than him
-            if (next.move != NOT_POSSIBLE && next.score >= res.score) { //TODO si mvt autre pas possible sans mort pour down
+            if (next.move != NOT_POSSIBLE && next.score >= res.score) {
                 res.move = c.move;
                 res.score = next.score;
             }
-            //printf("avec deep = %d et avec mouvement %d\n", deep, i);
-            //printf("p.x = %f, p.y = %f\n", p.x, p.y);
-            //printf("copy_p.x = %f, copy_p.y = %f\n", copy_p.x, copy_p.y);
-            //printf("vague tentative de connaitre la lane %f\n", current_lane->obstacles->x);
-            //printf("res : score %d, move %d\n", res.score, res.move);
-            //printf("c : score %d, move %d\n", c.score, c.move);
-            //printf("next : score %d, move %d\n", next.score, next.move);
-            //printf("\n");
 
         }
-        //printf("patate\n");
         free_lanes(beginning_lane);
         return res;
     }
+}
+
+
+lane** n_update(int n, lane* l) {
+    // makes n update of the lanes and store them in a array, the last update is in the first case
+    // it updates the lanes since the beginning obtains by copy_lane()
+    lane** tab = (lane**)malloc(sizeof(lane*)*n);
+    lane* current_lane = copy_lane(l, n);
+
+    for (int i=0; i<n; i=i+1) { // TODO : revenir au debut pour update
+        //printf("avant %f\n", current_lane->next->obstacles->x);
+        update_lanes(current_lane);
+        //printf("apres %f\n", current_lane->next->obstacles->x);
+        tab[n-i-1] = current_lane;
+        current_lane = copy_lane(current_lane, n);
+    }
+
+    free_lanes(current_lane);
+    
+    return tab;
+}
+
+void free_update(lane** tab, int n) {
+    for (int i=0; i<n; i=i+1) {
+        free_lanes(tab[i]);
+    }
+    free(tab);
 }

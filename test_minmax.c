@@ -19,22 +19,47 @@
 #define GO_LEFT  4
 #define STAY     5
 
+obstacle* init_obst(obstacle* next, obstacle* prev, float x, int size) {
+    obstacle* o = (obstacle*)malloc(sizeof(obstacle));
+    o->next = next;
+    if (next != NULL) {
+        next->prev = o;
+    }
+    o->prev = prev;
+    if (prev != NULL) {
+        prev->next = o;
+    }
+    o->x = x;
+    o->size = size;
+    return o;
+}
+
+lane* init_lane(int y, float speed, obstacle* obst, int obst_size, int type, lane* prev, lane* next) {
+    lane* l = (lane*)malloc(sizeof(lane));
+    l->y = y;
+    l->speed = speed;
+    l->obst_size = obst_size;
+    l->type = type;
+    l->prev = prev;
+    if (prev != NULL) {
+        prev->next = l;
+    }
+    l->obstacles = obst;
+    l->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l->coins[i] = false;
+    }
+    l->next = next;
+    if (next != NULL) {
+        next->prev = l;
+    }
+    return l;
+}
+
 void test_copy_obstacle(void) {
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = 3;
-    o1->size = 2;
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->next = NULL;
-    o2->prev = o1;
-    o2->x = 6;
-    o2->size = 1;
-    obstacle* o3 = (obstacle*)malloc(sizeof(obstacle));
-    o3->next = NULL;
-    o3->prev = o2;
-    o3->x = 10;
-    o3->size = 3;
+    obstacle* o1 = init_obst(NULL, NULL, 3, 2);
+    obstacle* o2 = init_obst(NULL, o1, 6, 1);
+    obstacle* o3 = init_obst(NULL, o2, 10, 3);
     o2->next = o3;
     o1->next = o2;
 
@@ -101,31 +126,9 @@ void test_collide(void) {
     p.orientation=0;
     p.skin=0;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2+1;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = NULL;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
-
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->prev = NULL;
-    o2->next= o1;
-    o1->prev = o2;
-    o2->x = 1;
-    o2->size = 2;
-
-    l1->obstacles = o2;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
+    obstacle* o2 = init_obst(o1, NULL, 1, 2);
+    lane* l1 = init_lane(4, -1, o2, 2, 4, NULL, NULL);
 
     assert(!collides_without_game(l1, p));
     p.x = 1;
@@ -145,47 +148,16 @@ void test_collide(void) {
 }
 
 void test_update_lanes(void) {
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2+1;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = NULL;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL);
 
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->next = NULL;
-    o2->prev = NULL;
-    o2->x = 1;
-    o2->size = 2;
-    lane* l2 = (lane*)malloc(sizeof(lane));
-    l2->y = 5;
-    l2->speed = -1;
-    l2->obst_size = 2;
-    l2->type = 4;
-    l2->prev = l1;
-    l1->next = l2;
-    l2->obstacles = o2;
-    l2->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l2->coins[i] = false;
-    }
-    l2->next = NULL;
+    obstacle* o2 = init_obst(NULL, NULL, 1, 2);
+    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL);
 
     update_lanes(l1);
     
     assert(l1->obstacles->x == LANE_WIDTH/2);
-    assert(l2->obstacles->x == 0);
+    assert(l2->obstacles->x == 2);
 
     free_lanes(l1);
 }
@@ -221,29 +193,13 @@ void test_one_stay(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2+1;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = l->next->next->next;
-    l->next->next->next->next = l1;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
 
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c1 = minmax_rec(l->next->next->next,1,todo,p);
+    couple c1 = minmax_rec(l1->prev,1,todo,p);
     assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -262,60 +218,12 @@ void test_one_right(void) {
     p.orientation=0;
     p.skin=0;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = 1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = NULL;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
-
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->next = NULL;
-    o2->prev = NULL;
-    o2->x = LANE_WIDTH/2-1;
-    o2->size = 2;
-    lane* l2 = (lane*)malloc(sizeof(lane));
-    l2->y = 4;
-    l2->speed = 1;
-    l2->obst_size = 2;
-    l2->type = 4;
-    l2->prev = l1;
-    l2->obstacles = o2;
-    l2->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l2->next = NULL;
-    l1->next = l2;
-
-    obstacle* o3 = (obstacle*)malloc(sizeof(obstacle));
-    o3->next = NULL;
-    o3->prev = NULL;
-    o3->x = LANE_WIDTH/2;
-    o3->size = 2;
-    lane* l3 = (lane*)malloc(sizeof(lane));
-    l3->y = 4;
-    l3->speed = 1;
-    l3->obst_size = 2;
-    l3->type = 4;
-    l3->prev = l2;
-    l3->obstacles = o3;
-    l3->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l3->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
+    lane* l1 = init_lane(4, 1, o1, 2, 4, NULL, NULL);
+    obstacle* o2 = init_obst(NULL, NULL, LANE_WIDTH/2-1, 2);
+    lane* l2 = init_lane(4, 1, o2, 2, 4, l1, NULL);
+    obstacle* o3 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
+    lane* l3 = init_lane(4, 1, o3, 2, 4, l2, NULL);
     l2->next = l3;
 
     couple todo;
@@ -340,29 +248,13 @@ void test_two_rigth(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2+1;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = l->next->next->next;
-    l->next->next->next->next = l1;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
 
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c2 = minmax_rec(l->next->next->next,2,todo,p);
+    couple c2 = minmax_rec(l1->prev,2,todo,p);
     assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -383,29 +275,13 @@ void test_three_stay(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = LANE_WIDTH/2;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 4;
-    l1->type = 4;
-    l1->prev = l->next->next->next;
-    l->next->next->next->next = l1;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
+    lane* l1 = init_lane(4, -1, o1, 4, 4, l->next->next->next, NULL);
 
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c3 = minmax_rec(l->next->next->next,3,todo,p);
+    couple c3 = minmax_rec(l1->prev,3,todo,p);
     assert(o1->x == LANE_WIDTH/2); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -426,48 +302,15 @@ void test_two_left(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = 2;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = l->next->next->next;
-    l->next->next->next->next = l1;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
-
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->next = NULL;
-    o2->prev = NULL;
-    o2->x = 1;
-    o2->size = 2;
-    lane* l2 = (lane*)malloc(sizeof(lane));
-    l2->y = 5;
-    l2->speed = -1;
-    l2->obst_size = 2;
-    l2->type = 4;
-    l2->prev = l1;
-    l1->next = l2;
-    l2->obstacles = o2;
-    l2->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l2->coins[i] = false;
-    }
-    l2->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, 2, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    obstacle* o2 = init_obst(NULL, NULL, 1, 2);
+    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL);
     
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c4 = minmax_rec(l->next->next->next->next,2,todo,p);
+    couple c4 = minmax_rec(l2->prev,2,todo,p);
     assert(o1->x == 2); // les obstacles ne doivent pas avoir bouge
     assert(p.x == 1); // le joueur ne doit pas avoir bouge
     assert(p.y == 4);
@@ -488,48 +331,15 @@ void test_three_down(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
-    o1->next = NULL;
-    o1->prev = NULL;
-    o1->x = 2;
-    o1->size = 2;
-    lane* l1 = (lane*)malloc(sizeof(lane));
-    l1->y = 4;
-    l1->speed = -1;
-    l1->obst_size = 2;
-    l1->type = 4;
-    l1->prev = l->next->next->next;
-    l->next->next->next->next = l1;
-    l1->obstacles = o1;
-    l1->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l1->coins[i] = false;
-    }
-    l1->next = NULL;
-
-    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
-    o2->next = NULL;
-    o2->prev = NULL;
-    o2->x = 1;
-    o2->size = 2;
-    lane* l2 = (lane*)malloc(sizeof(lane));
-    l2->y = 5;
-    l2->speed = -1;
-    l2->obst_size = 2;
-    l2->type = 4;
-    l2->prev = l1;
-    l1->next = l2;
-    l2->obstacles = o2;
-    l2->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l2->coins[i] = false;
-    }
-    l2->next = NULL;
+    obstacle* o1 = init_obst(NULL, NULL, 2, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    obstacle* o2 = init_obst(NULL, NULL, 1, 2);
+    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL);
     
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c4 = minmax_rec(l->next->next->next->next,3,todo,p);
+    couple c4 = minmax_rec(l2->prev,3,todo,p);
     assert(o1->x == 2); // les obstacles ne doivent pas avoir bouge
     assert(p.x == 1); // le joueur ne doit pas avoir bouge
     assert(p.y == 4);
@@ -538,18 +348,43 @@ void test_three_down(void) {
 
     free_lanes(l);
 }
+
+void test_n_update(void) {
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL);
+    obstacle* o2 = init_obst(NULL, NULL, 1, 2);
+    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL);
+    l2->prev = l1;
+    l1->next = l2;
+
+    lane** tab = n_update(3, l1);
+    assert(tab[0] != l1);
+    assert(tab[1] != l1);
+    assert(tab[2] != l1);
+    assert(tab[2]->obstacles->x == LANE_WIDTH/2-1);
+    assert(tab[2]->next->obstacles->x == 2);
+    assert(tab[1]->obstacles->x == LANE_WIDTH/2-2);
+    assert(tab[1]->next->obstacles->x == 3);
+    assert(tab[0]->obstacles->x == LANE_WIDTH/2-3);
+    assert(tab[0]->next->obstacles->x == 4);
+    assert(l1->obstacles->x == LANE_WIDTH/2);
+    assert(l2->obstacles->x == 1);
+    free_update(tab, 3);
+    free_lanes(l1);
+}
  
 int main(void) {
     //test_copy_obstacle();
     //test_copy_lane();
     //test_collide();
     //test_update_lanes();
-    test_minmax_rec_begining();
-    test_one_stay();
-    test_one_right();
-    test_two_rigth();
-    test_three_stay();
-    test_three_down();
-    test_two_left();
+    //test_minmax_rec_begining();
+    //test_one_stay();
+    //test_one_right();
+    //test_two_rigth();
+    //test_three_stay();
+    //test_three_down();
+    //test_two_left();
+    test_n_update();
     return 0;
 }
