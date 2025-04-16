@@ -272,16 +272,22 @@ lane** n_update(int n, lane* l) {
     // it updates the lanes since the beginning obtains by copy_lane()
     lane** tab = (lane**)malloc(sizeof(lane*)*n);
     lane* current_lane = copy_lane(l, n);
+    lane* beginning_lane = current_lane;
 
-    for (int i=0; i<n; i=i+1) { // TODO : revenir au debut pour update
-        //printf("avant %f\n", current_lane->next->obstacles->x);
-        update_lanes(current_lane);
-        //printf("apres %f\n", current_lane->next->obstacles->x);
+    for (int i=0; i<n; i=i+1) {
+        while (beginning_lane->prev != NULL) {
+            beginning_lane = beginning_lane->prev;
+        }
+        update_lanes(beginning_lane);
         tab[n-i-1] = current_lane;
         current_lane = copy_lane(current_lane, n);
+        beginning_lane = current_lane;
     }
 
-    free_lanes(current_lane);
+    while (beginning_lane->prev != NULL) {
+        beginning_lane = beginning_lane->prev;
+    }
+    free_lanes(beginning_lane);
     
     return tab;
 }
@@ -291,4 +297,216 @@ void free_update(lane** tab, int n) {
         free_lanes(tab[i]);
     }
     free(tab);
+}
+
+couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane** tab) {
+    /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
+    le reste du temps
+    effectuer un mouvement, tester s'il est juste (collision ou eau)
+    s'il es juste, calculer le nouveau score (+1 si devant, -1 si derrière, 0 sinon) ?
+    remonter ce score à une variable globale à la boucle qu'on met à jour si c'est mieux
+    recommencer jusqu'à fin des mouvements possibles
+    -> le meilleur mouvement est celui permis par la boucle lors du premier appel
+    -> si on envoie un couple (score, mvt), c'est ce qu'on maintient à jour dans la boucle et qu'on renvoie
+    */
+    if (deep <= 0) {
+        return previous;
+    } else {
+        // on a state, want to know possibiities
+        couple res;
+        res.move = NOT_POSSIBLE;
+        res.score = -deep-1;
+
+        // step 1 : update the map and do a move
+        lane* current_lane = tab[deep-1];
+        lane* copy_current = current_lane;
+
+        player copy_p;
+        copy_p.orientation = p.orientation;
+        copy_p.skin = p.skin;
+        for (int i=1; i<6; i=i+1) {
+            // couple linked to a mouv
+            couple c;
+            c.move = i;
+            c.score = previous.score;
+
+            switch (i) {
+                case GO_AHEAD:
+                    if (l->next != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y + 1;
+                        current_lane = copy_current->next;
+                        c.score = c.score+1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                case GO_DOWN:
+                    if (l->prev != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y - 1;
+                        current_lane =  copy_current->prev;
+                        c.score = c.score-1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                break;
+                case GO_LEFT:
+                    if (p.x > 0) {
+                        copy_p.x = p.x - 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                case GO_RIGHT:
+                    if (copy_p.x < LANE_WIDTH -1 ) {
+                        copy_p.x = p.x + 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                default:
+                    current_lane = copy_current;
+                    copy_p.x = p.x;
+                    copy_p.y = p.y;
+                    break;
+            }
+            
+
+            // step 2 : for each possible move, check the collision
+            bool coll = collides_without_game(current_lane, copy_p);
+
+            // step 3 : if move possible and no collision, continu with this move
+            couple next;
+            if (c.move != NOT_POSSIBLE && !coll) {
+                next = minmax_rec(current_lane, deep-1, c, copy_p);
+            } else {
+                next.move = NOT_POSSIBLE;
+                next.score = -1;
+            }
+
+            // step 4 : update res if c better than him
+            if (next.move != NOT_POSSIBLE && next.score >= res.score) {
+                res.move = c.move;
+                res.score = next.score;
+            }
+
+        }
+        return res;
+    }
+}
+
+couple minmax_rec_memo_all(lane* l, int deep, couple previous, player p, lane** tab, List* vus) {
+    /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
+    le reste du temps
+    effectuer un mouvement, tester s'il est juste (collision ou eau)
+    s'il es juste, calculer le nouveau score (+1 si devant, -1 si derrière, 0 sinon) ?
+    remonter ce score à une variable globale à la boucle qu'on met à jour si c'est mieux
+    recommencer jusqu'à fin des mouvements possibles
+    -> le meilleur mouvement est celui permis par la boucle lors du premier appel
+    -> si on envoie un couple (score, mvt), c'est ce qu'on maintient à jour dans la boucle et qu'on renvoie
+    */
+    if (deep <= 0) {
+        return previous;
+    } else {
+        // on a state, want to know possibiities
+        couple res;
+        res.move = NOT_POSSIBLE;
+        res.score = -deep-1;
+
+        // step 1 : update the map and do a move
+        lane* current_lane = tab[deep-1];
+        lane* copy_current = current_lane;
+
+        player copy_p;
+        copy_p.orientation = p.orientation;
+        copy_p.skin = p.skin;
+        for (int i=1; i<6; i=i+1) {
+            // couple linked to a mouv
+            couple c;
+            c.move = i;
+            c.score = previous.score;
+
+            switch (i) {
+                case GO_AHEAD:
+                    if (l->next != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y + 1;
+                        current_lane = copy_current->next;
+                        c.score = c.score+1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                case GO_DOWN:
+                    if (l->prev != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y - 1;
+                        current_lane =  copy_current->prev;
+                        c.score = c.score-1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                break;
+                case GO_LEFT:
+                    if (p.x > 0) {
+                        copy_p.x = p.x - 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                case GO_RIGHT:
+                    if (copy_p.x < LANE_WIDTH -1 ) {
+                        copy_p.x = p.x + 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
+                default:
+                    current_lane = copy_current;
+                    copy_p.x = p.x;
+                    copy_p.y = p.y;
+                    break;
+            }
+ 
+            couple tempo = is_in(deep, copy_p.x, copy_p.y, vus);
+            if (tempo.move != -1) {
+                res.move = tempo.move;
+                res.score = tempo.score;
+            } else {
+                // step 2 : for each possible move, check the collision
+                bool coll = collides_without_game(current_lane, copy_p);
+
+                // step 3 : if move possible and no collision, continu with this move
+                couple next;
+                if (c.move != NOT_POSSIBLE && !coll) {
+                    next = minmax_rec(current_lane, deep-1, c, copy_p);
+                } else {
+                    next.move = NOT_POSSIBLE;
+                    next.score = -1;
+                }
+
+                // step 4 : update res if c better than him
+                if (next.move != NOT_POSSIBLE && next.score >= res.score) {
+                    res.move = c.move;
+                    res.score = next.score;
+                }
+
+                //step 5 : add res to vus
+                vus = append(deep, copy_p.x, copy_p.y, res, vus);
+            }
+
+            
+
+        }
+        return res;
+    }
 }

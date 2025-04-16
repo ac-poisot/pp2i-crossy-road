@@ -178,6 +178,24 @@ void test_minmax_rec_begining(void) {
     assert(c.score == 3);
     assert(c.move == GO_AHEAD);
 
+    lane** tab = n_update(3, l);
+    couple cm = minmax_rec_memo_state(l, 3, todo, p, tab);
+    assert(cm.score == 3);
+    assert(cm.move == GO_AHEAD);
+
+    couple beg;
+    beg.score = -1;
+    beg.move = -1;
+    List* vus = create_list(3, p.x, p.y, beg, NULL);
+    couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
+    printf("score : %d, move : %d\n", cma.score, cma.move);
+    assert(cma.score == 3);
+    assert(cma.move == GO_AHEAD);
+
+    free_list(vus);
+
+    free_update(tab, 3);
+
     free_lanes(l);
 }
 
@@ -206,6 +224,12 @@ void test_one_stay(void) {
     assert(c1.score == 0);
     assert(c1.move == STAY);
 
+    lane** tab = n_update(1, l1->prev);
+    couple cm = minmax_rec_memo_state(l1->prev, 1, todo, p, tab);
+    assert(cm.score == 0);
+    assert(cm.move == STAY);
+    free_update(tab, 1);
+
     free_lanes(l);
 
 }
@@ -232,6 +256,12 @@ void test_one_right(void) {
     couple c1 = minmax_rec(l2,1,todo,p);
     assert(c1.score == 0);
     assert(c1.move == GO_RIGHT);
+
+    lane** tab = n_update(1, l2);
+    couple cm = minmax_rec_memo_state(l2, 1, todo, p, tab);
+    assert(cm.score == 0);
+    assert(cm.move == GO_RIGHT);
+    free_update(tab, 1);
 
     free_lanes(l1);
 
@@ -261,6 +291,12 @@ void test_two_rigth(void) {
     assert(c2.score == 1);
     assert(c2.move == GO_RIGHT);
 
+    lane** tab = n_update(2, l1->prev);
+    couple cm = minmax_rec_memo_state(l1->prev, 2, todo, p, tab);
+    assert(cm.score == 1);
+    assert(cm.move == GO_RIGHT);
+    free_update(tab, 2);
+
     free_lanes(l);
 }
 
@@ -287,6 +323,12 @@ void test_three_stay(void) {
     assert(p.y == 3);
     assert(c3.score == 1);
     assert(c3.move == STAY);
+
+    lane** tab = n_update(3, l1->prev);
+    couple cm = minmax_rec_memo_state(l1->prev, 3, todo, p, tab);
+    assert(cm.score == 1);
+    assert(cm.move == STAY);
+    free_update(tab, 3);
 
     free_lanes(l);
 }
@@ -317,6 +359,12 @@ void test_two_left(void) {
     assert(c4.score == -1);
     assert(c4.move == GO_LEFT);
 
+    lane** tab = n_update(2, l2->prev);
+    couple cm = minmax_rec_memo_state(l2->prev, 2, todo, p, tab);
+    assert(cm.score == -1);
+    assert(cm.move == GO_LEFT);
+    free_update(tab, 2);
+
     free_lanes(l);
 }
 
@@ -346,6 +394,12 @@ void test_three_down(void) {
     assert(c4.score == 0);
     assert(c4.move == GO_DOWN);
 
+    lane** tab = n_update(3, l2->prev);
+    couple cm = minmax_rec_memo_state(l2->prev, 3, todo, p, tab);
+    assert(cm.score == 0);
+    assert(cm.move == GO_DOWN);
+    free_update(tab, 3);
+
     free_lanes(l);
 }
 
@@ -354,23 +408,28 @@ void test_n_update(void) {
     lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL);
     obstacle* o2 = init_obst(NULL, NULL, 1, 2);
     lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL);
-    l2->prev = l1;
-    l1->next = l2;
+    obstacle* o3 = init_obst(NULL, NULL, 20, 2);
+    lane* l3 = init_lane(5, -2, o3, 2, 4, NULL, l1);
 
     lane** tab = n_update(3, l1);
+
     assert(tab[0] != l1);
     assert(tab[1] != l1);
     assert(tab[2] != l1);
     assert(tab[2]->obstacles->x == LANE_WIDTH/2-1);
     assert(tab[2]->next->obstacles->x == 2);
+    assert(tab[2]->prev->obstacles->x == 18);
     assert(tab[1]->obstacles->x == LANE_WIDTH/2-2);
     assert(tab[1]->next->obstacles->x == 3);
+    assert(tab[1]->prev->obstacles->x == 16);
     assert(tab[0]->obstacles->x == LANE_WIDTH/2-3);
     assert(tab[0]->next->obstacles->x == 4);
+    assert(tab[0]->prev->obstacles->x == 14);
     assert(l1->obstacles->x == LANE_WIDTH/2);
     assert(l2->obstacles->x == 1);
+    assert(l3->obstacles->x == 20);
     free_update(tab, 3);
-    free_lanes(l1);
+    free_lanes(l3);
 }
  
 int main(void) {
@@ -378,13 +437,13 @@ int main(void) {
     //test_copy_lane();
     //test_collide();
     //test_update_lanes();
-    //test_minmax_rec_begining();
+    test_minmax_rec_begining();
     //test_one_stay();
     //test_one_right();
     //test_two_rigth();
     //test_three_stay();
     //test_three_down();
     //test_two_left();
-    test_n_update();
+    //test_n_update();
     return 0;
 }
