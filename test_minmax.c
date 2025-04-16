@@ -203,7 +203,6 @@ void test_minmax_rec_begining(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c = minmax_rec(l, 3, todo, p);
-    printf("score : %d, move : %d\n", c.score, c.move);
     assert(c.score == 3);
     assert(c.move == GO_AHEAD);
 
@@ -245,8 +244,6 @@ void test_one_stay(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c1 = minmax_rec(l->next->next->next,1,todo,p);
-    printf("le score obtenu %d\n", c1.score);
-    printf("le mouvement obtenu %d\n", c1.move);
     assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -325,8 +322,6 @@ void test_one_right(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c1 = minmax_rec(l2,1,todo,p);
-    printf("le score obtenu %d\n", c1.score);
-    printf("le mouvement obtenu %d\n", c1.move);
     assert(c1.score == 0);
     assert(c1.move == GO_RIGHT);
 
@@ -368,8 +363,6 @@ void test_two_rigth(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c2 = minmax_rec(l->next->next->next,2,todo,p);
-    printf("le score obtenu %d\n", c2.score);
-    printf("le mouvement obtenu %d\n", c2.move);
     assert(o1->x == LANE_WIDTH/2 + 1); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -413,8 +406,6 @@ void test_three_stay(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c3 = minmax_rec(l->next->next->next,3,todo,p);
-    printf("le score obtenu %d\n", c3.score);
-    printf("le mouvement obtenu %d\n", c3.move);
     assert(o1->x == LANE_WIDTH/2); // les obstacles ne doivent pas avoir bouge
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
@@ -424,7 +415,7 @@ void test_three_stay(void) {
     free_lanes(l);
 }
 
-void test_two_down(void) {
+void test_two_left(void) {
     // define the game
     player p;
     p.y=4;
@@ -477,27 +468,88 @@ void test_two_down(void) {
     todo.score = 0;
     todo.move = STAY;
     couple c4 = minmax_rec(l->next->next->next->next,2,todo,p);
-    printf("le score obtenu %d\n", c4.score);
-    printf("le mouvement obtenu %d\n", c4.move);
     assert(o1->x == 2); // les obstacles ne doivent pas avoir bouge
     assert(p.x == 1); // le joueur ne doit pas avoir bouge
     assert(p.y == 4);
     assert(c4.score == -1);
-    assert(c4.move == GO_DOWN);
+    assert(c4.move == GO_LEFT);
 
     free_lanes(l);
 }
 
+void test_three_down(void) {
+    // define the game
+    player p;
+    p.y=4;
+    p.x=1;
+    p.orientation=0;
+    p.skin=0;
+    lane* l = initialLanes();
+    free_lanes(l->next->next->next->next);
+    l->next->next->next->next = NULL;
+
+    obstacle* o1 = (obstacle*)malloc(sizeof(obstacle));
+    o1->next = NULL;
+    o1->prev = NULL;
+    o1->x = 2;
+    o1->size = 2;
+    lane* l1 = (lane*)malloc(sizeof(lane));
+    l1->y = 4;
+    l1->speed = -1;
+    l1->obst_size = 2;
+    l1->type = 4;
+    l1->prev = l->next->next->next;
+    l->next->next->next->next = l1;
+    l1->obstacles = o1;
+    l1->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l1->coins[i] = false;
+    }
+    l1->next = NULL;
+
+    obstacle* o2 = (obstacle*)malloc(sizeof(obstacle));
+    o2->next = NULL;
+    o2->prev = NULL;
+    o2->x = 1;
+    o2->size = 2;
+    lane* l2 = (lane*)malloc(sizeof(lane));
+    l2->y = 5;
+    l2->speed = -1;
+    l2->obst_size = 2;
+    l2->type = 4;
+    l2->prev = l1;
+    l1->next = l2;
+    l2->obstacles = o2;
+    l2->coins = (bool*)malloc(sizeof(bool)*24);
+    for (int i=0; i<24; i=i+1) {
+        l2->coins[i] = false;
+    }
+    l2->next = NULL;
+    
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    couple c4 = minmax_rec(l->next->next->next->next,3,todo,p);
+    assert(o1->x == 2); // les obstacles ne doivent pas avoir bouge
+    assert(p.x == 1); // le joueur ne doit pas avoir bouge
+    assert(p.y == 4);
+    assert(c4.score == 0);
+    assert(c4.move == GO_DOWN);
+
+    free_lanes(l);
+}
+ 
 int main(void) {
     //test_copy_obstacle();
     //test_copy_lane();
     //test_collide();
     //test_update_lanes();
-    //test_minmax_rec_begining();
+    test_minmax_rec_begining();
     test_one_stay();
     test_one_right();
     test_two_rigth();
     test_three_stay();
-    //test_two_down();
+    test_three_down();
+    test_two_left();
     return 0;
 }

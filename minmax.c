@@ -171,7 +171,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
         // on a state, want to know possibiities
         couple res;
         res.move = NOT_POSSIBLE;
-        res.score = previous.score;
+        res.score = -deep-1;
 
         // step 1 : update the map and do a move
         lane* current_lane = copy_lane(l, deep);
@@ -183,18 +183,13 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
             copy_current= copy_current->prev;
         }
 
-        displayLanes(beginning_lane);
-        displayLanes(beginning_lane->next);
-        displayLanes(beginning_lane->next->next);
-
-        printf("aaaa\n");
+        //displayLanes(beginning_lane);
+        //printf("aaaa\n");
 
         update_lanes(beginning_lane);
         copy_current = current_lane;
 
-        displayLanes(beginning_lane);
-        displayLanes(beginning_lane->next);
-        displayLanes(beginning_lane->next->next);
+        //displayLanes(beginning_lane);
 
         player copy_p;
         copy_p.orientation = p.orientation;
@@ -207,56 +202,56 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
 
             switch (i) {
                 case GO_AHEAD:
-                if (l->next != NULL) {
-                    copy_p.x = p.x;
-                    copy_p.y = p.y + 1;
-                    current_lane = copy_current->next;
-                    c.score = c.score+1;
-                } else {
-                    c.move = NOT_POSSIBLE;
-                }
-                break;
+                    if (l->next != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y + 1;
+                        current_lane = copy_current->next;
+                        c.score = c.score+1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
                 case GO_DOWN:
-                if (l->prev != NULL) {
-                    copy_p.x = p.x;
-                    copy_p.y = p.y - 1;
-                    current_lane =  copy_current->prev;
-                    c.score = c.score-1;
-                } else {
-                    c.move = NOT_POSSIBLE;
-                }
+                    if (l->prev != NULL) {
+                        copy_p.x = p.x;
+                        copy_p.y = p.y - 1;
+                        current_lane =  copy_current->prev;
+                        c.score = c.score-1;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
                 break;
                 case GO_LEFT:
-                if (p.x > 0) {
-                    copy_p.x = p.x - 1;
-                    copy_p.y = p.y;
-                    current_lane = copy_current;
-                } else {
-                    c.move = NOT_POSSIBLE;
-                }
-                break;
+                    if (p.x > 0) {
+                        copy_p.x = p.x - 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
                 case GO_RIGHT:
-                if (copy_p.x < LANE_WIDTH -1 ) {
-                    copy_p.x = p.x + 1;
-                    copy_p.y = p.y;
-                    current_lane = copy_current;
-                } else {
-                    c.move = NOT_POSSIBLE;
-                }
-                break;
+                    if (copy_p.x < LANE_WIDTH -1 ) {
+                        copy_p.x = p.x + 1;
+                        copy_p.y = p.y;
+                        current_lane = copy_current;
+                    } else {
+                        c.move = NOT_POSSIBLE;
+                    }
+                    break;
                 default:
-                current_lane = copy_current;
-                copy_p.x = p.x;
-                copy_p.y = p.y;
-                break;
+                    current_lane = copy_current;
+                    copy_p.x = p.x;
+                    copy_p.y = p.y;
+                    break;
             }
             
 
             // step 2 : for each possible move, check the collision
             bool coll = collides_without_game(current_lane, copy_p);
-            if (coll) {
-                printf("la collision %d\n", i);
-            }
+            //if (coll) {
+            //    printf("la collision %d\n", i);
+            //}
 
             // step 3 : if move possible and no collision, continu with this move
             couple next;
@@ -272,18 +267,18 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
                 res.move = c.move;
                 res.score = next.score;
             }
-            printf("avec deep = %d et avec mouvement %d\n", deep, i);
-            printf("p.x = %f, p.y = %f\n", p.x, p.y);
-            printf("copy_p.x = %f, copy_p.y = %f\n", copy_p.x, copy_p.y);
+            //printf("avec deep = %d et avec mouvement %d\n", deep, i);
+            //printf("p.x = %f, p.y = %f\n", p.x, p.y);
+            //printf("copy_p.x = %f, copy_p.y = %f\n", copy_p.x, copy_p.y);
             //printf("vague tentative de connaitre la lane %f\n", current_lane->obstacles->x);
-            printf("res : score %d, move %d\n", res.score, res.move);
-            printf("c : score %d, move %d\n", c.score, c.move);
-            printf("next : score %d, move %d\n", next.score, next.move);
-            printf("\n");
+            //printf("res : score %d, move %d\n", res.score, res.move);
+            //printf("c : score %d, move %d\n", c.score, c.move);
+            //printf("next : score %d, move %d\n", next.score, next.move);
+            //printf("\n");
 
         }
+        //printf("patate\n");
         free_lanes(beginning_lane);
-        //free_lanes(current_lane);
         return res;
     }
 }
