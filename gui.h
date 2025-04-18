@@ -1,3 +1,9 @@
 #pragma once
 
-void test_gui(void);
+typedef struct button {
+    int x;
+    int y;
+    int width; // position of the obstacle
+    int height;
+    int texture;
+} button;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "core.h"
+#include "gui.h"
 
 #define WIDTH 960
 #define HEIGHT 960
@@ -14,8 +15,6 @@
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
 #define ANIM_LENGTH 5 // In frames, time it takes for the player to get to the next tile
 #define PLAYER_SPEED (1.0f /ANIM_LENGTH) // In tiles per frame, speed of the player
-
-#define PLAYER_SKINS 1 // Number of skins available
 
 #define UP 1
 #define RIGHT 90
@@ -28,12 +27,12 @@ enum {
     GAME,
     GAME_OVER,
     GO_TO_MENU,
-    SHOP
+    GAMBLING,
+    SKIN_SELECT,
 };
 
 enum {
-    SKIN1 = LANE_TYPES + 1,
-    TREE,
+    TREE = LANE_TYPES + 1,
     CAR1,
     CAR2,
     LILY,
@@ -43,9 +42,12 @@ enum {
     TRAIN_MID,
     TRAIN_EDGE,
     PLAY_BUTTON,
+    SKINS_BUTTON,
     MENU_BUTTON,
     TITLE_CARD,
+    SKIN_BG,
     GAME_OVER_CARD,
+    SKIN_START,
     END_TEXTURES
 };
 
@@ -54,6 +56,11 @@ enum {
 
 #define CARD_WIDTH 400
 #define CARD_HEIGHT 200
+
+#define SKIN_SIDE 100
+#define SKINS 6
+#define SKINS_PER_LINE (int) ((WIDTH-SKIN_SIDE*2)/(SKIN_SIDE*1.5)) // how many skins to be displayed by line
+#define PRICE 5
 
 #define FADE_LENGTH 50 // in frames, duration of the transitions
 
@@ -90,13 +97,20 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[TRAIN_EDGE] = create_texture(renderer, "sprites/train_edge.png", TILE_SIDE, TILE_SIDE);
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 
-    textures[SKIN1] = create_texture(renderer, "sprites/skin1.png", TILE_SIDE, TILE_SIDE);
-
     textures[PLAY_BUTTON] = create_texture(renderer, "sprites/menu/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[MENU_BUTTON] = create_texture(renderer, "sprites/menu/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[SKINS_BUTTON] = create_texture(renderer, "sprites/menu/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
 
     textures[TITLE_CARD] = create_texture(renderer, "sprites/menu/title.png", CARD_WIDTH, CARD_HEIGHT);
     textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/menu/game_over.png", CARD_WIDTH, CARD_HEIGHT);
+
+    textures[SKIN_BG] = create_texture(renderer, "sprites/menu/skin_bg.png", SKIN_SIDE, SKIN_SIDE);
+
+    for (int i=0; i<SKINS; i++) {
+        char s[20];
+        sprintf(s, "sprites/skin%d.png", i);
+        textures[SKIN_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
+    }
 }
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
@@ -171,7 +185,7 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
 void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures) {
     SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
     SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-    SDL_RenderCopyEx(renderer, textures[player.skin+SKIN1], &spriteRect, &destRect, player.orientation, NULL, false);
+    SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
 }
 
 void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
@@ -188,24 +202,37 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
     if (data.player.skin != -1) {
         displayPlayer(data.player, data.cameraY, renderer, textures);
 
-    // Display score
-    char scoreText[20];
-    sprintf(scoreText, "Score: %d", (int)data.player.y);
+        // Display score
+        char scoreText[20];
+        sprintf(scoreText, "Score: %d", (int)data.player.y);
 
-    SDL_Color white = {255, 255, 255, 255};
-    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
+        SDL_Color white = {255, 255, 255, 255};
+        TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
 
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
 
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+        
 
-    SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
-    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
-    TTF_CloseFont(font);
+        SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+        TTF_CloseFont(font);
     }
+}
+
+void display_button(button b, SDL_Renderer* renderer, SDL_Texture** textures) {
+    SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
+    SDL_Rect destRect = {b.x, b.y, b.width, b.height};
+    SDL_RenderCopy(renderer, textures[b.texture], &spriteRect, &destRect);
+}
+
+bool button_clicked(button b, SDL_Event event) {
+    return event.button.x > b.x
+        && event.button.x <= b.x + b.width
+        && event.button.y > b.y
+        && event.button.y <= b.y + b.height;
 }
 
 
@@ -220,7 +247,7 @@ int main() {
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
+    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES+SKINS)*(sizeof(SDL_Texture*)));
     load_textures(renderer, textures);
 
     SDL_Event event;
@@ -231,20 +258,24 @@ int main() {
     
 
     int game_state = MENU;
-
+    int player_skin = 0;
+    int purse = 0;
+    bool unlocked_skins[SKINS] = {true};
+    for (int i=1; i<SKINS; i++) {
+        unlocked_skins[i] = true;
+    }
+    unlocked_skins[0] = true;
 
     // Game-specific variables
-    displayedData game;
-    int purse = 0;
+    displayedData game = {0, NULL, NULL, {0, 0, 0, 0}, 0, 0};
+
     bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
     bool blocked_path = false; // whether the path is currently blocked by a tree or not
     obstacle* on_log = NULL; // the log on which the player is
     float x_offset = 0; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
     float liftboost = 0; // in tiles per frame, speed at which the player is being carried (specifically for logs)
     int high_score = 0;
-    // int player_skin = 0;
-    // bool unlocked_skins[PLAYER_SKINS] = {false};
-    // unlocked_skins[0] = true;
+
     int player_anim = 0; // timer for player animation (0 = stopped, anything else = moving)
     int buffer = 0; // stores the next movement to be performed
     bool buffer_key_flag = true; // whether the key for the last movement has been released or not
@@ -254,8 +285,21 @@ int main() {
     demo.player.skin = -1;
     int fade = FADE_LENGTH;
 
+    // Buttons
+
+    button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
+
+    for (int i=0; i<SKINS; i++) {
+        skin_buttons[i].x = ((i%SKINS_PER_LINE)*SKIN_SIDE*1.5)+SKIN_SIDE;
+        skin_buttons[i].y = (i/SKINS_PER_LINE*SKIN_SIDE*1.5)+SKIN_SIDE;
+        skin_buttons[i].width = SKIN_SIDE;
+        skin_buttons[i].height = SKIN_SIDE;
+        skin_buttons[i].texture = SKIN_BG;
+    }
+
     while (running) {
         action = SDL_PollEvent(&event);
+        SDL_FlushEvent(SDL_MOUSEMOTION);
 
         if (action) {
             switch (event.type) {
@@ -270,6 +314,7 @@ int main() {
         switch(game_state) {
         case MENU: {
             // Demo background
+            SDL_RenderClear(renderer);
             display(demo, renderer, textures);
     
             demo = move_camera(demo, GAME_SPEED*5);
@@ -296,18 +341,20 @@ int main() {
 
             // Display buttons
 
-            SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
-            SDL_Rect destRect = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT};
-            SDL_RenderCopy(renderer, textures[PLAY_BUTTON], &spriteRect, &destRect);
+            button play = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, PLAY_BUTTON};
+            button skins = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2 + 1.5*BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SKINS_BUTTON};
+
+            display_button(play, renderer, textures);
+            display_button(skins, renderer, textures);
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
-                    if (event.button.x > (WIDTH-BUTTON_WIDTH)/2
-                        && event.button.x <= (WIDTH+BUTTON_WIDTH)/2
-                        && event.button.y > (HEIGHT-BUTTON_HEIGHT)/2
-                        && event.button.y <= (HEIGHT+BUTTON_HEIGHT)/2) {
+                    if (button_clicked(play, event)) {
                             game_state = MENU_TO_GAME;
                         }
+                    else if (button_clicked(skins, event)) {
+                        game_state = SKIN_SELECT;
+                    }
                     break;
                 case SDL_KEYUP:
                     if (event.key.keysym.sym == SDLK_RETURN) {
@@ -348,11 +395,13 @@ int main() {
                     SDL_RenderFillRect(renderer, &bg);
 
                     if (fade == FADE_LENGTH/2) {
+                        free_lanes(game.first_lane);
                         game = init_game(GAME_HEIGHT);
                         on_log = NULL;
                         x_offset = 0;
                         liftboost = 0;
                         player_anim = 0;
+                        game.player.skin = player_skin;
                         buffer = 0;
                         buffer_key_flag = true;
                     }
@@ -649,16 +698,12 @@ int main() {
             }
             break;
         case GAME_OVER: {
-            SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
-            SDL_Rect destRect = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT};
-            SDL_RenderCopy(renderer, textures[MENU_BUTTON], &spriteRect, &destRect);
+            button menu_button = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
+            display_button(menu_button, renderer, textures);
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
-                    if (event.button.x > (WIDTH-BUTTON_WIDTH)/2
-                        && event.button.x <= (WIDTH+BUTTON_WIDTH)/2
-                        && event.button.y > (HEIGHT-BUTTON_HEIGHT)/2
-                        && event.button.y <= (HEIGHT+BUTTON_HEIGHT)/2) {
+                    if (button_clicked(menu_button, event)) {
                             game_state = GO_TO_MENU;
                         }
                     break;
@@ -689,12 +734,75 @@ int main() {
                 if (high_score < (int) game.player.y) {
                     high_score = (int) game.player.y;
                 }
-                free_lanes(game.first_lane);
                 game_state = MENU;
                 fade = FADE_LENGTH;
             }
             break;
         }
+        case SKIN_SELECT: {
+            SDL_RenderClear(renderer);
+            display(demo, renderer, textures);
+            demo = move_camera(demo, GAME_SPEED*5);
+            lane* current_lane = demo.camera_first_lane;
+            while (current_lane->next != NULL) {
+                switch (current_lane->type) {
+                    case ROAD:
+                    update_vehicles(current_lane);
+                    break;
+                    case WATER:
+                    update_drowning_slots(current_lane);
+                    break;
+                    case TRACK:
+                    update_trains(current_lane);
+                    break;
+                    default:
+                    break;
+                }
+                current_lane = current_lane->next;
+            }
+
+            button menu_button = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
+            display_button(menu_button, renderer, textures);
+
+            for (int i=0; i<SKINS; i++) {
+                if (!unlocked_skins[i]) {
+                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+                    SDL_Rect bg = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
+                    SDL_RenderFillRect(renderer, &bg);
+                }
+                if (player_skin == i) {
+                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+                    SDL_Rect bg = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
+                    SDL_RenderFillRect(renderer, &bg);
+                }
+
+                display_button(skin_buttons[i], renderer, textures);
+                SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
+                SDL_Rect destRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
+                SDL_RenderCopy(renderer, textures[SKIN_START+i], &spriteRect, &destRect);
+            }
+            switch (event.type) {
+                case SDL_MOUSEBUTTONUP:
+                    if (button_clicked(menu_button, event)) {
+                            game_state = MENU;
+                        } else {     
+                        for (int i=0; i<SKINS; i++) {
+                            if (button_clicked(skin_buttons[i], event)) {
+                                if (unlocked_skins[i]) {
+                                    player_skin = i;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_RETURN) {
+                        game_state = MENU;
+                    }
+            }
+            break;
+        }
+
         default:
             break;
         }
@@ -704,7 +812,7 @@ int main() {
     }
 
 
-    for (int i=0; i<END_TEXTURES-1; i++) {
+    for (int i=0; i<END_TEXTURES+SKINS-2; i++) {
         SDL_DestroyTexture(textures[i+1]);
     }
     
