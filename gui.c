@@ -42,6 +42,7 @@ enum {
     LOG_EDGE,
     TRAIN_MID,
     TRAIN_EDGE,
+    WARNING,
     PLAY_BUTTON,
     SKINS_BUTTON,
     MENU_BUTTON,
@@ -101,6 +102,8 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[TRAIN_EDGE] = create_texture(renderer, "sprites/train_edge.png", TILE_SIDE, TILE_SIDE);
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 
+    textures[WARNING] = create_texture(renderer, "sprites/warning.png", TILE_SIDE, TILE_SIDE);
+
     textures[PLAY_BUTTON] = create_texture(renderer, "sprites/menu/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[MENU_BUTTON] = create_texture(renderer, "sprites/menu/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[SKINS_BUTTON] = create_texture(renderer, "sprites/menu/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -119,6 +122,23 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
         textures[SKIN_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
     }
 }
+
+
+
+void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer) {
+    SDL_Color white = {255, 255, 255, 255};
+    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", size);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, white);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+    SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+    TTF_CloseFont(font);
+}
+
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
 
@@ -171,6 +191,20 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
                 }
                 SDL_Rect destRect3 = {(current_obstacle->x+current_obstacle->size-1)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
                 SDL_RenderCopy(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect3);
+
+                if (!flip) {
+                    if (current_obstacle->x + current_obstacle->size > -WARNING_TIME*TRAIN_SPEED && current_obstacle->x + current_obstacle->size < 0) {
+                        SDL_Rect warningRect = {0, 0, TILE_SIDE, TILE_SIDE};
+                        SDL_Rect destRect2 = {0, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                        SDL_RenderCopy(renderer, textures[WARNING], &warningRect, &destRect2);
+                    }
+                } else {
+                    if (current_obstacle->x < LANE_WIDTH + WARNING_TIME*TRAIN_SPEED && current_obstacle->x > LANE_WIDTH) {
+                        SDL_Rect warningRect = {0, 0, TILE_SIDE, TILE_SIDE};
+                        SDL_Rect destRect2 = {(LANE_WIDTH-1)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+                        SDL_RenderCopy(renderer, textures[WARNING], &warningRect, &destRect2);
+                    }
+                }
                 break;
             case ROAD:
                 if (current_obstacle->size == 1) {
@@ -196,21 +230,6 @@ void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Tex
 }
 
 
-void display_text(char* text, int x, int y, SDL_Renderer* renderer) {
-    SDL_Color white = {255, 255, 255, 255};
-    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
-
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, white);
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-
-    SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
-    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
-    TTF_CloseFont(font);
-}
-
-
 void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
@@ -228,7 +247,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
         // Display score
         char scoreText[20];
         sprintf(scoreText, "Score: %d", (int) data.player.y);
-        display_text(scoreText, 0, 0, renderer);
+        display_text(scoreText, 0, 0, 24, renderer);
     }
 }
 
@@ -268,7 +287,7 @@ int main() {
 
     int game_state = MENU;
     int player_skin = 0;
-    int purse = 20;
+    int purse = 8;
     bool unlocked_skins[SKINS] = {true};
     for (int i=1; i<SKINS; i++) {
         unlocked_skins[i] = false;
@@ -373,12 +392,11 @@ int main() {
                     else if (button_clicked(skins, event)) {
                         game_state = SKIN_SELECT;
                     }
-                    else if (button_clicked(gamble, event)) {
+                    else if (button_clicked(gamble, event) && purse >= PRICE) {
                         purse -= PRICE;
                         fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
-                        skin_to_unlock = rand() % SKINS;
-                        unlocked_skins[skin_to_unlock] = true;
+                        skin_to_unlock = (rand() % (SKINS-1))+1;
                     }
                     break;
                 case SDL_KEYUP:
@@ -394,11 +412,11 @@ int main() {
             // Display high score
             char highScoreText[20];
             sprintf(highScoreText, "High Score: %d", high_score);
-            display_text(highScoreText, 0, 0, renderer);
+            display_text(highScoreText, 0, 0, 24, renderer);
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-50, 0, renderer);
+            display_text(purseText, WIDTH-50, 0, 24, renderer);
 
             break;
         }
@@ -853,10 +871,17 @@ int main() {
             if (!fade) {
                 fade = GAMBLING_DURATION;
                 game_state = GAMBLED;
+                if (!unlocked_skins[skin_to_unlock]) {
+                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer);
+                } else {
+                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer);
+                }
+                unlocked_skins[skin_to_unlock] = true;
             }
             break;
         }
         case GAMBLED: {
+
             button menu_button = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
             display_button(menu_button, renderer, textures);
 
