@@ -13,7 +13,7 @@
 
 #define GAME_HEIGHT (HEIGHT/TILE_SIDE)
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
-#define ANIM_LENGTH 5 // In frames, time it takes for the player to get to the next tile
+#define ANIM_LENGTH 7 // In frames, time it takes for the player to get to the next tile
 #define PLAYER_SPEED (1.0f /ANIM_LENGTH) // In tiles per frame, speed of the player
 
 #define UP 1
@@ -28,6 +28,7 @@ enum {
     GAME_OVER,
     GO_TO_MENU,
     GAMBLING,
+    GAMBLED,
     SKIN_SELECT,
 };
 
@@ -44,8 +45,10 @@ enum {
     PLAY_BUTTON,
     SKINS_BUTTON,
     MENU_BUTTON,
+    GAMBLE_BUTTON,
     TITLE_CARD,
     SKIN_BG,
+    LOCK,
     GAME_OVER_CARD,
     SKIN_START,
     END_TEXTURES
@@ -100,6 +103,9 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[PLAY_BUTTON] = create_texture(renderer, "sprites/menu/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[MENU_BUTTON] = create_texture(renderer, "sprites/menu/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[SKINS_BUTTON] = create_texture(renderer, "sprites/menu/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[GAMBLE_BUTTON] = create_texture(renderer, "sprites/menu/gamble_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+
+    textures[LOCK] = create_texture(renderer, "sprites/lock.png", SKIN_SIDE, SKIN_SIDE);
 
     textures[TITLE_CARD] = create_texture(renderer, "sprites/menu/title.png", CARD_WIDTH, CARD_HEIGHT);
     textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/menu/game_over.png", CARD_WIDTH, CARD_HEIGHT);
@@ -188,6 +194,22 @@ void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Tex
     SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
 }
 
+
+void display_text(char* text, int x, int y, SDL_Renderer* renderer) {
+    SDL_Color white = {255, 255, 255, 255};
+    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, white);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+    SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+    TTF_CloseFont(font);
+}
+
+
 void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
@@ -204,21 +226,8 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
 
         // Display score
         char scoreText[20];
-        sprintf(scoreText, "Score: %d", (int)data.player.y);
-
-        SDL_Color white = {255, 255, 255, 255};
-        TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
-
-        SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
-
-        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-        
-
-        SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
-        TTF_CloseFont(font);
+        sprintf(scoreText, "Score: %d", (int) data.player.y);
+        display_text(scoreText, 0, 0, renderer);
     }
 }
 
@@ -234,7 +243,6 @@ bool button_clicked(button b, SDL_Event event) {
         && event.button.y > b.y
         && event.button.y <= b.y + b.height;
 }
-
 
 int main() {
 
@@ -259,10 +267,10 @@ int main() {
 
     int game_state = MENU;
     int player_skin = 0;
-    int purse = 0;
+    int purse = 20;
     bool unlocked_skins[SKINS] = {true};
     for (int i=1; i<SKINS; i++) {
-        unlocked_skins[i] = true;
+        unlocked_skins[i] = false;
     }
     unlocked_skins[0] = true;
 
@@ -343,9 +351,17 @@ int main() {
 
             button play = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, PLAY_BUTTON};
             button skins = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2 + 1.5*BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, SKINS_BUTTON};
+            button gamble = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2 + 3*BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, GAMBLE_BUTTON};
 
             display_button(play, renderer, textures);
             display_button(skins, renderer, textures);
+            if (purse >= PRICE) {
+                display_button(gamble, renderer, textures);
+            } else {
+                SDL_Rect spriteRect = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT};
+                SDL_Rect destRect = {gamble.x, gamble.y, BUTTON_WIDTH, BUTTON_HEIGHT};
+                SDL_RenderCopy(renderer, textures[LOCK], &spriteRect, &destRect);
+            }
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -354,6 +370,10 @@ int main() {
                         }
                     else if (button_clicked(skins, event)) {
                         game_state = SKIN_SELECT;
+                    }
+                    else if (button_clicked(gamble, event)) {
+                        purse -= PRICE;
+                        game_state = GAMBLING;
                     }
                     break;
                 case SDL_KEYUP:
@@ -366,22 +386,14 @@ int main() {
             SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
             SDL_RenderCopy(renderer, textures[TITLE_CARD], &spriteRect2, &destRect2);
 
-            char scoreText[20];
-            sprintf(scoreText, "Best: %d", high_score);
-        
-            SDL_Color white = {255, 255, 255, 255};
-            TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", 24);
-        
-            SDL_Surface* textSurface = TTF_RenderText_Solid(font, scoreText, white);
-        
-            SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-            
-        
-            SDL_Rect textRect = {10, 10, textSurface->w, textSurface->h};
-            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-            SDL_FreeSurface(textSurface);
-            SDL_DestroyTexture(textTexture);
-            TTF_CloseFont(font);
+            // Display high score
+            char highScoreText[20];
+            sprintf(highScoreText, "High Score: %d", high_score);
+            display_text(highScoreText, 0, 0, renderer);
+            // Display purse
+            char purseText[20];
+            sprintf(purseText, "%d$", purse);
+            display_text(purseText, WIDTH-50, 0, renderer);
 
             break;
         }
@@ -624,7 +636,7 @@ int main() {
             game.player.x += liftboost; // apply liftboost
 
             // a new action needs to be performed!
-            if (!player_anim && buffer && buffer_key_flag && !blocked_path) {
+            if (!player_anim && buffer && buffer_key_flag && !blocked_path && !drown_flag) {
                 game.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;
                 buffer_key_flag = false;
@@ -765,11 +777,6 @@ int main() {
             display_button(menu_button, renderer, textures);
 
             for (int i=0; i<SKINS; i++) {
-                if (!unlocked_skins[i]) {
-                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-                    SDL_Rect bg = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
-                    SDL_RenderFillRect(renderer, &bg);
-                }
                 if (player_skin == i) {
                     SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
                     SDL_Rect bg = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
@@ -780,6 +787,11 @@ int main() {
                 SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
                 SDL_Rect destRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
                 SDL_RenderCopy(renderer, textures[SKIN_START+i], &spriteRect, &destRect);
+
+                if (!unlocked_skins[i]) {
+                    SDL_Rect lockRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
+                    SDL_RenderCopy(renderer, textures[LOCK], &spriteRect, &lockRect);
+                }
             }
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -802,7 +814,55 @@ int main() {
             }
             break;
         }
+        case GAMBLING: {
+            SDL_RenderClear(renderer);
+            display(demo, renderer, textures);
+            demo = move_camera(demo, GAME_SPEED*5);
+            lane* current_lane = demo.camera_first_lane;
+            while (current_lane->next != NULL) {
+                switch (current_lane->type) {
+                    case ROAD:
+                    update_vehicles(current_lane);
+                    break;
+                    case WATER:
+                    update_drowning_slots(current_lane);
+                    break;
+                    case TRACK:
+                    update_trains(current_lane);
+                    break;
+                    default:
+                    break;
+                }
+                current_lane = current_lane->next;
+            }
+            int skin_to_unlock = rand() % SKINS;
 
+            unlocked_skins[skin_to_unlock] = true;
+            
+            // Display unlocked skin
+            SDL_Rect spriteRect = {0, 0, SKIN_SIDE*4, SKIN_SIDE*4};
+            SDL_Rect destRect = {WIDTH/2-SKIN_SIDE*4/2, HEIGHT/2-SKIN_SIDE*4/2, SKIN_SIDE*4, SKIN_SIDE*4};
+            SDL_RenderCopy(renderer, textures[SKIN_START+skin_to_unlock], &spriteRect, &destRect);
+            game_state = GAMBLED;
+            break;
+        }
+        case GAMBLED: {
+            button menu_button = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
+            display_button(menu_button, renderer, textures);
+
+            switch (event.type) {
+                case SDL_MOUSEBUTTONUP:
+                    if (button_clicked(menu_button, event)) {
+                            game_state = MENU;
+                        }
+                    break;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym == SDLK_RETURN) {
+                        game_state = MENU;
+                    }
+            }
+            break;
+        }
         default:
             break;
         }
