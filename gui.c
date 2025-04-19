@@ -66,6 +66,7 @@ enum {
 #define PRICE 5
 
 #define FADE_LENGTH 50 // in frames, duration of the transitions
+#define GAMBLING_DURATION 50 // in frames, duration of the gambling animation
 
 #define REFRESH_RATE 60
 
@@ -288,6 +289,7 @@ int main() {
     int buffer = 0; // stores the next movement to be performed
     bool buffer_key_flag = true; // whether the key for the last movement has been released or not
     
+    int skin_to_unlock = 0;
     // Menu and transition variables
     displayedData demo = init_game(GAME_HEIGHT);
     demo.player.skin = -1;
@@ -373,7 +375,10 @@ int main() {
                     }
                     else if (button_clicked(gamble, event)) {
                         purse -= PRICE;
+                        fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
+                        skin_to_unlock = rand() % SKINS;
+                        unlocked_skins[skin_to_unlock] = true;
                     }
                     break;
                 case SDL_KEYUP:
@@ -835,15 +840,20 @@ int main() {
                 }
                 current_lane = current_lane->next;
             }
-            int skin_to_unlock = rand() % SKINS;
-
-            unlocked_skins[skin_to_unlock] = true;
             
             // Display unlocked skin
-            SDL_Rect spriteRect = {0, 0, SKIN_SIDE*4, SKIN_SIDE*4};
-            SDL_Rect destRect = {WIDTH/2-SKIN_SIDE*4/2, HEIGHT/2-SKIN_SIDE*4/2, SKIN_SIDE*4, SKIN_SIDE*4};
+
+            int icon_size = SKIN_SIDE*4*((float) GAMBLING_DURATION-fade)/GAMBLING_DURATION;
+
+            SDL_Rect spriteRect = {0, 0, icon_size, icon_size};
+            SDL_Rect destRect = {WIDTH/2-icon_size/2, HEIGHT/2-icon_size/2, icon_size, icon_size};
             SDL_RenderCopy(renderer, textures[SKIN_START+skin_to_unlock], &spriteRect, &destRect);
-            game_state = GAMBLED;
+
+            fade--;
+            if (!fade) {
+                fade = GAMBLING_DURATION;
+                game_state = GAMBLED;
+            }
             break;
         }
         case GAMBLED: {
