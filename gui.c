@@ -43,6 +43,7 @@ enum {
     TRAIN_MID,
     TRAIN_EDGE,
     WARNING,
+    COIN,
     PLAY_BUTTON,
     SKINS_BUTTON,
     MENU_BUTTON,
@@ -103,22 +104,24 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 
     textures[WARNING] = create_texture(renderer, "sprites/warning.png", TILE_SIDE, TILE_SIDE);
+    textures[COIN] = create_texture(renderer, "sprites/coin.png", TILE_SIDE, TILE_SIDE);
 
-    textures[PLAY_BUTTON] = create_texture(renderer, "sprites/menu/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[MENU_BUTTON] = create_texture(renderer, "sprites/menu/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[SKINS_BUTTON] = create_texture(renderer, "sprites/menu/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[GAMBLE_BUTTON] = create_texture(renderer, "sprites/menu/gamble_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+
+    textures[PLAY_BUTTON] = create_texture(renderer, "sprites/text/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[MENU_BUTTON] = create_texture(renderer, "sprites/text/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[SKINS_BUTTON] = create_texture(renderer, "sprites/text/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    textures[GAMBLE_BUTTON] = create_texture(renderer, "sprites/text/gamble_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
 
     textures[LOCK] = create_texture(renderer, "sprites/lock.png", SKIN_SIDE, SKIN_SIDE);
 
-    textures[TITLE_CARD] = create_texture(renderer, "sprites/menu/title.png", CARD_WIDTH, CARD_HEIGHT);
-    textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/menu/game_over.png", CARD_WIDTH, CARD_HEIGHT);
+    textures[TITLE_CARD] = create_texture(renderer, "sprites/text/title.png", CARD_WIDTH, CARD_HEIGHT);
+    textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/text/game_over.png", CARD_WIDTH, CARD_HEIGHT);
 
-    textures[SKIN_BG] = create_texture(renderer, "sprites/menu/skin_bg.png", SKIN_SIDE, SKIN_SIDE);
+    textures[SKIN_BG] = create_texture(renderer, "sprites/text/skin_bg.png", SKIN_SIDE, SKIN_SIDE);
 
     for (int i=0; i<SKINS; i++) {
-        char s[20];
-        sprintf(s, "sprites/skin%d.png", i);
+        char s[24];
+        sprintf(s, "sprites/skins/skin%d.png", i);
         textures[SKIN_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
     }
 }
@@ -150,6 +153,14 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
         SDL_RenderCopy(renderer, textures[lane->type], &spriteRect, &destRect);
     }
 
+    // Display coins
+    for (int i = 0; i < LANE_WIDTH; i++) {
+        if (lane->coins[i]) {
+            SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+            SDL_Rect destRect = {i*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+            SDL_RenderCopy(renderer, textures[COIN], &spriteRect, &destRect);
+        }
+    }
 
     // Display obstacles
     obstacle* current_obstacle = lane->obstacles;
@@ -287,7 +298,7 @@ int main() {
 
     int game_state = MENU;
     int player_skin = 0;
-    int purse = 8;
+    int purse = 0;
     bool unlocked_skins[SKINS] = {true};
     for (int i=1; i<SKINS; i++) {
         unlocked_skins[i] = false;
@@ -480,6 +491,10 @@ int main() {
     
     
             display(game, renderer, textures);
+            // Display the purse
+            char purseText[20];
+            sprintf(purseText, "%d$", purse);
+            display_text(purseText, WIDTH-24*3, 0, 24, renderer);
     
             game = move_camera(game, GAME_SPEED);
     
