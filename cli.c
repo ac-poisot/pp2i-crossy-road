@@ -568,11 +568,11 @@ int main(void) {
                 // Display the purse
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
                 //mvprintw(23, 0,"%d / %d / %d / 0 / %d // %d" ,(time_powers/REFRESH_RATE), time_powers2/REFRESH_RATE, time_powers3/REFRESH_RATE , modif, power );
-                mvprintw(22, 0, "1 :%s",power_affichage(time_powers/(REFRESH_RATE*5)));
-                mvprintw(23, 0, "2 :%s",power_affichage(time_powers2/(REFRESH_RATE*5)));
-                mvprintw(24, 0, "3 :%s",power_affichage(time_powers3/(REFRESH_RATE*5)));
-                mvprintw(25, 0, "4 :%s",power_affichage(time_powers4/(REFRESH_RATE)));
-                mvprintw(26, 0, "5 :%d x 1$",modif);
+                mvprintw(22, 0, "Jesus Power :%s",power_affichage(time_powers/(REFRESH_RATE*5)));
+                mvprintw(23, 0, "Time Power :%s",power_affichage(time_powers2/(REFRESH_RATE*5)));
+                mvprintw(24, 0, "Tank Power :%s",power_affichage(time_powers3/(REFRESH_RATE*5)));
+                mvprintw(25, 0, "Terraformation Power :%s",power_affichage(time_powers4/(REFRESH_RATE)));
+                mvprintw(26, 0, "Modification Money :%d x 1$",modif);
                 mvprintw(27, 0, "power : %d", power);
 
                 refresh();
