@@ -71,6 +71,7 @@ void display_lane(lane* lane, int lane_count) {
     int_list *coins = lane->coins;
     while(coins != NULL) {
         mvprintw(screen_y, (int)round(coins->val), "$");
+        coins = coins->next;
     }
 
     attroff(COLOR_PAIR(lane->type*10 + 1));
