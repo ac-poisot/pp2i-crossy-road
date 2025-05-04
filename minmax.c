@@ -266,6 +266,30 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
     }
 }
 
+player minmax_simple(lane* l, int deep, player p) {
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    couple c = minmax_rec(l, deep, todo, p);
+    switch (c.move) {
+        case GO_AHEAD:
+            p.y = p.y + 1;
+            break;
+        case GO_DOWN:
+            p.y = p.y - 1;
+            break;
+        case GO_LEFT:
+            p.x = p.x - 1;
+            break;
+        case GO_RIGHT:
+            p.x = p.x + 1;
+            break;
+        default:
+        break;
+    }
+    return p;
+}
+
 
 lane** n_update(int n, lane* l) {
     // makes n update of the lanes and store them in a array, the last update is in the first case
@@ -398,6 +422,32 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
         }
         return res;
     }
+}
+
+player minmax_memo_state(lane* l, int deep, player p) {
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    lane** tab = n_update(deep, l);
+    couple c = minmax_rec_memo_state(l, deep, todo, p, tab);
+    switch (c.move) {
+        case GO_AHEAD:
+            p.y = p.y + 1;
+            break;
+        case GO_DOWN:
+            p.y = p.y - 1;
+            break;
+        case GO_LEFT:
+            p.x = p.x - 1;
+            break;
+        case GO_RIGHT:
+            p.x = p.x + 1;
+            break;
+        default:
+        break;
+    }
+    free_update(tab, deep);
+    return p;
 }
 
 couple minmax_rec_memo_all(lane* l, int deep, couple previous, player p, lane** tab, List* vus) {

@@ -56,6 +56,15 @@ lane* init_lane(int y, float speed, obstacle* obst, int obst_size, int type, lan
     return l;
 }
 
+player init_player(float x, float y, int orientation, int skin) {
+    player p;
+    p.y=y;
+    p.x=x;
+    p.orientation=orientation;
+    p.skin=skin;
+    return p;
+}
+
 void test_copy_obstacle(void) {
     obstacle* o1 = init_obst(NULL, NULL, 3, 2);
     obstacle* o2 = init_obst(NULL, o1, 6, 1);
@@ -120,11 +129,7 @@ void test_copy_lane(void) {
 }
 
 void test_collide(void) {
-    player p;
-    p.y=0;
-    p.x=0;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(0, 0, 0, 0);
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
     obstacle* o2 = init_obst(o1, NULL, 1, 2);
@@ -164,11 +169,7 @@ void test_update_lanes(void) {
 
 void test_minmax_rec_begining(void) {
     // define the game
-    player p;
-    p.y=0;
-    p.x=LANE_WIDTH/2;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(LANE_WIDTH/2, 0, 0, 0);
     lane* l = initialLanes();
     
     couple todo;
@@ -183,16 +184,26 @@ void test_minmax_rec_begining(void) {
     assert(cm.score == 3);
     assert(cm.move == GO_AHEAD);
 
-    couple beg;
-    beg.score = -1;
-    beg.move = -1;
-    List* vus = create_list(3, p.x, p.y, beg, NULL);
-    couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
-    printf("score : %d, move : %d\n", cma.score, cma.move);
-    assert(cma.score == 3);
-    assert(cma.move == GO_AHEAD);
+    player p1 = init_player(LANE_WIDTH/2, 0, 0, 0);
+    p1 = minmax_simple(l, 3, p1);
+    assert(p1.x == LANE_WIDTH/2);
+    assert(p1.y == 1);
 
-    free_list(vus);
+    player p2 = init_player(LANE_WIDTH/2, 0, 0, 0);
+    p2 = minmax_memo_state(l, 3, p2);
+    assert(p2.x == LANE_WIDTH/2);
+    assert(p2.y == 1);
+
+    //couple beg;
+    //beg.score = -1;
+    //beg.move = -1;
+    //List* vus = create_list(3, p.x, p.y, beg, NULL);
+    //couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
+    //printf("score : %d, move : %d\n", cma.score, cma.move);
+    //assert(cma.score == 3);
+    //assert(cma.move == GO_AHEAD);
+
+    //free_list(vus);
 
     free_update(tab, 3);
 
@@ -201,11 +212,7 @@ void test_minmax_rec_begining(void) {
 
 void test_one_stay(void) {
     // define the game
-    player p;
-    p.y=3;
-    p.x=LANE_WIDTH/2;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(LANE_WIDTH/2, 3, 0, 0);
     lane* l = initialLanes();
 
     free_lanes(l->next->next->next->next);
@@ -230,17 +237,23 @@ void test_one_stay(void) {
     assert(cm.move == STAY);
     free_update(tab, 1);
 
+    player p1 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p1 = minmax_simple(l1->prev, 1, p1);
+    assert(p1.x == LANE_WIDTH/2);
+    assert(p1.y == 3);
+
+    player p2 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p2 = minmax_memo_state(l1->prev, 1, p2);
+    assert(p2.x == LANE_WIDTH/2);
+    assert(p2.y == 3);
+
     free_lanes(l);
 
 }
 
 void test_one_right(void) {
     // define the game
-    player p;
-    p.y=1;
-    p.x=LANE_WIDTH/2+1;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(LANE_WIDTH/2+1, 1, 0, 0);
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
     lane* l1 = init_lane(4, 1, o1, 2, 4, NULL, NULL);
@@ -263,17 +276,24 @@ void test_one_right(void) {
     assert(cm.move == GO_RIGHT);
     free_update(tab, 1);
 
+    player p1 = init_player(LANE_WIDTH/2+1, 1, 0, 0);
+    p1 = minmax_simple(l2, 1, p1);
+    assert(p1.x == LANE_WIDTH/2+2);
+    assert(p1.y == 1);
+
+    player p2 = init_player(LANE_WIDTH/2+1, 1, 0, 0);
+    p2 = minmax_memo_state(l2, 1, p2);
+    assert(p2.x == LANE_WIDTH/2+2);
+    assert(p2.y == 1);
+
     free_lanes(l1);
 
 }
 
 void test_two_rigth(void) {
     // define the game
-    player p;
-    p.y=3;
-    p.x=LANE_WIDTH/2;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(LANE_WIDTH/2, 3, 0, 0);
+
     lane* l = initialLanes();
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
@@ -297,16 +317,23 @@ void test_two_rigth(void) {
     assert(cm.move == GO_RIGHT);
     free_update(tab, 2);
 
+    player p1 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p1 = minmax_simple(l1->prev, 2, p1);
+    assert(p1.x == LANE_WIDTH/2+1);
+    assert(p1.y == 3);
+
+    player p2 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p2 = minmax_memo_state(l1->prev, 2, p2);
+    assert(p2.x == LANE_WIDTH/2+1);
+    assert(p2.y == 3);
+
     free_lanes(l);
 }
 
 void test_three_stay(void) {
     // define the game
-    player p;
-    p.y=3;
-    p.x=LANE_WIDTH/2;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(LANE_WIDTH/2, 3, 0, 0);
+
     lane* l = initialLanes();
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
@@ -330,16 +357,23 @@ void test_three_stay(void) {
     assert(cm.move == STAY);
     free_update(tab, 3);
 
+    player p1 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p1 = minmax_simple(l1->prev, 3, p1);
+    assert(p1.x == LANE_WIDTH/2);
+    assert(p1.y == 3);
+
+    player p2 = init_player(LANE_WIDTH/2, 3, 0, 0);
+    p2 = minmax_memo_state(l1->prev, 3, p2);
+    assert(p2.x == LANE_WIDTH/2);
+    assert(p2.y == 3);
+
     free_lanes(l);
 }
 
 void test_two_left(void) {
     // define the game
-    player p;
-    p.y=4;
-    p.x=1;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(1, 4, 0, 0);
+
     lane* l = initialLanes();
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
@@ -365,16 +399,23 @@ void test_two_left(void) {
     assert(cm.move == GO_LEFT);
     free_update(tab, 2);
 
+    player p1 = init_player(1, 4, 0, 0);
+    p1 = minmax_simple(l2->prev, 2, p1);
+    assert(p1.x == 0);
+    assert(p1.y == 4);
+
+    player p2 = init_player(1, 4, 0, 0);
+    p2 = minmax_memo_state(l2->prev, 2, p2);
+    assert(p2.x == 0);
+    assert(p2.y == 4);
+
     free_lanes(l);
 }
 
 void test_three_down(void) {
     // define the game
-    player p;
-    p.y=4;
-    p.x=1;
-    p.orientation=0;
-    p.skin=0;
+    player p = init_player(1, 4, 0, 0);
+
     lane* l = initialLanes();
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
@@ -399,6 +440,16 @@ void test_three_down(void) {
     assert(cm.score == 0);
     assert(cm.move == GO_DOWN);
     free_update(tab, 3);
+
+    player p1 = init_player(1, 4, 0, 0);
+    p1 = minmax_simple(l2->prev, 3, p1);
+    assert(p1.x == 1);
+    assert(p1.y == 3);
+
+    player p2 = init_player(1, 4, 0, 0);
+    p2 = minmax_memo_state(l2->prev, 3, p2);
+    assert(p2.x == 1);
+    assert(p2.y == 3);
 
     free_lanes(l);
 }
@@ -433,17 +484,17 @@ void test_n_update(void) {
 }
  
 int main(void) {
-    //test_copy_obstacle();
-    //test_copy_lane();
-    //test_collide();
-    //test_update_lanes();
+    test_copy_obstacle();
+    test_copy_lane();
+    test_collide();
+    test_update_lanes();
     test_minmax_rec_begining();
-    //test_one_stay();
-    //test_one_right();
-    //test_two_rigth();
-    //test_three_stay();
-    //test_three_down();
-    //test_two_left();
-    //test_n_update();
+    test_one_stay();
+    test_one_right();
+    test_two_rigth();
+    test_three_stay();
+    test_three_down();
+    test_two_left();
+    test_n_update();
     return 0;
 }
