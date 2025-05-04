@@ -557,6 +557,7 @@ void displayLanes(lane* l) {
             }
 
         }
+        i=0; // Wah
         printf("\n");
         l = l->next;
     }

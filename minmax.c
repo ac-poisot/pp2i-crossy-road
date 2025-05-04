@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 
 #include "minmax.h"
 
@@ -297,6 +298,7 @@ lane** n_update(int n, lane* l) {
     lane** tab = (lane**)malloc(sizeof(lane*)*n);
     lane* current_lane = copy_lane(l, n);
     lane* beginning_lane = current_lane;
+    assert(beginning_lane->next != NULL);
 
     for (int i=0; i<n; i=i+1) {
         while (beginning_lane->prev != NULL) {
@@ -318,7 +320,11 @@ lane** n_update(int n, lane* l) {
 
 void free_update(lane** tab, int n) {
     for (int i=0; i<n; i=i+1) {
-        free_lanes(tab[i]);
+        lane* beginning_lane = tab[i];
+        while (beginning_lane->prev != NULL) {
+            beginning_lane = beginning_lane->prev;
+        }
+        free_lanes(beginning_lane);
     }
     free(tab);
 }
