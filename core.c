@@ -86,10 +86,7 @@ lane* empty_lane(lane* prev_lane, int type) {
     new_lane->speed = 0;
     new_lane->obstacles = NULL;
     new_lane->obst_size = 1+rand()%2;
-    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        new_lane->coins[i] = false;
-    }
+    new_lane->coins = NULL;
     new_lane->type = type;
     new_lane->next = NULL;
     
@@ -132,10 +129,7 @@ lane* random_lane(lane* prev_lane) {
     }
 
 
-    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        new_lane->coins[i] = !(rand() % 30); // for each tile, 1/30 chance of having a coin
-    }
+    new_lane->coins = NULL;
     new_lane->prev = prev_lane;
     new_lane->next = NULL;
     return new_lane;
@@ -274,6 +268,81 @@ obstacle* generate_trains(void) {
     return first_obst;
 }
 
+bool* create_obstacles_array(obstacle* o) {
+    bool* array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
+    for(int i = 0 ; i < LANE_WIDTH; i++) {
+        array[i] = false;
+    }
+    while(o != NULL) {
+        if(o->x >= 0 && o->x < LANE_WIDTH) {
+            for(int i = 0; i < o->size; i++) {
+                array[(int)round(o->x) + i] = true;
+            }
+        }
+        o = o->next;
+    }
+    return array;
+}
+
+int_list* generate_coins(lane* l) {
+    int_list *new_coins = NULL;
+    bool* obstacles_array = NULL;
+    switch (l->type) {
+        case GRASS:
+            obstacles_array = create_obstacles_array(l->obstacles);
+            int pos = rand()%LANE_WIDTH;
+            while(obstacles_array[pos]) {
+                pos = rand()%LANE_WIDTH;
+            }
+            new_coins = (int_list*) malloc(sizeof(int_list));
+            new_coins->val = pos;
+            new_coins->next = NULL;
+            return new_coins;
+            break;
+        case WATER:
+            if(l->speed == 0) {
+                obstacles_array = create_obstacles_array(l->obstacles);
+                int pos = rand()%LANE_WIDTH;
+                while(!obstacles_array[pos]) {
+                    pos = rand()%LANE_WIDTH;
+                }
+                new_coins = (int_list*) malloc(sizeof(int_list));
+                new_coins->val = pos;
+                new_coins->next = NULL;
+                return new_coins;
+            } else {
+                obstacle *o = l->obstacles;
+                int_list *first_coin = NULL;
+                int_list *last_coin = NULL;
+                while(o != NULL) {
+                    if(rand()%COIN_ISSUES == 0) {
+                        int_list *new_coins = (int_list*) malloc(sizeof(int_list));
+                        new_coins->val = o->x + rand()%o->size;
+                        new_coins->next = NULL;
+                        if(first_coin == NULL) {
+                            first_coin = new_coins;
+                        } else {
+                            last_coin->next = new_coins;
+                        }
+                        last_coin = new_coins;
+                    }
+                    o = o->next;
+                }
+                return first_coin;
+            }
+            break;
+        case TRACK:
+        case ROAD:
+            new_coins = (int_list*) malloc(sizeof(int_list));
+            new_coins->val = rand()%LANE_WIDTH;
+            new_coins->next = NULL;
+            return new_coins;
+            break;
+        default:
+        return NULL;
+    }
+}
+
 
 lane* generate_lane(lane* prev_lane, int type) {
     /* creates an empty lane */
@@ -321,10 +390,10 @@ lane* generate_lane(lane* prev_lane, int type) {
             }
             break;
     } // generates coins (not done yet)
-    new_lane->coins = malloc(LANE_WIDTH * sizeof(bool));
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        new_lane->coins[i] = false;
+    if(rand()%COIN_ISSUES == 0) {
+        new_lane->coins = generate_coins(new_lane);
     }
+    new_lane->coins = NULL;
     new_lane->type = type;
     new_lane->next = NULL;
     
@@ -576,7 +645,6 @@ void generateNNewLanes(lane* l, int n) {
     for (int i = 0; i < n; i++) {
         int* boules = probabilite_biomes(fourLastLanes(l));
         l = generate_lane(l, biome(boules));
-        l->coins[rand()%LANE_WIDTH] = true;
         free(boules);
     }
 }

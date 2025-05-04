@@ -68,10 +68,9 @@ void display_lane(lane* lane, int lane_count) {
     }
     
     // Display the coins
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        if (lane->coins[i]) {
-            mvprintw(screen_y, i, "$");
-        }
+    int_list *coins = lane->coins;
+    while(coins != NULL) {
+        mvprintw(screen_y, (int)round(coins->val), "$");
     }
 
     attroff(COLOR_PAIR(lane->type*10 + 1));
@@ -383,12 +382,12 @@ int main(void) {
             if (player_lane != NULL) {
 
                 // Check for collisions with coins
-                for (int i = 0; i < LANE_WIDTH; i++) {
+                /*for (int i = 0; i < LANE_WIDTH; i++) {
                     if (player_lane->coins[i] && game.player.x == i) {
                         purse++;
                         player_lane->coins[i] = false;
                     }
-                }
+                }*/
 
                 if (player_lane->type == WATER) {
                     drown_flag = true; // set this to false to disable drowning
