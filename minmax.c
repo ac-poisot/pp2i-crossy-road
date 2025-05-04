@@ -45,6 +45,7 @@ obstacle* copy_obstacle(obstacle* o) {
 
 lane* copy_lane(lane* l, int p) {
     // deep copy of the p lanes in front of and behind the player but without coins
+    // the result is the current lane copied, so the 'real' first lane must be got to be freed
     if (l == NULL) {
         return NULL;
     } else {
@@ -100,27 +101,6 @@ lane* copy_lane(lane* l, int p) {
     
 }
 
-void printf_lane(lane* l, player p) {
-    // affiche les lanes, la ligne du haut est la premiere de la ligne aka la derniere en mode normal
-    lane* copyl = l;
-    printf("debut\n");
-    while (copyl != NULL) {
-        for (int i=0; i<LANE_WIDTH; i=i+1) {
-            if (copyl->y == p.y && p.x==i) {
-                printf("P");
-            }
-            else if (copyl->obstacles != NULL && (i>= copyl->obstacles->x && i<=copyl->obstacles->x+copyl->obst_size-1)) {
-                printf("#");
-            }
-            else {
-                printf(" ");
-            }
-        }
-        printf("\n");
-        copyl = copyl->next;
-    }
-    printf("fin\n");
-}
 
 bool collides_without_game(lane *current_lane, player p) {
     /* checks if the player collides with an obstacle */
@@ -136,6 +116,7 @@ bool collides_without_game(lane *current_lane, player p) {
 }
 
 void update_lanes(lane* l) {
+    // update the lane
     lane* current_lane = l;
     while (current_lane != NULL) {
         switch (current_lane->type) {;
@@ -157,10 +138,15 @@ void update_lanes(lane* l) {
 }
 
 couple minmax_rec(lane* l, int deep, couple previous, player p) {
-    /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
+    /* naive minmax
+    parameters : l the current lane, deep the more deepest you want to test, previous the result of the previous call of minmax, p a player representing the ia
+    return : a couple (score, move), where score is the max you can afford in terms of deplacement, ie not you real score but your progression and move, the move to do to obtain the score
+    */
+    /* explaining in French because I don't have my TOEIC
+    cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
     le reste du temps
     effectuer un mouvement, tester s'il est juste (collision ou eau)
-    s'il es juste, calculer le nouveau score (+1 si devant, -1 si derrière, 0 sinon) ?
+    s'il es juste, calculer le nouveau score (+1 si devant, -1 si derrière, 0 sinon)
     remonter ce score à une variable globale à la boucle qu'on met à jour si c'est mieux
     recommencer jusqu'à fin des mouvements possibles
     -> le meilleur mouvement est celui permis par la boucle lors du premier appel
@@ -169,7 +155,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
     if (deep <= 0) {
         return previous;
     } else {
-        // on a state, want to know possibiities
+        // on a state, want to know possibilities
         couple res;
         res.move = NOT_POSSIBLE;
         res.score = -deep-1;
@@ -187,6 +173,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
         update_lanes(beginning_lane);
         copy_current = current_lane;
 
+        // step 2 : try all the moves, which are represented by numbres, see top of the code
         player copy_p;
         copy_p.orientation = p.orientation;
         copy_p.skin = p.skin;
@@ -243,10 +230,10 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
             }
             
 
-            // step 2 : for each possible move, check the collision
+            // for each possible move, check the collision
             bool coll = collides_without_game(current_lane, copy_p);
 
-            // step 3 : if move possible and no collision, continu with this move
+            // step 3 : if move possible and no collision, continue with this move
             couple next;
             if (c.move != NOT_POSSIBLE && !coll) {
                 next = minmax_rec(current_lane, deep-1, c, copy_p);
@@ -255,7 +242,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
                 next.score = -1;
             }
 
-            // step 4 : update res if c better than him
+            // step 4 : update res if c better than it
             if (next.move != NOT_POSSIBLE && next.score >= res.score) {
                 res.move = c.move;
                 res.score = next.score;
@@ -268,6 +255,9 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
 }
 
 player minmax_simple(lane* l, int deep, player p) {
+    /* parameters : the lane were the ai is, the deep, and an player representing the ai
+        returns a player who has done the move found by minmax_rec
+    */
     couple todo;
     todo.score = 0;
     todo.move = STAY;
@@ -294,7 +284,7 @@ player minmax_simple(lane* l, int deep, player p) {
 
 lane** n_update(int n, lane* l) {
     // makes n update of the lanes and store them in a array, the last update is in the first case
-    // it updates the lanes since the beginning obtains by copy_lane()
+    // it updates the lanes since the beginning obtains by copy_lane() -> in tab[i] the 'current' lane, not the first
     lane** tab = (lane**)malloc(sizeof(lane*)*n);
     lane* current_lane = copy_lane(l, n);
     lane* beginning_lane = current_lane;
@@ -319,6 +309,7 @@ lane** n_update(int n, lane* l) {
 }
 
 void free_update(lane** tab, int n) {
+    // frees tab carefully
     for (int i=0; i<n; i=i+1) {
         lane* beginning_lane = tab[i];
         while (beginning_lane->prev != NULL) {
@@ -330,6 +321,10 @@ void free_update(lane** tab, int n) {
 }
 
 couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane** tab) {
+    /* minmaw but the deepth possible states of the map are known in tab, without the ai
+    parameters : l the current lane, deep the more deepest you want to test, previous the result of the previous call of minmax, p a player representing the ia, tab the deepth next states of the map with the last in case 0
+    return : a couple (score, move), where score is the max you can afford in terms of deplacement, ie not you real score but your progression and move, the move to do to obtain the score
+    */
     /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
     le reste du temps
     effectuer un mouvement, tester s'il est juste (collision ou eau)
@@ -431,6 +426,9 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
 }
 
 player minmax_memo_state(lane* l, int deep, player p) {
+    /* parameters : the lane were the ai is, the deep, and an player representing the ai
+        returns a player who has done the move found by minmax_rec
+    */
     couple todo;
     todo.score = 0;
     todo.move = STAY;
@@ -457,6 +455,7 @@ player minmax_memo_state(lane* l, int deep, player p) {
 }
 
 couple minmax_rec_memo_all(lane* l, int deep, couple previous, player p, lane** tab, List* vus) {
+    // pas fini mais on memoize aussi la position de l'ia -> vus contient la profondeur (ie la case du tableau) et sa position
     /*cas deep <= 0 -> on a fini -> renvoyer le score (et le mouvement)
     le reste du temps
     effectuer un mouvement, tester s'il est juste (collision ou eau)

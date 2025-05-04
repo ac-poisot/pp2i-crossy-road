@@ -21,7 +21,6 @@
 
 obstacle* copy_obstacle(obstacle* o);
 lane* copy_lane(lane* l, int p);
-void printf_lane(lane* l, player p) ;
 bool collides_without_game(lane *current_lane, player p);
 void update_lanes(lane* lane);
 couple minmax_rec(lane* l, int deep, couple previous, player p);
