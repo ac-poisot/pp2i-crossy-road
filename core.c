@@ -576,6 +576,7 @@ void generateNNewLanes(lane* l, int n) {
     for (int i = 0; i < n; i++) {
         int* boules = probabilite_biomes(fourLastLanes(l));
         l = generate_lane(l, biome(boules));
+        l->coins[rand()%LANE_WIDTH] = true;
         free(boules);
     }
 }
