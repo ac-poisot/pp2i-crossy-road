@@ -315,9 +315,9 @@ int_list* generate_coins(lane* l) {
                 int_list *first_coin = NULL;
                 int_list *last_coin = NULL;
                 while(o != NULL) {
-                    if(rand()%COIN_ISSUES == 0) {
+                    if(rand()%COIN_ISSUES == 0 && o->next != NULL) {
                         int_list *new_coins = (int_list*) malloc(sizeof(int_list));
-                        new_coins->val = o->x + rand()%o->size;
+                        new_coins->val = o->x + o->size + rand()%(int)(o->next->x - o->x - o->size - 1);
                         new_coins->next = NULL;
                         if(first_coin == NULL) {
                             first_coin = new_coins;
@@ -474,7 +474,14 @@ void update_drowning_slots(lane* l) {
         c->prev = new_obst;
         l->obstacles = new_obst;
         c = new_obst;
+        if(rand()%COIN_ISSUES == 0 && c->next != NULL) {
+            int_list *new_coins = (int_list*) malloc(sizeof(int_list));
+            new_coins->val = c->x + c->size + rand()%(int)(c->next->x - c->x - c->size - 1);
+            new_coins->next = l->coins;
+            l->coins = new_coins;
+        }
     }
+    int_list *current_coin = l->coins;
     while (c != NULL) { // updates the position of the slots
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){ // if the slot is going out of the lane at the right side, we delete it
             c-> prev ->next = NULL;
@@ -502,6 +509,12 @@ void update_drowning_slots(lane* l) {
             obstacle* next_obst = (obstacle*)malloc(sizeof(obstacle));
             next_obst->size = 1 + (rand()%MAX_LOG_SIZE);
             float current_x = c->x + (float)(next_obst->size + (rand()%LOG_SPACING_MAX));
+            if(rand()%COIN_ISSUES == 0) {
+                int_list *new_coins = (int_list*) malloc(sizeof(int_list));
+                new_coins->val = c->x + c->size + rand()%(int)(current_x - c->x - c->size - 1);
+                new_coins->next = l->coins;
+                l->coins = new_coins;
+            }
             next_obst->x = current_x;
             next_obst->next = NULL;
             next_obst->prev = c;
@@ -511,6 +524,10 @@ void update_drowning_slots(lane* l) {
         } else { // updates the position of the slot
             c->x = c->x + l->speed;
             c = c ->next;
+            if(current_coin != NULL) {
+                current_coin->val += l->speed;
+                current_coin = current_coin->next;
+            }
         }
     }
 }
