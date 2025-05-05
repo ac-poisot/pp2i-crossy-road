@@ -68,7 +68,7 @@ void display_lane(lane* lane, int lane_count) {
     }
     
     // Display the coins
-    int_list *coins = lane->coins;
+    float_list *coins = lane->coins;
     while(coins != NULL) {
         mvprintw(screen_y, (int)round(coins->val), "$");
         coins = coins->next;
@@ -151,7 +151,7 @@ void display(displayedData data) {
     }
 
     // Display the score
-    mvprintw(0, 0, "Score: %d\n", data.player.y); // \n to not have issues going down from powers of 10
+    mvprintw(0, 0, "Score: %d\n", (int) data.player.y); // \n to not have issues going down from powers of 10
     refresh();
 }
 
@@ -453,7 +453,7 @@ int main(void) {
             break;
 
             case GAME_OVER:
-            mvprintw(0, 0, "Final score: %d", game.player.y);
+            mvprintw(0, 0, "Final score: %d", (int) game.player.y);
             mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {

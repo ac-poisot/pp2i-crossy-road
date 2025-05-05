@@ -142,6 +142,15 @@ void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer) {
     TTF_CloseFont(font);
 }
 
+void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SDL_Texture** textures) {
+    while (current_coin != NULL) {
+        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+        SDL_Rect destRect = {current_coin->val*TILE_SIDE, y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+        SDL_RenderCopy(renderer, textures[COIN], &spriteRect, &destRect);
+        current_coin = current_coin->next;
+    }
+}
+
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
 
@@ -154,12 +163,8 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
     }
 
     // Display coins
-    for (int i = 0; i < LANE_WIDTH; i++) {
-        if (lane->coins[i]) {
-            SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
-            SDL_Rect destRect = {i*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-            SDL_RenderCopy(renderer, textures[COIN], &spriteRect, &destRect);
-        }
+    if (lane->type != WATER) {
+        display_coins(screen_y, lane->coins, renderer, textures);
     }
 
     // Display obstacles
@@ -231,6 +236,11 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
             }
         current_obstacle = current_obstacle->next;
         }
+
+    }
+
+    if (lane->type == WATER) {
+        display_coins(screen_y, lane->coins, renderer, textures);
     }
 }
 
@@ -534,11 +544,13 @@ int main() {
             if (player_top_lane != NULL) {
 
                 // Check for collisions with coins
-                for (int i = 0; i < LANE_WIDTH; i++) {
-                    if (player_top_lane->coins[i] && game.player.x == i) {
+                float_list* current_coin = player_top_lane->coins;
+                while (current_coin != NULL) {
+                    if (current_coin->val == (int) round(game.player.x)) {
                         purse++;
-                        player_top_lane->coins[i] = false;
+                        current_coin->val = -1;
                     }
+                    current_coin = current_coin->next;
                 }
 
                 if (player_top_lane->type == WATER) {
@@ -604,12 +616,12 @@ int main() {
             if (player_bottom_lane != NULL) {
 
                 // Check for collisions with coins
-                for (int i = 0; i < LANE_WIDTH; i++) {
-                    if (player_bottom_lane->coins[i] && game.player.x == i) {
-                        purse++;
-                        player_bottom_lane->coins[i] = false;
-                    }
-                }
+                // for (int i = 0; i < LANE_WIDTH; i++) {
+                //     if (player_bottom_lane->coins[i] && game.player.x == i) {
+                //         purse++;
+                //         player_bottom_lane->coins[i] = false;
+                //     }
+                // }
 
                 // Check for collisions with obstacles
                 obstacle* collided_obstacle = collides(player_bottom_lane, game);

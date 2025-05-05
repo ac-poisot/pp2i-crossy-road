@@ -27,7 +27,7 @@
 #define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
 #define LOG_SPACING_MAX 5 // in tiles, maximum of space between two logs (minimum is always 1)
 
-#define COIN_ISSUES 1 // there is a 1 in COIN_ISSUES chance of generating a coin
+#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin
 
 
 typedef struct obstacle {
@@ -37,17 +37,17 @@ typedef struct obstacle {
     int size;
 } obstacle;
 
-typedef struct int_list {
-    int val;
-    struct int_list* next;
-} int_list;
+typedef struct float_list {
+    float val;
+    struct float_list* next;
+} float_list;
 
 typedef struct lane {
     int y; // position of the lane
     float speed; // speed of the obstacles
     obstacle* obstacles; // array of obstacles present on the lane
     int obst_size; // size of the obstacle (log or vehicle length…)
-    int_list* coins; // pointer to bools representing the position of coins present on the lane
+    float_list* coins; // pointer to bools representing the position of coins present on the lane
     int type; // type of the lane (plains, road, tracks, river)
     struct lane* prev; // pointer to the previous lane
     struct lane* next; // pointer to the next lane
