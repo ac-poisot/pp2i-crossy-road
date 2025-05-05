@@ -544,14 +544,10 @@ int main() {
             if (player_top_lane != NULL) {
 
                 // Check for collisions with coins
-                float_list* current_coin = player_top_lane->coins;
-                while (current_coin != NULL) {
-                    if (current_coin->val == (int) round(game.player.x)) {
-                        purse++;
-                        current_coin->val = -1;
-                    }
-                    current_coin = current_coin->next;
+                if (game.player.y == (int) (game.player.y) && collides_coin(player_top_lane, game) != NULL) {
+                    purse++;
                 }
+
 
                 if (player_top_lane->type == WATER) {
                     drown_flag = true; // only matters for the top lane, which is the lane the player is on or is going to

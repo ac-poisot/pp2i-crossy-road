@@ -493,12 +493,6 @@ void update_drowning_slots(lane* l) {
         }
     }
 
-    float_list *current_coin = l->coins;
-    while (current_coin != NULL) {
-        current_coin->val = current_coin->val + l->speed;
-        current_coin = current_coin ->next;
-    }
-
     while (c != NULL) { // updates the position of the slots
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){ // if the slot is going out of the lane at the right side, we delete it
             c-> prev ->next = NULL;
@@ -542,6 +536,12 @@ void update_drowning_slots(lane* l) {
             c->x = c->x + l->speed;
             c = c ->next;
         }
+    }
+
+    float_list *current_coin = l->coins;
+    while (current_coin != NULL) {
+        current_coin->val = current_coin->val + l->speed;
+        current_coin = current_coin ->next;
     }
 }
 
@@ -687,6 +687,19 @@ obstacle* collides(lane *current_lane, displayedData game) {
             return current_obstacle;
         }
         current_obstacle = current_obstacle->next;
+    }
+    return NULL;
+}
+
+float_list* collides_coin(lane *current_lane, displayedData game) {
+    /* checks if the player collides with a coin */
+    float_list* current_coin = current_lane->coins;
+    while (current_coin != NULL) {
+        if (round(game.player.x*10) == round(current_coin->val*10)) { // values truncated to first decimal digit to avoid float precision issues
+            current_coin->val = -1; // mark the coin as collected
+            return current_coin;
+        }
+        current_coin = current_coin->next;
     }
     return NULL;
 }

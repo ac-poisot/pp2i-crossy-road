@@ -398,13 +398,8 @@ int main(void) {
             if (player_lane != NULL) {
 
                 // Check for collisions with coins
-                float_list* current_coin = player_lane->coins;
-                while (current_coin != NULL) {
-                    if (current_coin->val == (int) round(game.player.x)) {
-                        purse++;
-                        current_coin->val = -1;
-                    }
-                    current_coin = current_coin->next;
+                if (collides_coin(player_lane, game) != NULL) {
+                    purse++;
                 }
 
                 if (player_lane->type == WATER) {
