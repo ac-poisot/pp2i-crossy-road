@@ -34,7 +34,7 @@ obstacle* init_obst(obstacle* next, obstacle* prev, float x, int size) {
     return o;
 }
 
-lane* init_lane(int y, float speed, obstacle* obst, int obst_size, int type, lane* prev, lane* next) {
+lane* init_lane(int y, float speed, obstacle* obst, int obst_size, int type, lane* prev, lane* next, float_list* coins) {
     lane* l = (lane*)malloc(sizeof(lane));
     l->y = y;
     l->speed = speed;
@@ -45,10 +45,7 @@ lane* init_lane(int y, float speed, obstacle* obst, int obst_size, int type, lan
         prev->next = l;
     }
     l->obstacles = obst;
-    l->coins = (bool*)malloc(sizeof(bool)*24);
-    for (int i=0; i<24; i=i+1) {
-        l->coins[i] = false;
-    }
+    l->coins = coins;
     l->next = next;
     if (next != NULL) {
         next->prev = l;
@@ -133,7 +130,7 @@ void test_collide(void) {
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
     obstacle* o2 = init_obst(o1, NULL, 1, 2);
-    lane* l1 = init_lane(4, -1, o2, 2, 4, NULL, NULL);
+    lane* l1 = init_lane(4, -1, o2, 2, 4, NULL, NULL, NULL);
 
     assert(!collides_without_game(l1, p));
     p.x = 1;
@@ -154,10 +151,10 @@ void test_collide(void) {
 
 void test_update_lanes(void) {
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL, NULL);
 
     obstacle* o2 = init_obst(NULL, NULL, 1, 2);
-    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL);
+    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL, NULL);
 
     update_lanes(l1);
     
@@ -219,7 +216,7 @@ void test_one_stay(void) {
     l->next->next->next->next = NULL;
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL, NULL);
 
     couple todo;
     todo.score = 0;
@@ -256,11 +253,11 @@ void test_one_right(void) {
     player p = init_player(LANE_WIDTH/2+1, 1, 0, 0);
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
-    lane* l1 = init_lane(4, 1, o1, 2, 4, NULL, NULL);
+    lane* l1 = init_lane(4, 1, o1, 2, 4, NULL, NULL, NULL);
     obstacle* o2 = init_obst(NULL, NULL, LANE_WIDTH/2-1, 2);
-    lane* l2 = init_lane(4, 1, o2, 2, 4, l1, NULL);
+    lane* l2 = init_lane(4, 1, o2, 2, 4, l1, NULL, NULL);
     obstacle* o3 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
-    lane* l3 = init_lane(4, 1, o3, 2, 4, l2, NULL);
+    lane* l3 = init_lane(4, 1, o3, 2, 4, l2, NULL, NULL);
     l2->next = l3;
 
     couple todo;
@@ -299,7 +296,7 @@ void test_two_rigth(void) {
     l->next->next->next->next = NULL;
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2+1, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL, NULL);
 
     couple todo;
     todo.score = 0;
@@ -339,7 +336,7 @@ void test_three_stay(void) {
     l->next->next->next->next = NULL;
 
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
-    lane* l1 = init_lane(4, -1, o1, 4, 4, l->next->next->next, NULL);
+    lane* l1 = init_lane(4, -1, o1, 4, 4, l->next->next->next, NULL, NULL);
 
     couple todo;
     todo.score = 0;
@@ -379,9 +376,9 @@ void test_two_left(void) {
     l->next->next->next->next = NULL;
 
     obstacle* o1 = init_obst(NULL, NULL, 2, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL, NULL);
     obstacle* o2 = init_obst(NULL, NULL, 1, 2);
-    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL);
+    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL, NULL);
     
     couple todo;
     todo.score = 0;
@@ -421,9 +418,9 @@ void test_three_down(void) {
     l->next->next->next->next = NULL;
 
     obstacle* o1 = init_obst(NULL, NULL, 2, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, l->next->next->next, NULL, NULL);
     obstacle* o2 = init_obst(NULL, NULL, 1, 2);
-    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL);
+    lane* l2 = init_lane(5, -1, o2, 2, 4, l1, NULL, NULL);
     
     couple todo;
     todo.score = 0;
@@ -456,11 +453,11 @@ void test_three_down(void) {
 
 void test_n_update(void) {
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
-    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL);
+    lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL, NULL);
     obstacle* o2 = init_obst(NULL, NULL, 1, 2);
-    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL);
+    lane* l2 = init_lane(5, 1, o2, 2, 4, l1, NULL, NULL);
     obstacle* o3 = init_obst(NULL, NULL, 20, 2);
-    lane* l3 = init_lane(5, -2, o3, 2, 4, NULL, l1);
+    lane* l3 = init_lane(5, -2, o3, 2, 4, NULL, l1, NULL);
 
     lane** tab = n_update(3, l1);
 
