@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -7,6 +8,14 @@
 
 int tick;
 
+
+float_list* generate_coin(float_list* next,float val) {
+    float_list* new_coins = malloc(sizeof(float_list));
+    new_coins->next = next;
+    new_coins->power = 1;
+    new_coins->val = val;
+    return new_coins;
+}
 
 void free_obstacles(obstacle* first_obstacle) {
     /* frees recursively obstacles */
@@ -300,9 +309,7 @@ float_list* generate_coins(lane* l) {
             while(obstacles_array[pos]) {
                 pos = rand()%LANE_WIDTH;
             }
-            new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = (float) pos;
-            new_coins->next = NULL;
+            new_coins = (float_list*) generate_coin(NULL,(float) pos);
             free(obstacles_array);
             return new_coins;
             break;
@@ -313,9 +320,7 @@ float_list* generate_coins(lane* l) {
                 while(!obstacles_array[pos]) {
                     pos = rand()%LANE_WIDTH;
                 }
-                new_coins = (float_list*) malloc(sizeof(float_list));
-                new_coins->val = pos;
-                new_coins->next = NULL;
+                new_coins = (float_list*) generate_coin(NULL, pos);
                 free(obstacles_array);
                 return new_coins;
             } else {
@@ -324,9 +329,7 @@ float_list* generate_coins(lane* l) {
                 float_list *last_coin = NULL;
                 while(o != NULL) {
                     if(rand()%COIN_ISSUES == 0 && o->next != NULL) {
-                        float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-                        new_coins->val = o->x + rand()%(o->size);
-                        new_coins->next = NULL;
+                        float_list *new_coins = (float_list*) generate_coin(NULL,o->x + rand()%(o->size));
                         if(first_coin == NULL) {
                             first_coin = new_coins;
                         } else {
@@ -342,9 +345,7 @@ float_list* generate_coins(lane* l) {
         case TRACK:
         case ROAD:
 
-            new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = rand()%LANE_WIDTH;
-            new_coins->next = NULL;
+            new_coins = (float_list*) generate_coin(NULL,rand()%LANE_WIDTH);
             return new_coins;
             break;
         default:
@@ -486,9 +487,7 @@ void update_drowning_slots(lane* l) {
         l->obstacles = new_obst;
         c = new_obst;
         if(rand()%COIN_ISSUES == 0 && c->next != NULL) {
-            float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = c->x + rand()%(c->size);
-            new_coins->next = l->coins;
+            float_list *new_coins = (float_list*) generate_coin(l->coins,c->x + rand()%(c->size));
             l->coins = new_coins;
         }
     }
@@ -521,9 +520,7 @@ void update_drowning_slots(lane* l) {
             next_obst->size = 1 + (rand()%MAX_LOG_SIZE);
             float current_x = c->x + (float)(next_obst->size + (rand()%LOG_SPACING_MAX));
             if(rand()%COIN_ISSUES == 0) {
-                float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-                new_coins->val = c->x + rand()%(c->size);
-                new_coins->next = l->coins;
+                float_list *new_coins = (float_list*) generate_coin(l->coins,c->x + rand()%(c->size));
                 l->coins = new_coins;
             }
             next_obst->x = current_x;

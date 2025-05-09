@@ -39,6 +39,7 @@ typedef struct obstacle {
 
 typedef struct float_list {
     float val;
+    int power;
     struct float_list* next;
 } float_list;
 
