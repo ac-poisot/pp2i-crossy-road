@@ -59,6 +59,7 @@ typedef struct player {
     float x; // position of the player
     int orientation; // orientation of the player
     int skin; // skin of the player (?)
+    int power; // power of the player
 } player;
 
 typedef struct displayedData {
@@ -94,3 +95,4 @@ obstacle* collides(lane *current_lane, displayedData game);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);
+displayedData power4 (displayedData data);
