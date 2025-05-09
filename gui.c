@@ -22,16 +22,6 @@
 #define LEFT 270
 
 enum {
-    XIV = 1,
-    NEO,
-    TANK,
-    ECOLO,
-    CRESUS,
-};
-#define CRESUS_MODIF 3 // The modifier for the CRESUS power
-#define TIME_POWER 15 // In seconds, time the power lasts
-
-enum {
     MENU,
     MENU_TO_GAME,
     GAME,
@@ -63,8 +53,10 @@ enum {
     LOCK,
     GAME_OVER_CARD,
     SKIN_START,
-    END_TEXTURES
 };
+
+#define POWER_START (SKIN_START + SKINS - 1)
+#define END_TEXTURES (POWER_START + POWERS_END)
 
 #define BUTTON_WIDTH 200
 #define BUTTON_HEIGHT 100
@@ -115,7 +107,11 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
 
     textures[WARNING] = create_texture(renderer, "sprites/warning.png", TILE_SIDE, TILE_SIDE);
     textures[COIN] = create_texture(renderer, "sprites/coin.png", TILE_SIDE, TILE_SIDE);
-
+    for (int i=1; i<POWERS_END; i++) {
+        char s[30];
+        sprintf(s, "sprites/powers/power%d.png", i);
+        textures[POWER_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
+    }
 
     textures[PLAY_BUTTON] = create_texture(renderer, "sprites/text/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
     textures[MENU_BUTTON] = create_texture(renderer, "sprites/text/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -156,7 +152,14 @@ void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SD
     while (current_coin != NULL) {
         SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
         SDL_Rect destRect = {current_coin->val*TILE_SIDE, y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-        SDL_RenderCopy(renderer, textures[COIN], &spriteRect, &destRect);
+
+        int texture;
+        if (current_coin->power == 0) {
+            texture = COIN;
+        } else {
+            texture = POWER_START + current_coin->power;
+        }
+        SDL_RenderCopy(renderer, textures[texture], &spriteRect, &destRect);
         current_coin = current_coin->next;
     }
 }
@@ -306,7 +309,7 @@ int main() {
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES+SKINS)*(sizeof(SDL_Texture*)));
+    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
     load_textures(renderer, textures);
 
     SDL_Event event;
@@ -576,6 +579,7 @@ int main() {
                     else {
                         if(collided_coin->power == ECOLO){
                             game = power4(game);
+                            break;
                         }
                         else {
                             game.player.power = collided_coin->power;
@@ -1008,7 +1012,7 @@ int main() {
     }
 
 
-    for (int i=0; i<END_TEXTURES+SKINS-2; i++) {
+    for (int i=0; i<END_TEXTURES-1; i++) {
         SDL_DestroyTexture(textures[i+1]);
     }
     

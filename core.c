@@ -293,7 +293,10 @@ bool* create_obstacles_array(obstacle* o) {
 float_list* init_coin(float_list* next,float val) {
     float_list* new_coin = malloc(sizeof(float_list));
     new_coin->next = next;
-    new_coin->power = 1;
+    new_coin->power = 0;
+    if (rand()%POWER_PROBABILITY == 0) {
+        new_coin->power = rand()%(POWERS_END-1) + 1;
+    }
     new_coin->val = val;
     return new_coin;
 }
@@ -723,7 +726,7 @@ displayedData move_camera(displayedData data, float speed) {
 
 displayedData init_game(int game_height) {
     // Initialize the game
-    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0, 1};
+    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0, 0};
 
     // Initialize the first lane
     lane* l = empty_lane(NULL, GRASS);
