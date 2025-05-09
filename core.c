@@ -141,6 +141,21 @@ lane* random_lane(lane* prev_lane) {
     return new_lane;
 }
 
+bool* create_obstacles_array(obstacle* o) {
+    bool* array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
+    for(int i = 0 ; i < LANE_WIDTH; i++) {
+        array[i] = false;
+    }
+    while(o != NULL) {
+        if(o->x >= 0 && o->x < LANE_WIDTH) {
+            for(int i = 0; i < o->size; i++) {
+                array[(int)round(o->x) + i] = true;
+            }
+        }
+        o = o->next;
+    }
+    return array;
+}
 
 void array_not(bool* a) {
     for(int i = 0; i < LANE_WIDTH; i++) {
@@ -236,10 +251,17 @@ obstacle* generate_trees(lane* l) {
     obstacle* current_obst = generate_random_trees();
     bool* current_obst_array = create_obstacles_array(current_obst);
     array_not(current_obst_array);
-    while(!array_exist(array_and(prev_obst, current_obst_array))) {
+    bool* intersection = array_and(prev_obst, current_obst_array);
+    while(!array_exist(intersection)) {
+        free(intersection);
+        free(current_obst);
+        free(current_obst_array);
         current_obst = generate_random_trees();
         current_obst_array = create_obstacles_array(current_obst);
     }
+    free(intersection);
+    free(prev_obst);
+    free(current_obst_array);
     return current_obst;
 }
 
@@ -294,15 +316,22 @@ obstacle* generate_waterlilies(lane* l) {
             array_not(prev_obst);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
-            while(!array_exist(array_and(current_obst_array, prev_obst))) {
+            bool* intersection = array_and(current_obst_array, prev_obst);
+            while(!array_exist(intersection)) {
+                free(current_obst);
+                free(current_obst_array);
+                free(intersection);
                 current_obst = generate_random_waterlilies();
                 current_obst_array = create_obstacles_array(current_obst);
             }
+            free(intersection);
+            free(current_obst_array);
+            free(prev_obst);
             return current_obst;
         case TRACK:
             return generate_random_waterlilies();
         case WATER:
-            if(l->speed == 0) {
+            if(l->prev->speed == 0) {
                 prev_obst = create_obstacles_array(l->prev->obstacles);
                 current_obst_array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
                 int len_group = 0;
@@ -361,6 +390,7 @@ obstacle* generate_waterlilies(lane* l) {
                         }
                     }
                 }
+                free(prev_obst);
                 free(current_obst_array);
                 return current_obst;
             }
@@ -368,9 +398,12 @@ obstacle* generate_waterlilies(lane* l) {
         current_obst = generate_random_waterlilies();
         current_obst_array = create_obstacles_array(current_obst);
         while(!reachable(current_obst_array, l->prev->speed)) {
+            free(current_obst);
+            free(current_obst_array);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
         }
+        free(current_obst_array);
         return current_obst;
     }
 }
@@ -421,21 +454,6 @@ obstacle* generate_trains(void) {
     return first_obst;
 }
 
-bool* create_obstacles_array(obstacle* o) {
-    bool* array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
-    for(int i = 0 ; i < LANE_WIDTH; i++) {
-        array[i] = false;
-    }
-    while(o != NULL) {
-        if(o->x >= 0 && o->x < LANE_WIDTH) {
-            for(int i = 0; i < o->size; i++) {
-                array[(int)round(o->x) + i] = true;
-            }
-        }
-        o = o->next;
-    }
-    return array;
-}
 
 float_list* generate_coins(lane* l) {
     float_list *new_coins = NULL;
