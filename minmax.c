@@ -565,3 +565,20 @@ couple minmax_rec_memo_all(lane* l, int deep, couple previous, player p, lane** 
         return res;
     }
 }
+
+player play_ai(int cai, lane* player_lane, player ai) {
+    // make the move for the ai
+    switch (cai) {
+        case 1:
+        return minmax_simple(player_lane, 5, ai);
+        break;
+        case 2:
+        return minmax_memo_state(player_lane, 5, ai);
+        break;
+        case 4:
+        return minmax_memo_state(player_lane, 5, ai);
+        break;
+        default:
+        break;
+    }
+}

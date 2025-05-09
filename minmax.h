@@ -30,3 +30,4 @@ void free_update(lane** tab, int n);
 couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane** tab);
 player minmax_memo_state(lane* l, int deep, player p);
 couple minmax_rec_memo_all(lane* l, int deep, couple previous, player p, lane** tab, List* vus);
+player play_ai(int cai, lane* player_lane, player ai);

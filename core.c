@@ -4,6 +4,7 @@
 #include <time.h>
 #include <math.h>
 #include "core.h"
+#include "minmax.h"
 
 int tick;
 
@@ -729,6 +730,7 @@ displayedData move_camera(displayedData data, float speed) {
 displayedData init_game(int game_height) {
     // Initialize the game
     player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0};
+    player ai = {PLAYER_START_Y, LANE_WIDTH/2+2, 0, 0};
 
     // Initialize the first lane
     lane* l = empty_lane(NULL, GRASS);
@@ -751,7 +753,7 @@ displayedData init_game(int game_height) {
     // }
     generateNNewLanes(l, game_height + 4);
 
-    displayedData res = {game_height, first_lane, first_lane, p, 0, 0};
+    displayedData res = {game_height, first_lane, first_lane, p, ai, 0, 0};
 
     return res;
 }

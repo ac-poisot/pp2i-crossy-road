@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "core.h"
+#include "minmax.h"
 
 #define GAME_HEIGHT 20 // in tiles, height of the displayed area
 #define REFRESH_RATE 60 // in frames per second, refresh rate of the game
@@ -16,6 +17,7 @@
 #define GAME 1
 #define GAME_OVER 2
 #define SHOP 3
+#define AI 4
 
 // Shop colors
 #define PLAYER_COLORS 4
@@ -58,6 +60,7 @@ void init_colors() {
         init_pair(10*ROAD+(i+2), UNLOCKABLE_COLORS[i], COLOR_BLACK);
     }
 }
+
 
 void display_lane(lane* lane, int lane_count) {
     attron(COLOR_PAIR(lane->type*10 + 1));
@@ -161,6 +164,11 @@ void display(displayedData data) {
             mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
             attroff(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
         }
+        if (current_lane->y == data.ai.y) {
+            attron(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
+            mvprintw(round(data.cameraY - data.ai.y + 1), round(data.ai.x), "*");
+            attroff(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
+        }
         current_lane = current_lane->next;
         lane_count++;
     }
@@ -231,6 +239,8 @@ int main(void) {
 
     bool menu_anim = true;
     int star = 0;
+    int cai = 0; // ai defautl without
+    int time_ai = 0; // time to allow ai to play
     
 
     while (true) {
@@ -255,6 +265,7 @@ int main(void) {
 
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
             mvprintw(GAME_HEIGHT/4 + 4, 2, "Press s to go to the shop");
+            mvprintw(GAME_HEIGHT/4 + 5, 1, "Press a to go choose the ai");
 
             mvprintw(GAME_HEIGHT/4 + 7, 7, "Press q to quit");
             
@@ -267,6 +278,10 @@ int main(void) {
                 case 's':
                 clear();
                 game_state = SHOP;
+                break;
+                case 'a':
+                clear();
+                game_state = AI;
                 break;
                 case ERR:
                 break;
@@ -328,6 +343,26 @@ int main(void) {
                 }
             }
 
+            break;
+
+            case AI:
+            mvprintw(0, 23, "Press m to return to menu");
+            // choix -> jouer seul (0), voir ia (4), jouer avec 1(1), 2(2) 
+            // possiblement3 quand je l'ai fini
+            mvprintw(10, 2, "Alone -> 0");
+            mvprintw(11, 2, "AI easy -> 1");
+            mvprintw(12, 2, "AI mid -> 2");
+            mvprintw(13, 2, "Only watch -> 4");
+            if (ch=='0' || ch=='1' || ch=='2' || ch=='4') {
+                cai = ch-'0';
+            }
+            mvprintw(20, 2, "AI choisen: %d", cai);
+            mvprintw(15, 2, "your choice : ");
+            if (ch == 'm') {
+                clear();
+                menu_anim = true;
+                game_state = MENU;
+            }
             break;
 
             case GAME:
@@ -451,6 +486,13 @@ int main(void) {
 
             }
 
+            if (cai != 0) {
+                time_ai = time_ai + 1;
+                if (time_ai%20 == 0) {
+                    game.ai = play_ai(cai, player_lane, game.ai);
+                }
+            }
+
             if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag || game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
                 game_state = GAME_OVER;
             }
@@ -466,6 +508,7 @@ int main(void) {
 
             case GAME_OVER:
             mvprintw(0, 0, "Final score: %d", (int) game.player.y);
+            mvprintw(1, 0, "AI choisen: %d", (int)cai);
             mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {
