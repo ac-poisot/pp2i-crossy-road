@@ -283,6 +283,8 @@ obstacle* generate_trees(lane* l) {
         free(current_obst_array);
         current_obst = generate_random_trees();
         current_obst_array = create_obstacles_array(current_obst);
+        array_not(current_obst_array);
+        intersection = array_and(prev_obst, current_obst_array);
     }
 
     free(intersection);
@@ -349,6 +351,7 @@ obstacle* generate_waterlilies(lane* l) {
                 free(intersection);
                 current_obst = generate_random_waterlilies();
                 current_obst_array = create_obstacles_array(current_obst);
+                intersection = array_and(current_obst_array, prev_obst);
             }
             free(intersection);
             free(current_obst_array);
