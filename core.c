@@ -279,7 +279,7 @@ obstacle* generate_trees(lane* l) {
     bool* intersection = array_and(prev_obst, current_obst_array);
     while(!array_exist(intersection)) { // While there isn't an exit from one of the waterlilies
         free(intersection);
-        free(current_obst);
+        free_obstacles(current_obst);
         free(current_obst_array);
         current_obst = generate_random_trees();
         current_obst_array = create_obstacles_array(current_obst);
@@ -346,7 +346,7 @@ obstacle* generate_waterlilies(lane* l) {
             current_obst_array = create_obstacles_array(current_obst);
             bool* intersection = array_and(current_obst_array, prev_obst);
             while(!array_exist(intersection)) {
-                free(current_obst);
+                free_obstacles(current_obst);
                 free(current_obst_array);
                 free(intersection);
                 current_obst = generate_random_waterlilies();
@@ -438,7 +438,7 @@ obstacle* generate_waterlilies(lane* l) {
         current_obst = generate_random_waterlilies();
         current_obst_array = create_obstacles_array(current_obst);
         while(!reachable(l->prev, current_obst_array, l->prev->speed)) { // We regenerate the obstacles if the map isn't playable with them
-            free(current_obst);
+            free_obstacles(current_obst);
             free(current_obst_array);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
