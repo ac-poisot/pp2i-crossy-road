@@ -91,3 +91,12 @@ couple is_in(int i, float x, float y, List *list) {
         return is_in(i, x, y, next(c));
     }
 }
+
+void print_list(List* l){
+    if (l==NULL) {
+        printf("\n");
+    } else {
+        printf("(%d, %f, %f, %d, %d), ", id(l), v_x(l), v_y(l), l->cpl.score, l->cpl.move);
+        print_list(l->next);
+    }
+}

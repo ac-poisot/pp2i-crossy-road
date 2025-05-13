@@ -191,16 +191,15 @@ void test_minmax_rec_begining(void) {
     assert(p2.x == LANE_WIDTH/2);
     assert(p2.y == 1);
 
-    //couple beg;
-    //beg.score = -1;
-    //beg.move = -1;
-    //List* vus = create_list(3, p.x, p.y, beg, NULL);
-    //couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
-    //printf("score : %d, move : %d\n", cma.score, cma.move);
-    //assert(cma.score == 3);
-    //assert(cma.move == GO_AHEAD);
-
-    //free_list(vus);
+    couple beg;
+    beg.score = -1;
+    beg.move = -1;
+    List* vus = create_list(3, p.x, p.y, beg, NULL);
+    couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
+    printf("score : %d, move : %d\n", cma.score, cma.move);
+    assert(cma.score == 3);
+    assert(cma.move == GO_AHEAD);
+    free_list(vus);
 
     free_update(tab, 3);
 
@@ -481,17 +480,17 @@ void test_n_update(void) {
 }
  
 int main(void) {
-    test_copy_obstacle();
-    test_copy_lane();
-    test_collide();
-    test_update_lanes();
+    //test_copy_obstacle();
+    //test_copy_lane();
+    //test_collide();
+    //test_update_lanes();
     test_minmax_rec_begining();
-    test_one_stay();
-    test_one_right();
-    test_two_rigth();
-    test_three_stay();
-    test_three_down();
-    test_two_left();
-    test_n_update();
+    //test_one_stay();
+    //test_one_right();
+    //test_two_rigth();
+    //test_three_stay();
+    //test_three_down();
+    //test_two_left();
+    //test_n_update();
     return 0;
 }
