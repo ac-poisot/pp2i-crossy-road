@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <time.h>
 #include "core.h"
@@ -305,6 +306,17 @@ int main() {
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
+    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
+    {
+       printf("%s", Mix_GetError());
+    }
+    Mix_AllocateChannels(10);
+    Mix_Chunk *sfx_jump = Mix_LoadWAV("sound/sfx/jump.wav");
+    Mix_VolumeChunk(sfx_jump, MIX_MAX_VOLUME);
+
+
+    Mix_Volume(1, MIX_MAX_VOLUME/2);
+    Mix_Chunk *sound;
 
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -759,6 +771,7 @@ int main() {
 
             // a new action needs to be performed!
             if (!player_anim && buffer && buffer_key_flag && !blocked_path && !drown_flag) {
+                Mix_PlayChannel(1, sfx_jump, 0);
                 game.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;// FOR TANK, should be  double
                 buffer_key_flag = false;
