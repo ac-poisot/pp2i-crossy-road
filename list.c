@@ -65,13 +65,26 @@ List *next(List *list) {
     }
 }
 
-List *append(int index, float x, float y, couple cpl, List *list) {
+List *append(int index, float x, float y, couple cpl, List *list) { // void pour eviter pb ?
     /* ajoute un element en fin de liste */
     List *c = list;
     if (c == NULL) {
         return create_list(index, x, y, cpl ,NULL);
-    } else {;
-        c = create_list(id(c), v_x(c), v_y(c), c->cpl, append(index, x, y, cpl, c->next));
+    //} else {;
+    //    c = create_list(id(c), v_x(c), v_y(c), c->cpl, append(index, x, y, cpl, c->next));
+    //    return c;
+    //}
+    } else if (c->next == NULL) {
+        List* tempo = create_list(index, x, y, cpl, NULL);
+        c->next = tempo;
+        return c;
+    } else {
+        List* copy_c = c;
+        while (copy_c->next != NULL) {
+            copy_c = copy_c->next;
+        }
+        List* tempo = create_list(index, x, y, cpl, NULL);
+        copy_c->next = tempo;
         return c;
     }
 }
@@ -80,8 +93,8 @@ couple is_in(int i, float x, float y, List *list) {
     couple res;
     List *c = list;
     if (c == NULL) {
-        res.move = -1;
-        res.score = -1;
+        res.move = -2;
+        res.score = -2;
         return res;
     } else if (id(c)==i && v_x(c)==x && v_y(c)==y){
         res.move = c->cpl.move;

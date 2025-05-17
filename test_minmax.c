@@ -199,14 +199,17 @@ void test_minmax_rec_begining(void) {
     assert(p2.y == 1);
 
     //couple beg;
-    //beg.score = -1;
+    //beg.score = 0;
     //beg.move = -1;
-    //List* vus = create_list(3, p.x, p.y, beg, NULL);
-    //couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
-    //printf("score : %d, move : %d\n", cma.score, cma.move);
+    ////List* vus = create_list(3, p.x, p.y, beg, NULL); // trouve le truc qui marche pas!
+    //List* vus = NULL;
+    //lane** tab2 = n_update(3, l);
+    //couple cma = minmax_rec_memo_all(l, 3, beg, p, tab2, vus);
+    //printf("score final: %d, move : %d\n", cma.score, cma.move);
     //assert(cma.score == 3);
     //assert(cma.move == GO_AHEAD);
     //free_list(vus);
+    //free_update(tab2, 3);
 
     free_update(tab, 3);
 
