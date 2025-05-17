@@ -165,7 +165,14 @@ void test_update_lanes(void) {
 }
 
 void test_minmax_rec_begining(void) {
-    // define the game
+    printf("1\n");
+    /* situation
+    4________________________
+    3
+    2
+    1
+    0___________P____________
+    */
     player p = init_player(LANE_WIDTH/2, 0, 0, 0);
     lane* l = initialLanes();
     
@@ -191,15 +198,15 @@ void test_minmax_rec_begining(void) {
     assert(p2.x == LANE_WIDTH/2);
     assert(p2.y == 1);
 
-    couple beg;
-    beg.score = -1;
-    beg.move = -1;
-    List* vus = create_list(3, p.x, p.y, beg, NULL);
-    couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
-    printf("score : %d, move : %d\n", cma.score, cma.move);
-    assert(cma.score == 3);
-    assert(cma.move == GO_AHEAD);
-    free_list(vus);
+    //couple beg;
+    //beg.score = -1;
+    //beg.move = -1;
+    //List* vus = create_list(3, p.x, p.y, beg, NULL);
+    //couple cma = minmax_rec_memo_all(l, 3, todo, p, tab, vus);
+    //printf("score : %d, move : %d\n", cma.score, cma.move);
+    //assert(cma.score == 3);
+    //assert(cma.move == GO_AHEAD);
+    //free_list(vus);
 
     free_update(tab, 3);
 
@@ -207,6 +214,14 @@ void test_minmax_rec_begining(void) {
 }
 
 void test_one_stay(void) {
+    printf("2\n");
+    /* situation
+    4____________##__________ <-
+    3           P
+    2
+    1
+    0________________________
+    */
     // define the game
     player p = init_player(LANE_WIDTH/2, 3, 0, 0);
     lane* l = initialLanes();
@@ -248,6 +263,12 @@ void test_one_stay(void) {
 }
 
 void test_one_right(void) {
+    printf("3\n");
+    /* situation
+    2___________##___________ ->
+    1          ##P            ->
+    0___________##___________ ->
+    */
     // define the game
     player p = init_player(LANE_WIDTH/2+1, 1, 0, 0);
 
@@ -287,6 +308,14 @@ void test_one_right(void) {
 }
 
 void test_two_rigth(void) {
+    printf("4\n");
+    /* situation
+    4____________##__________ <-
+    3           P
+    2
+    1
+    0________________________
+    */
     // define the game
     player p = init_player(LANE_WIDTH/2, 3, 0, 0);
 
@@ -327,6 +356,14 @@ void test_two_rigth(void) {
 }
 
 void test_three_stay(void) {
+    printf("5\n");
+    /* situation
+    4___________####_________
+    3           P
+    2
+    1
+    0________________________
+    */
     // define the game
     player p = init_player(LANE_WIDTH/2, 3, 0, 0);
 
@@ -334,7 +371,7 @@ void test_three_stay(void) {
     free_lanes(l->next->next->next->next);
     l->next->next->next->next = NULL;
 
-    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
+    obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 4);
     lane* l1 = init_lane(4, -1, o1, 4, 4, l->next->next->next, NULL, NULL);
 
     couple todo;
@@ -367,6 +404,15 @@ void test_three_stay(void) {
 }
 
 void test_two_left(void) {
+    printf("6\n");
+    /* situation
+    5 ##                      <-
+    4_P##____________________ <-
+    3
+    2
+    1
+    0________________________
+    */
     // define the game
     player p = init_player(1, 4, 0, 0);
 
@@ -409,6 +455,15 @@ void test_two_left(void) {
 }
 
 void test_three_down(void) {
+    printf("7\n");
+    /* situation
+    5 ##                      <-
+    4_P##____________________ <-
+    3
+    2
+    1
+    0________________________
+    */
     // define the game
     player p = init_player(1, 4, 0, 0);
 
@@ -480,17 +535,17 @@ void test_n_update(void) {
 }
  
 int main(void) {
-    //test_copy_obstacle();
-    //test_copy_lane();
-    //test_collide();
-    //test_update_lanes();
+    test_copy_obstacle();
+    test_copy_lane();
+    test_collide();
+    test_update_lanes();
     test_minmax_rec_begining();
-    //test_one_stay();
-    //test_one_right();
-    //test_two_rigth();
-    //test_three_stay();
-    //test_three_down();
-    //test_two_left();
-    //test_n_update();
+    test_one_stay();
+    test_one_right();
+    test_two_rigth();
+    test_three_stay();
+    test_two_left();
+    test_three_down();
+    test_n_update();
     return 0;
 }

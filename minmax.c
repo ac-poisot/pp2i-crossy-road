@@ -335,6 +335,10 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
     -> le meilleur mouvement est celui permis par la boucle lors du premier appel
     -> si on envoie un couple (score, mvt), c'est ce qu'on maintient à jour dans la boucle et qu'on renvoie
     */
+    /*TODO  verifier si la lane passe en parametre "colle" à celle du tableau
+    aka quand utilisation de prev et next sur current_lane, quand passe en parametre, est-ce celle du tableau est bien celle en parametre,
+    chose sure dans minmax_rec, mais ici sur que non */
+    /*TODO -> regler ca en fait*/
     if (deep <= 0) {
         return previous;
     } else {
@@ -344,9 +348,11 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
         res.score = -deep-1;
 
         // step 1 : update the map and do a move
-        printf("%d\n", deep-1);
+        //printf("%d\n", deep-1);
         lane* current_lane = tab[deep-1];
         lane* copy_current = current_lane;
+        //displayLanes(current_lane);
+        //printf("\n");
 
         player copy_p;
         copy_p.orientation = p.orientation;
@@ -359,22 +365,28 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
 
             switch (i) {
                 case GO_AHEAD:
-                    if (l->next != NULL) {
+                    if (copy_current->next != NULL) {
                         copy_p.x = p.x;
                         copy_p.y = p.y + 1;
                         assert(copy_current->next != NULL);
                         current_lane = copy_current->next;
+                        for (int j=0; j<deep; j=j+1) {
+                            tab[j] = tab[j]->next;
+                        }
                         c.score = c.score+1;
                     } else {
                         c.move = NOT_POSSIBLE;
                     }
                     break;
                 case GO_DOWN:
-                    if (l->prev != NULL) {
+                    if (copy_current->prev != NULL) {
                         copy_p.x = p.x;
                         copy_p.y = p.y - 1;
                         assert(copy_current->prev != NULL);
                         current_lane =  copy_current->prev;
+                        for (int j=0; j<deep; j=j+1) {
+                            tab[j] = tab[j]->prev;
+                        }
                         c.score = c.score-1;
                     } else {
                         c.move = NOT_POSSIBLE;
@@ -412,16 +424,27 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
             // step 3 : if move possible and no collision, continu with this move
             couple next;
             if (c.move != NOT_POSSIBLE && !coll) {
-                printf("aaaaaaa\n");
+                //printf("aaaaaaa\n");
                 next = minmax_rec_memo_state(current_lane, deep-1, c, copy_p, tab);
             } else {
                 next.move = NOT_POSSIBLE;
                 next.score = -1;
             }
 
+            // change tab if GO_AHEAD or GO_DOWN
+            if (i==GO_AHEAD) {
+                for (int j=0; j<deep; j=j+1) {
+                    tab[j] = tab[j]->prev;
+                }
+            } else if (i==GO_DOWN) {
+                for (int j=0; j<deep; j=j+1) {
+                    tab[j] = tab[j]->next;
+                }
+            }
+
             // step 4 : update res if c better than him
             if (next.move != NOT_POSSIBLE && next.score >= res.score) {
-                printf("wakanda\n");
+                //printf("wakanda\n");
                 res.move = c.move;
                 res.score = next.score;
             }
