@@ -184,11 +184,14 @@ bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterli
         if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {// If it is a lane of waterlilies before the road or the lane of trunks
             int first = 0;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
-            while(prev_obst[first] != true) {
+            while(first < LANE_WIDTH && prev_obst[first] != true) {
                 first++;
             }
+            if(first >= LANE_WIDTH) {
+                return false;
+            }
             free(prev_obst);
-            i = i < first ? first : i;
+            i = first;
         }
 
         for(; i < LANE_WIDTH; i++) {
@@ -198,18 +201,21 @@ bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterli
         }
 
     } else { // If the cars or trunks are going to the left side
-        int upper = LANE_WIDTH-5;
+        int upper = LANE_WIDTH-6;
         if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {// If it is a lane of waterlilies before the road or the lane of trunks
-            int last = LANE_WIDTH-5;
+            int last = LANE_WIDTH-6;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
-            while(prev_obst[last] != true) {
+            while(last >= 0 && prev_obst[last] != true) {
                 last--;
             }
+            if(last < 0) {
+                return false;
+            }
             free(prev_obst);
-            upper = upper < last ? upper : last;
+            upper = last;
         }
 
-        for(int i = 0; i < upper; i++) {
+        for(int i = 0; i <= upper; i++) {
             if(a[i]) {
                 return true;
             }
@@ -370,7 +376,7 @@ obstacle* generate_waterlilies(lane* l) {
 
                 int len_group = 0;
                 for(int i = 0; i < LANE_WIDTH; i++) {
-                    if(prev_obst[i]) { // We are currently looking at a group of waterlilies sitting next to each other
+                    if(prev_obst[i] && len_group <= 2) { // We are currently looking at a group of waterlilies sitting next to each other
                         len_group++;
                     } else if(len_group != 0) { // We just finished a group of waterlilies
                         int chosen = i - len_group + rand()%len_group;
@@ -407,6 +413,38 @@ obstacle* generate_waterlilies(lane* l) {
                             }
 
                         }
+                        
+                        if(prev_obst[i]) {
+                            len_group++;
+                        }
+                    }
+                }
+                if(len_group != 0) { // We just finished a group of waterlilies
+                    int chosen = LANE_WIDTH - len_group + rand()%len_group;
+                    current_obst_array[chosen] = true;
+                    len_group = 0;
+
+
+                    // Randomly generates a pattern with one or more waterlilies at that place
+                    int pattern = rand()%9;
+                    if(pattern == 0) {
+                        if(chosen - 2 >= 0) {
+                            current_obst_array[chosen-2] = true;
+                        }
+                        if(chosen - 1 >= 0) {
+                            current_obst_array[chosen-1] = true;
+                        }
+                    } else if(pattern <= 3 && chosen - 1 >= 0) {
+                        current_obst_array[chosen-1] = true;
+                   
+                    } else if(pattern == 5) {
+                        if(chosen + 1 < LANE_WIDTH) {
+                            current_obst_array[chosen+1] = true;
+                        }
+                        if(chosen + 2 < LANE_WIDTH) {
+                            current_obst_array[chosen+2] = true;
+                        }
+
                     }
                 }
 
@@ -575,7 +613,7 @@ lane* generate_lane(lane* prev_lane, int type) {
             new_lane->speed = 0;
             break;
         case WATER: // generates waterlilies or drowning slots
-            if ((int)(rand()%3) == 0) {
+            if ((int)(rand()%3) >= 0) {
                 new_lane->speed = 0;
                 new_lane->obstacles = generate_waterlilies(new_lane);
             } else {
