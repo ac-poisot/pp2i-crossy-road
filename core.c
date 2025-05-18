@@ -142,6 +142,7 @@ lane* random_lane(lane* prev_lane) {
 }
 
 bool* create_obstacles_array(obstacle* o) {
+    /* creates an array of booleans representing  */
     bool* array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
     for(int i = 0 ; i < LANE_WIDTH; i++) {
         array[i] = false;
@@ -158,12 +159,14 @@ bool* create_obstacles_array(obstacle* o) {
 }
 
 void array_not(bool* a) {
+    /* Invert the value of each cell of the array */
     for(int i = 0; i < LANE_WIDTH; i++) {
         a[i] = !a[i];
     }
 }
 
 bool* array_and(bool* a1, bool* a2) {
+    /* Returns the intersection of two arrays as a new array */
     bool* res = (bool*)malloc(LANE_WIDTH * sizeof(bool));
     for(int i = 0; i < LANE_WIDTH; i++) {
         res[i] = a1[i] && a2[i];
@@ -172,6 +175,7 @@ bool* array_and(bool* a1, bool* a2) {
 }
 
 bool array_exist(bool* a) {
+    /* Check if at least one cell of the array is true */
     for(int i = 0; i < LANE_WIDTH; i++) {
         if(a[i]) return true;
     }
@@ -181,7 +185,8 @@ bool array_exist(bool* a) {
 bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterlily is reachable
     if(speed > 0) { // If the cars or trunks are going to the right side
         int i = 5;
-        if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {// If it is a lane of waterlilies before the road or the lane of trunks
+        if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {
+            // If it is a lane of waterlilies before the road or the lane of trunks, we make sure that at least one waterlily is accessible
             int first = 0;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
             while(first < LANE_WIDTH && prev_obst[first] != true) {
@@ -202,7 +207,8 @@ bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterli
 
     } else { // If the cars or trunks are going to the left side
         int upper = LANE_WIDTH-6;
-        if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {// If it is a lane of waterlilies before the road or the lane of trunks
+        if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {
+            // If it is a lane of waterlilies before the road or the lane of trunks, we make sure that at least one waterlily is accessible
             int last = LANE_WIDTH-6;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
             while(last >= 0 && prev_obst[last] != true) {
@@ -248,6 +254,7 @@ obstacle* generate_vehicles(lane* l) {
 }
 
 obstacle* generate_random_trees(void) {
+    /* randomly generates trees */
     int nb = (int)(1+(rand()%3));
     float x = (float)(rand()%(LANE_WIDTH/2));
     float current_x = x;
@@ -283,7 +290,7 @@ obstacle* generate_trees(lane* l) {
     bool* current_obst_array = create_obstacles_array(current_obst);
     array_not(current_obst_array);
     bool* intersection = array_and(prev_obst, current_obst_array);
-    while(!array_exist(intersection)) { // While there isn't an exit from one of the waterlilies
+    while(!array_exist(intersection)) { // While there isn't an exit from one of the waterlilies, we regenerate the list of trees
         free(intersection);
         free_obstacles(current_obst);
         free(current_obst_array);
@@ -300,9 +307,10 @@ obstacle* generate_trees(lane* l) {
 }
 
 obstacle* generate_random_waterlilies(void) {
-    int nb = (int)(3+rand()%3);
+    /* randomly generates waterlilies */
+    int nb = (int)(3+rand()%3); // the number of waterlilies to generate
     float water_length = (float)(rand()%LANE_WIDTH-2); // taille de l'eau
-    float current_x = -1;
+    float current_x = -1; // the coordinate of the waterlilies is stored in this variable
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
     first_obst->prev = NULL;
@@ -310,6 +318,7 @@ obstacle* generate_random_waterlilies(void) {
     first_obst->size = 1;
     obstacle *last_generated = first_obst;
     current_x = current_x + water_length;
+
     for (int i=0; i<nb-1 && ((int)current_x < LANE_WIDTH-UNPLAYABLE_WIDTH+1) ; i=i+1) {
         water_length = (float)(rand()%(LANE_WIDTH-(int)current_x));
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
@@ -346,12 +355,13 @@ obstacle* generate_waterlilies(lane* l) {
     bool* current_obst_array = NULL;
     switch (l->prev->type) {
         case GRASS:
+        /* if the previous lane was a grass lane, at least one path should not be blocked by a lack of waterlilies */
             prev_obst = create_obstacles_array(l->prev->obstacles);
             array_not(prev_obst);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
             bool* intersection = array_and(current_obst_array, prev_obst);
-            while(!array_exist(intersection)) {
+            while(!array_exist(intersection)) { // While there isn't an exit to one of the waterlilies, we regenerate the obstacles
                 free_obstacles(current_obst);
                 free(current_obst_array);
                 free(intersection);
@@ -364,9 +374,12 @@ obstacle* generate_waterlilies(lane* l) {
             free(prev_obst);
             return current_obst;
         case TRACK:
+        /* if the previous lane was a track lane, there isn't much constraints */
             return generate_random_waterlilies();
         case WATER:
             if(l->prev->speed == 0) {
+
+                /* if the previous lane was a lane of waterlilies, we generate new waterlilies on the lane such as each waterlilies way is still going */
                 prev_obst = create_obstacles_array(l->prev->obstacles);
 
                 current_obst_array = (bool*)malloc(LANE_WIDTH * sizeof(bool));
@@ -379,7 +392,7 @@ obstacle* generate_waterlilies(lane* l) {
                     if(prev_obst[i] && len_group <= 2) { // We are currently looking at a group of waterlilies sitting next to each other
                         len_group++;
                     } else if(len_group != 0) { // We just finished a group of waterlilies
-                        int chosen = i - len_group + rand()%len_group;
+                        int chosen = i - len_group + rand()%len_group; // We randomly choose a waterlily in the group to expand it to this new lane
                         current_obst_array[chosen] = true;
                         len_group = 0;
 
@@ -420,7 +433,7 @@ obstacle* generate_waterlilies(lane* l) {
                     }
                 }
                 if(len_group != 0) { // We just finished a group of waterlilies
-                    int chosen = LANE_WIDTH - len_group + rand()%len_group;
+                    int chosen = LANE_WIDTH - len_group + rand()%len_group; // We randomly choose a waterlily in the group to expand it to this new lane
                     current_obst_array[chosen] = true;
                     len_group = 0;
 
@@ -473,9 +486,10 @@ obstacle* generate_waterlilies(lane* l) {
             }
             // If there are not waterlilies but trunks, we treat the case as we do for cars hence no "break" instruction here
         case ROAD:
+        /* if the previous lane is either a lane of cars or trunks */
         current_obst = generate_random_waterlilies();
         current_obst_array = create_obstacles_array(current_obst);
-        while(!reachable(l->prev, current_obst_array, l->prev->speed)) { // We regenerate the obstacles if the map isn't playable with them
+        while(!reachable(l->prev, current_obst_array, l->prev->speed)) { // We regenerate the obstacles if the map isn't playable with them because there isn't an accessible way
             free_obstacles(current_obst);
             free(current_obst_array);
             current_obst = generate_random_waterlilies();
