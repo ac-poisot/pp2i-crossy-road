@@ -133,8 +133,6 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     }
 }
 
-
-
 void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer) {
     SDL_Color white = {255, 255, 255, 255};
     TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", size);
@@ -164,7 +162,6 @@ void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SD
         current_coin = current_coin->next;
     }
 }
-
 
 void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures) {
 
@@ -264,7 +261,6 @@ void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Tex
     SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
 }
 
-
 void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
@@ -300,9 +296,15 @@ bool button_clicked(button b, SDL_Event event) {
 }
 
 int main() {
-
+    obstacle* didier = malloc(sizeof(obstacle));
+    didier->next = NULL;
+    didier->prev = NULL;
+    didier->size =  -12;
+    didier->x = 0;
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
-    srand(time(NULL));
+    time_t SEED = time(NULL);
+    srand(SEED);
+
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
@@ -329,8 +331,6 @@ int main() {
     bool action = false;
 
 
-    
-
     int game_state = MENU;
     int player_skin = 0;
     int purse = 0;
@@ -341,7 +341,7 @@ int main() {
     unlocked_skins[0] = true;
 
     // Game-specific variables
-    displayedData game = {0, NULL, NULL, {0, 0, 0, 0}, 0, 0};
+    displayedData game = {0, NULL, NULL, {0,0, 0, 0, 0}, 0, 0};
 
     bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
     bool blocked_path = false; // whether the path is currently blocked by a tree or not
@@ -375,6 +375,7 @@ int main() {
     }
 
     while (running) {
+
         action = SDL_PollEvent(&event);
         SDL_FlushEvent(SDL_MOUSEMOTION);
 
@@ -470,6 +471,7 @@ int main() {
         }
 
         case MENU_TO_GAME: {
+            
             if (fade) {
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
@@ -579,7 +581,7 @@ int main() {
 
                 // Check for collisions with coins
                 float_list* collided_coin =  collides_coin(player_top_lane, game);
-                if (game.player.y == (int) (game.player.y) && collided_coin != NULL) {
+                if (collided_coin != NULL) {
                     if(collided_coin->power == 0){
                         if (game.player.power == CRESUS) {
                             purse += CRESUS_MODIF;
@@ -590,10 +592,11 @@ int main() {
                     }
                     else {
                         if(collided_coin->power == ECOLO){
+                            power_time =1;
                             game = power4(game);
                             break;
                         }
-                        else {
+                        else {  
                             game.player.power = collided_coin->power;
                             power_time = TIME_POWER*REFRESH_RATE;
                         }
@@ -611,7 +614,7 @@ int main() {
 
                 if (x_offset == 0 && on_log == NULL && player_top_lane->type == WATER && player_top_lane->speed != 0 && game.player.power == XIV) {
                         liftboost = player_top_lane->speed;
-                        on_log = (int*) 1;
+                        on_log = didier;
                         x_offset = 0.0001;
                     }
 
@@ -686,10 +689,34 @@ int main() {
             }
 
             if (player_bottom_lane != NULL) {
+                // Check for collisions with coins
+                float_list* collided_coin =  collides_coin(player_bottom_lane, game);
+                if (collided_coin != NULL) {
+                    if(collided_coin->power == 0){
+                        if (game.player.power == CRESUS) {
+                            purse += CRESUS_MODIF;
+                        }
+                        else {
+                            purse++;
+                        }
+                    }
+                    else {
+                        if(collided_coin->power == ECOLO){
+                            power_time =1;
+                            game = power4(game);
+                            break;
+                        }
+                        else {
+                            game.player.power = collided_coin->power;
+                            power_time = TIME_POWER*REFRESH_RATE;
+                        }
+                    }
+                    
+                }
 
                 if (x_offset == 0 && on_log == NULL && player_bottom_lane->type == WATER && player_bottom_lane->speed != 0 && game.player.power == XIV) {
                     liftboost = player_bottom_lane->speed;
-                    on_log = (int*) 1;
+                    on_log = didier;
                     x_offset = 0.0001;
                 }
                 // Check for collisions with obstacles
@@ -1018,9 +1045,9 @@ int main() {
         if (power_time>0){
             power_time--;
         }//Decrease time remaining for the power;
-        // if (power_time<=0) {
-        //     power = 0;
-        // }
+         if (power_time<=0) {
+            game.player.power = 0;
+        }
         nanosleep(&request, &remaining);
     }
 

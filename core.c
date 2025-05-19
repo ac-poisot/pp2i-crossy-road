@@ -756,7 +756,10 @@ displayedData init_game(int game_height) {
 
 displayedData power4 (displayedData data) {
     lane* current_lane = data.camera_first_lane;
-    while (current_lane->y !=data.player.y) {
+    while ((int) current_lane->y != (int) data.player.y) {
+        current_lane = current_lane->next;
+    }
+    if (current_lane->y <= data.player.y){
         current_lane = current_lane->next;
     }
     lane* l1 = empty_lane(current_lane->prev, GRASS);
