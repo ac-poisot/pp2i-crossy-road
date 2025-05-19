@@ -46,6 +46,7 @@ enum {
     TRAIN_EDGE,
     WARNING,
     COIN,
+    CLOUD,
     PLAY_BUTTON,
     SKINS_BUTTON,
     MENU_BUTTON,
@@ -108,6 +109,7 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
 
     textures[WARNING] = create_texture(renderer, "sprites/warning.png", TILE_SIDE, TILE_SIDE);
+    textures[CLOUD] = create_texture(renderer, "sprites/cloud.png", TILE_SIDE, TILE_SIDE);
     textures[COIN] = create_texture(renderer, "sprites/coin.png", TILE_SIDE, TILE_SIDE);
     for (int i=1; i<POWERS_END; i++) {
         char s[30];
@@ -280,6 +282,18 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
         char scoreText[20];
         sprintf(scoreText, "Score: %d", (int) data.player.y);
         display_text(scoreText, 0, 0, 24, renderer);
+    }
+
+    if (data.player.power != 0) {
+        int cloud_size = TILE_SIDE*2;
+        SDL_Rect spriteRect2 = {0, 0, cloud_size, cloud_size};
+        SDL_Rect destRect2 = {(WIDTH-cloud_size)/2, cloud_size/2, cloud_size, cloud_size};
+        SDL_RenderCopy(renderer, textures[CLOUD], &spriteRect2, &destRect2);
+
+
+        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+        SDL_Rect destRect = {(WIDTH-TILE_SIDE)/2, cloud_size-TILE_SIDE/2, TILE_SIDE, TILE_SIDE};
+        SDL_RenderCopy(renderer, textures[POWER_START+data.player.power], &spriteRect, &destRect);
     }
 }
 
@@ -536,12 +550,6 @@ int main() {
             char purseText[20];
             sprintf(purseText, "%d$", purse);
             display_text(purseText, WIDTH-24*3, 0, 24, renderer);
-
-            char powerText[20];
-            if (game.player.power != 0) {
-                sprintf(powerText, "Power: %d", game.player.power);
-                display_text(powerText, WIDTH-24*5, 30, 24, renderer);
-            }
     
             game = move_camera(game, GAME_SPEED);
     
