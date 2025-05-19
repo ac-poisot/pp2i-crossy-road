@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include "core.h"
 #include "gui.h"
@@ -1061,6 +1062,7 @@ int main() {
     free(textures);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    free(didier);
 
     return 0;
 }
