@@ -13,6 +13,8 @@
 
 #define TILE_SIDE 40
 
+#define AI_AMOUNT 6 // temp until ai branch merge
+
 #define GAME_HEIGHT (HEIGHT/TILE_SIDE)
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
 #define ANIM_LENGTH 7 // In frames, time it takes for the player to get to the next tile // Double it for TANK
@@ -136,11 +138,11 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
     }
 }
 
-void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer) {
-    SDL_Color white = {255, 255, 255, 255};
+void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color) {
+
     TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", size);
 
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, white);
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
     SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
@@ -280,8 +282,9 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
 
         // Display score
         char scoreText[20];
+        SDL_Color white = {255, 255, 255, 255};
         sprintf(scoreText, "Score: %d", (int) data.player.y);
-        display_text(scoreText, 0, 0, 24, renderer);
+        display_text(scoreText, 0, 0, 24, renderer, white);
     }
 
     if (data.player.power != 0) {
@@ -345,6 +348,8 @@ int main() {
     int running = 1;
     bool action = false;
 
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Color black = {0, 0, 0, 255};
 
     int game_state = MENU;
     int player_skin = 0;
@@ -376,6 +381,8 @@ int main() {
     int fade = FADE_LENGTH;
     
     int power_time = 0;//Time remaining for the power
+
+    int ai_choice = 0;
 
     // Buttons
 
@@ -448,6 +455,20 @@ int main() {
                 SDL_RenderCopy(renderer, textures[LOCK], &spriteRect, &destRect);
             }
 
+            // AI choice
+            button ai = {(WIDTH+BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
+            display_button(ai, renderer, textures);
+
+            char aiText[20];
+            if (ai_choice) {
+                sprintf(aiText, "%d", ai_choice);
+            } else {
+                sprintf(aiText, "X");
+            }
+
+            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 30, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT*0.9, renderer, black);
+
+
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
                     if (button_clicked(play, event)) {
@@ -461,6 +482,9 @@ int main() {
                         fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
                         skin_to_unlock = (rand() % (SKINS-1))+1;
+                    }
+                    else if (button_clicked(ai, event)) {
+                        ai_choice = (ai_choice + 1) % AI_AMOUNT;
                     }
                     break;
                 case SDL_KEYUP:
@@ -476,11 +500,11 @@ int main() {
             // Display high score
             char highScoreText[20];
             sprintf(highScoreText, "High Score: %d", high_score);
-            display_text(highScoreText, 0, 0, 24, renderer);
+            display_text(highScoreText, 0, 0, 24, renderer, white);
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-50, 0, 24, renderer);
+            display_text(purseText, WIDTH-50, 0, 24, renderer, white);
 
             break;
         }
@@ -549,7 +573,7 @@ int main() {
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*3, 0, 24, renderer);
+            display_text(purseText, WIDTH-24*3, 0, 24, renderer, white);
     
             game = move_camera(game, GAME_SPEED);
     
@@ -1020,9 +1044,9 @@ int main() {
                 fade = GAMBLING_DURATION;
                 game_state = GAMBLED;
                 if (!unlocked_skins[skin_to_unlock]) {
-                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer);
+                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer, white);
                 } else {
-                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer);
+                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer, white);
                 }
                 unlocked_skins[skin_to_unlock] = true;
             }
