@@ -459,7 +459,7 @@ int main() {
             button ai = {(WIDTH+BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
             display_button(ai, renderer, textures);
 
-            char aiText[20];
+            char aiText[2];
             if (ai_choice) {
                 sprintf(aiText, "%d", ai_choice);
             } else {
