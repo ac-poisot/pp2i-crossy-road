@@ -159,12 +159,12 @@ void display(displayedData data) {
     int lane_count = 0;
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
-        if (current_lane->y == data.player.y) {
+        if (current_lane->y == data.player.y && data.player.skin != -1) {
             attron(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
             mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
             attroff(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
         }
-        if (current_lane->y == data.ai.y) {
+        if (current_lane->y == data.ai.y && data.ai.skin != -1) {
             attron(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
             mvprintw(round(data.cameraY - data.ai.y + 1), round(data.ai.x), "*");
             attroff(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
@@ -239,8 +239,9 @@ int main(void) {
 
     bool menu_anim = true;
     int star = 0;
-    int cai = 0; // ai defautl without
-    int time_ai = 0; // time to allow ai to play
+
+    int cai = 0; // ai chosen, absent by default
+    int time_ai = 0; // timer for the ai
     
 
     while (true) {
@@ -290,8 +291,18 @@ int main(void) {
                 game_state = GAME;
                 move_timer = GAME_SPEED;
                 on_log = NULL;
+                time_ai = 0;
                 game = init_game(GAME_HEIGHT);
-                game.player.skin = player_color;
+                if (!cai) {
+                    game.ai.skin = -1;
+                } else {
+                    game.ai.skin = (game.player.skin+1)%PLAYER_COLORS;
+                }
+                if (cai == 4) {
+                    game.player.skin = -1;
+                } else {
+                    game.player.skin = player_color;
+                }
                 break;
 
             }
@@ -349,15 +360,14 @@ int main(void) {
             mvprintw(0, 23, "Press m to return to menu");
             // choix -> jouer seul (0), voir ia (4), jouer avec 1(1), 2(2) 
             // possiblement3 quand je l'ai fini
-            mvprintw(10, 2, "Alone -> 0");
-            mvprintw(11, 2, "AI easy -> 1");
-            mvprintw(12, 2, "AI mid -> 2");
-            mvprintw(13, 2, "Only watch -> 4");
+            mvprintw(10, 2, "0: no AI");
+            mvprintw(11, 2, "1: VS. easy AI");
+            mvprintw(12, 2, "2: VS. medium AI");
+            mvprintw(13, 2, "4: AI alone");
             if (ch=='0' || ch=='1' || ch=='2' || ch=='4') {
                 cai = ch-'0';
             }
-            mvprintw(20, 2, "AI choisen: %d", cai);
-            mvprintw(15, 2, "your choice : ");
+            mvprintw(20, 2, "AI chosen: %d\n\n\nw", cai);
             if (ch == 'm') {
                 clear();
                 menu_anim = true;
@@ -394,7 +404,7 @@ int main(void) {
 
             // Camera movement, automatic or if player is in the top quarter of the game
 
-            if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4)) { 
+            if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4) || game.cameraY - game.ai.y < (GAME_HEIGHT/4)) { 
                 game = move_camera(game, 1);
                 move_timer = GAME_SPEED;
             } else {
@@ -487,7 +497,7 @@ int main(void) {
             }
 
             if (cai != 0) {
-                time_ai = time_ai + 1;
+                time_ai++;
                 if (time_ai%20 == 0) {
                     game.ai = play_ai(cai, player_lane, game.ai);
                 }
@@ -502,13 +512,17 @@ int main(void) {
                 // Display the purse
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
                 refresh();
+            } else {
+                if (cai == 4) {
+                    game_state = GAME;
+                }
             }
         
             break;
 
             case GAME_OVER:
             mvprintw(0, 0, "Final score: %d", (int) game.player.y);
-            mvprintw(1, 0, "AI choisen: %d", (int)cai);
+            mvprintw(1, 0, "AI chosen: %d", (int)cai);
             mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {
