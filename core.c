@@ -184,34 +184,34 @@ bool array_exist(bool* a) {
 
 bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterlily is reachable
     if(speed > 0) { // If the cars or trunks are going to the right side
-        int i = 5;
+        int i = 5 + UNPLAYABLE_WIDTH;
         if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {
             // If it is a lane of waterlilies before the road or the lane of trunks, we make sure that at least one waterlily is accessible
-            int first = 0;
+            int first = UNPLAYABLE_WIDTH;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
-            while(first < LANE_WIDTH && prev_obst[first] != true) {
+            while(first < LANE_WIDTH-UNPLAYABLE_WIDTH && prev_obst[first] != true) {
                 first++;
             }
-            if(first >= LANE_WIDTH) {
+            if(first >= LANE_WIDTH - UNPLAYABLE_WIDTH) {
                 return false;
             }
             free(prev_obst);
             i = first;
         }
 
-        for(; i < LANE_WIDTH; i++) {
+        for(; i < LANE_WIDTH - UNPLAYABLE_WIDTH; i++) {
             if(a[i]) {
                 return true;
             }
         }
 
     } else { // If the cars or trunks are going to the left side
-        int upper = LANE_WIDTH-6;
+        int upper = LANE_WIDTH-6 - UNPLAYABLE_WIDTH;
         if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {
             // If it is a lane of waterlilies before the road or the lane of trunks, we make sure that at least one waterlily is accessible
-            int last = LANE_WIDTH-6;
+            int last = LANE_WIDTH-6 - UNPLAYABLE_WIDTH;
             bool* prev_obst = create_obstacles_array(l->prev->obstacles);
-            while(last >= 0 && prev_obst[last] != true) {
+            while(last >= UNPLAYABLE_WIDTH && prev_obst[last] != true) {
                 last--;
             }
             if(last < 0) {
@@ -309,7 +309,7 @@ obstacle* generate_trees(lane* l) {
 obstacle* generate_random_waterlilies(void) {
     /* randomly generates waterlilies */
     int nb = (int)(3+rand()%3); // the number of waterlilies to generate
-    float water_length = (float)(rand()%LANE_WIDTH-2); // taille de l'eau
+    float water_length = (float)(rand()%(LANE_WIDTH-2 - 2 * UNPLAYABLE_WIDTH)); // taille de l'eau
     float current_x = -1; // the coordinate of the waterlilies is stored in this variable
     obstacle* first_obst = (obstacle*)malloc(sizeof(obstacle));
     first_obst->x = current_x;
@@ -317,10 +317,10 @@ obstacle* generate_random_waterlilies(void) {
     first_obst->next = NULL;
     first_obst->size = 1;
     obstacle *last_generated = first_obst;
-    current_x = current_x + water_length;
+    current_x = current_x + water_length + UNPLAYABLE_WIDTH;
 
-    for (int i=0; i<nb-1 && ((int)current_x < LANE_WIDTH-UNPLAYABLE_WIDTH+1) ; i=i+1) {
-        water_length = (float)(rand()%(LANE_WIDTH-(int)current_x));
+    for (int i=0; i<nb-1 && ((int)current_x < LANE_WIDTH-UNPLAYABLE_WIDTH-1) ; i=i+1) {
+        water_length = (float)(rand()%(LANE_WIDTH-(int)current_x - UNPLAYABLE_WIDTH));
         obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
         obst->x = current_x+1;
         obst->next = NULL;
@@ -329,7 +329,7 @@ obstacle* generate_random_waterlilies(void) {
         last_generated->next = obst;
         last_generated = obst;
         current_x = current_x + water_length+1;
-        if (i==nb-2 && current_x<LANE_WIDTH-UNPLAYABLE_WIDTH+1) {
+        if (i==nb-2 && current_x<LANE_WIDTH-UNPLAYABLE_WIDTH-1) {
             // creates a last obstacle to avoid to many waterlilies
             water_length = (float)(LANE_WIDTH-UNPLAYABLE_WIDTH-current_x);
             obstacle* obst = (obstacle*)malloc(sizeof(obstacle));
@@ -400,28 +400,28 @@ obstacle* generate_waterlilies(lane* l) {
                         // Randomly generates a pattern with one or more waterlilies at that place
                         int pattern = rand()%9;
                         if(pattern == 0) {
-                            if(chosen - 2 >= 0) {
+                            if(chosen - 2 >= UNPLAYABLE_WIDTH) {
                                 current_obst_array[chosen-2] = true;
                             }
-                            if(chosen - 1 >= 0) {
+                            if(chosen - 1 >= UNPLAYABLE_WIDTH) {
                                 current_obst_array[chosen-1] = true;
                             }
-                        } else if(pattern == 1 && chosen-1 >= 0) {
+                        } else if(pattern == 1 && chosen-1 >= UNPLAYABLE_WIDTH) {
                             current_obst_array[chosen-1] = true;
                         } else if(pattern <= 3) {
                             if(chosen - 1 >= 0) {
                                 current_obst_array[chosen-1] = true;
                             }
-                            if(chosen + 1 < LANE_WIDTH) {
+                            if(chosen + 1 < LANE_WIDTH - UNPLAYABLE_WIDTH) {
                                 current_obst_array[chosen+1] = true;
                             }
-                        } else if(pattern == 4 && chosen + 1 < LANE_WIDTH) {
+                        } else if(pattern == 4 && chosen + 1 < LANE_WIDTH - UNPLAYABLE_WIDTH) {
                             current_obst_array[chosen + 1] = true;
                         } else if(pattern == 5) {
-                            if(chosen + 1 < LANE_WIDTH) {
+                            if(chosen + 1 < LANE_WIDTH - UNPLAYABLE_WIDTH) {
                                 current_obst_array[chosen+1] = true;
                             }
-                            if(chosen + 2 < LANE_WIDTH) {
+                            if(chosen + 2 < LANE_WIDTH - UNPLAYABLE_WIDTH) {
                                 current_obst_array[chosen+2] = true;
                             }
 
