@@ -106,14 +106,26 @@ lane* copy_lane(lane* l, int p) {
 bool collides_without_game(lane *current_lane, player p) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
-    while (current_obstacle != NULL) {
-        if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
-            return true;
-        } else {
-            current_obstacle = current_obstacle->next;
-        }
+    if (current_lane->type != 2) { // WATER == 2
+        while (current_obstacle != NULL) {
+            if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+                return true;
+            } else {
+                current_obstacle = current_obstacle->next;
+            }
+       }
+       return false;
+    } else {
+        while (current_obstacle != NULL) {
+            if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+                return false;
+            } else {
+                current_obstacle = current_obstacle->next;
+            }
+       }
+       return true;
     }
-    return false;
+    
 }
 
 void update_lanes(lane* l) {
@@ -173,6 +185,11 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
 
         update_lanes(beginning_lane);
         copy_current = current_lane;
+
+        // update your position if you are on water
+        if (current_lane->type == 2) {
+            p.x = p.x + current_lane->speed;
+        }
 
         // step 2 : try all the moves, which are represented by numbres, see top of the code
         player copy_p;
@@ -486,6 +503,7 @@ player play_ai(int cai, lane* player_lane, player ai) {
         return minmax_memo_state(player_lane, 5, ai);
         break;
         default:
+        return ai;
         break;
     }
 }

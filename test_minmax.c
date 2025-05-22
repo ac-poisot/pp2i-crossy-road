@@ -146,7 +146,18 @@ void test_collide(void) {
     p.x = LANE_WIDTH/2+3;
     assert(!collides_without_game(l1, p));
 
+    obstacle* o3 = init_obst(NULL, NULL, 15, 1); 
+    lane* l2 = init_lane(4, -1, o3, 1, 2, NULL, NULL, NULL);
+    p.y = 4;
+    p.x = 14;
+    assert(collides_without_game(l2,p));
+    p.x = 15;
+    assert(!collides_without_game(l2,p));
+    p.x = 16;
+    assert(collides_without_game(l2,p));
+
     free_lanes(l1);
+    free_lanes(l2);
 }
 
 void test_update_lanes(void) {
@@ -508,6 +519,45 @@ void test_three_down(void) {
     free_lanes(l);
 }
 
+void test_water_stay(void) {
+    printf("8\n");
+    player p = init_player(15, 4, 1, 1);
+    obstacle* o = init_obst(NULL, NULL, 15, 1); 
+    lane* l = init_lane(4, -1, o, 1, 2, NULL, NULL, NULL);
+
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    couple c1 = minmax_rec(l,3,todo,p);
+    assert(c1.score == 0);
+    assert(c1.move == STAY);
+    assert(p.x == 15);
+    assert(p.y == 4);
+
+    free_lanes(l);
+}
+
+void test_water_one_ahead(void) {
+    printf("9\n");
+    player p = init_player(15, 4, 1, 1);
+    obstacle* o = init_obst(NULL, NULL, 15, 1); 
+    lane* l = init_lane(4, -1, o, 1, 2, NULL, NULL, NULL);
+    lane* ls = init_lane(5, 0, NULL, 0, 1, l, NULL, NULL);
+    displayLanes(l);
+
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    couple c1 = minmax_rec(ls->prev,1,todo,p);
+    printf("%d %d\n", c1.score, c1.move);
+    assert(c1.score == 1);
+    assert(c1.move == GO_AHEAD);
+    assert(p.x == 15);
+    assert(p.y == 4);
+
+    free_lanes(l);
+}
+
 void test_n_update(void) {
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
     lane* l1 = init_lane(4, -1, o1, 2, 4, NULL, NULL, NULL);
@@ -549,6 +599,8 @@ int main(void) {
     test_three_stay();
     test_two_left();
     test_three_down();
+    test_water_stay();
+    test_water_one_ahead();
     test_n_update();
     return 0;
 }
