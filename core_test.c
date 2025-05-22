@@ -4,129 +4,207 @@
 #include <stdbool.h>
 #include <time.h>
 #include <assert.h>
+#include <math.h>
 
 #define TEST
 
-bool* generateObtaclePresenceArray(lane* l) {
-    //bool obstacle_positions[LANE_WIDTH] = { false };
-    bool *obstacle_positions = (bool*)malloc(LANE_WIDTH * sizeof(bool));
-    for(int i = 0; i < LANE_WIDTH; i++) {
-        obstacle_positions[i] = false;
-    }
-    obstacle *current_obst = l->obstacles;
-    while (current_obst != NULL) {
-        int start = (int)current_obst->x;
-        int end = start + current_obst->size;
-        for (int i = start; i < end && i < LANE_WIDTH; i++) {
-            if(i >= 0 && i < LANE_WIDTH) {
-                obstacle_positions[i] = true;
-            }
-        }
-        current_obst = current_obst->next;
-    }
-
-    return obstacle_positions;
+bool float_equal(float a, float b) {
+    return fabs(a - b) < 0.0001;
 }
 
-void test_vehicles(void) {
-    lane* l = generate_lane(NULL, ROAD);
-    displayLanes(l);
-    bool* obstacle_positions = generateObtaclePresenceArray(l);
-    float first_x = l->obstacles->x;
-    obstacle *last_obst = l->obstacles;
-    while (last_obst->next != NULL) {
-        last_obst = last_obst->next;
-    }
-    float last_x = last_obst->x;
+void test_update_vehicles(void) {
+
+    // We create a custom lane with vehicles
+    lane* l = (lane*)malloc(sizeof(lane));
+    l->type = ROAD;
+    l->y = 0;
+    l->speed = VEHICLE_SPEED_MIN + (float)(rand()%2) / 10;
+    l->coins = NULL;
+    l->prev = NULL;
+    l->next = NULL;
+    l->obst_size = 3;
+
+
+    // We create a unique obstacle we are going to track
+    l->obstacles = (obstacle*)malloc(sizeof(obstacle));
+    float x = rand()%(LANE_WIDTH - 4);
+    l->obstacles->x = x;
+    l->obstacles->size = 3;
+    l->obstacles->next = NULL;
+    l->obstacles->prev = NULL;
+
+
+    // We create a unique obstacle we are going to track
     update_vehicles(l);
-    displayLanes(l);
-    printf("\n");
-    assert(l->obstacles != NULL);bool* new_obstacle_positions = generateObtaclePresenceArray(l);
-    for(int i = 0; i < LANE_WIDTH; i++) {
-        if(i+l->speed >= 0 && i+l->speed < LANE_WIDTH) {
-            assert(obstacle_positions[i] == new_obstacle_positions[i+(int)l->speed]);
+
+
+    // Check if the vehicle we created still exists and is in the right position
+    obstacle* current = l->obstacles;
+    bool did_move_correctly = false;
+    while (current != NULL) {
+        if(float_equal(current->x - l->speed, x)) {
+            did_move_correctly = true;
         }
+        current = current->next;
     }
-    free(obstacle_positions);
-    free(new_obstacle_positions);
-    assert(((int)l->obstacles->x == (int)first_x + (int)l->speed) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 6) || ((int) l->obstacles->x == (int)first_x + (int)l->speed - 12) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +6) || ((int)l->obstacles->x == (int)first_x + (int)l->speed +12) || ((int) l->obstacles->x == (int)first_x + (int)l->speed + 18));
-    last_obst = l->obstacles;
-    while (last_obst->next != NULL) {
-        last_obst = last_obst->next;
-    }
-    float new_last_x = last_obst->x;
-    assert((last_x + l->speed == new_last_x) || (last_x + l->speed - 6 == new_last_x) || (last_x + l->speed - 12 == new_last_x) || (last_x + l->speed - 18 == new_last_x) || (last_x + l->speed + 6 == new_last_x) || (last_x + l->speed + 12 == new_last_x));
-    free_lanes(l);
+    assert(did_move_correctly);
+
+
+    free_obstacles(l->obstacles);
+    free(l);
+    printf("test_update_vehicles passed\n");
 }
 
 void test_trees(void) {
-    lane* l = generate_lane(NULL, GRASS);
-    //printf("size : %d, x : %f\n", l->obstacles->size, l->obstacles->x);
-    displayLanes(l);
-    display_obstacles(l->obstacles);
-    printf("\n");
-    free_lanes(l);
+
+    // We create a custom lane with waterlilies before a lane of trees
+    lane* waterlilies = (lane*)malloc(sizeof(lane));
+    waterlilies->type = WATER;
+    waterlilies->y = 0;
+    waterlilies->speed = 0;
+    waterlilies->coins = NULL;
+    waterlilies->prev = NULL;
+    waterlilies->obst_size = 1;
+    waterlilies->obstacles = generate_waterlilies(waterlilies);
+    
+
+    // We create a custom lane with trees
+    lane* trees = (lane*)malloc(sizeof(lane));
+    trees->type = GRASS;
+    trees->y = 1;
+    trees->speed = 0;
+    trees->coins = NULL;
+    trees->prev = waterlilies;
+    trees->obst_size = 1;
+    trees->obstacles = generate_trees(trees);
+    waterlilies->next = trees;
+    trees->next = NULL;
+
+
+    bool* prev = create_obstacles_array(waterlilies->obstacles);
+    bool* current = create_obstacles_array(trees->obstacles);
+    array_not(current);
+    bool* res = array_and(prev, current);
+    assert(array_exist(res));
+    free(prev);
+    free(current);
+    free(res);
+    free_lanes(waterlilies);
+    printf("test_trees passed\n");
+
 }
 
 
-void test_drowning_slots(void) {
-    lane* l = generate_lane(NULL, WATER);
-    if (l->speed == 0) {
-        printf("waterlilies\n");
-    } else {
-        printf("trunks\n");
-    }
-    displayLanes(l);
-    bool* obstacle_positions = generateObtaclePresenceArray(l);
+void test_update_drowning_slots(void) {
+
+    // We create a custom lane with drowning slots
+    lane* l = (lane*)malloc(sizeof(lane));
+    l->type = WATER;
+    l->y = 0;
+    l->speed = LOG_SPEED * (rand()%2 ? 1 : -1);
+    l->obst_size = 3;
+    l->prev = NULL;
+    l->next = NULL;
+
+
+    // We create a unique obstacle we are going to track
+    l->obstacles = (obstacle*)malloc(sizeof(obstacle));
+    float x = rand()%(LANE_WIDTH - 5) + 2;
+    l->obstacles->x = x;
+    l->obstacles->size = 3;
+    l->obstacles->next = NULL;
+    l->obstacles->prev = NULL;
+
+
+    // We create a unique coin we are going to track
+    l->coins = (float_list*)malloc(sizeof(float_list));
+    l->coins->val = x + 1;
+    l->coins->next = NULL;
+
+
+    // We update the drowning slots of the lane
     update_drowning_slots(l);
-    displayLanes(l);
-    display_obstacles(l->obstacles);
-    printf("\n");
-    assert(l->obstacles != NULL);
-    bool* new_obstacle_positions = generateObtaclePresenceArray(l);
-    for(int i = 0; i < LANE_WIDTH; i++) {
-        if(i+l->speed >= 0 && i+l->speed < LANE_WIDTH) {
-            assert(obstacle_positions[i] == new_obstacle_positions[i+(int)l->speed]);
+
+
+    // Check if the drowning slot we created still exists and is in the right position
+    obstacle* current = l->obstacles;
+    bool did_move_correctly = false;
+    while (current != NULL) {
+        if(float_equal(current->x - l->speed, x)) {
+            did_move_correctly = true;
         }
+        current = current->next;
     }
-    free(obstacle_positions);
-    free(new_obstacle_positions);
-    free_lanes(l);
+    assert(did_move_correctly);
+
+    // Check if the coin we created still exists and is in the right position
+    float_list* current_coin = l->coins;
+    did_move_correctly = false;
+    while (current_coin != NULL) {
+        if(float_equal(current_coin->val - l->speed, x + 1)) {
+            did_move_correctly = true;
+        }
+        current_coin = current_coin->next;
+    }
+    assert(did_move_correctly);
+
+
+    free_obstacles(l->obstacles);
+    free_coins(l->coins);
+    free(l);
+    printf("test_drowning_slots passed\n");
 
 }
 
 void test_trains(void) {
-    lane* l = generate_lane(NULL, TRACK);
-    displayLanes(l);
-    bool* obstacle_positions = generateObtaclePresenceArray(l);
-    update_vehicles(l);
-    displayLanes(l);
-    printf("\n");
-    assert(l->obstacles != NULL);
-    bool* new_obstacle_positions = generateObtaclePresenceArray(l);
-    for(int i = 0; i < LANE_WIDTH; i++) {
-        if(i+l->speed >= 0 && i+l->speed < LANE_WIDTH) {
-            assert(obstacle_positions[i] == new_obstacle_positions[i+(int)l->speed]);
+    
+    // We create a custom lane with trains
+    lane* l = (lane*)malloc(sizeof(lane));
+    l->type = TRACK;
+    l->y = 0;
+    l->speed = TRAIN_SPEED * (rand()%2 ? 1 : -1);
+    l->coins = NULL;
+    l->prev = NULL;
+    l->next = NULL;
+    l->obst_size = TRAIN_LENGTH;
+
+
+    // We create a unique obstacle we are going to track
+    l->obstacles = (obstacle*)malloc(sizeof(obstacle));
+    float x = rand()%(LANE_WIDTH - 5) + 2;
+    l->obstacles->x = x;
+    l->obstacles->size = TRAIN_LENGTH;
+    l->obstacles->next = NULL;
+    l->obstacles->prev = NULL;
+
+
+    // We update the trains of the lane
+    update_trains(l);
+
+
+    // Check if the train we created still exists and is in the right position
+    obstacle* current = l->obstacles;
+    bool did_move_correctly = false;
+    while (current != NULL) {
+        if(float_equal(current->x - l->speed, x)) {
+            did_move_correctly = true;
         }
+        current = current->next;
     }
-    free(obstacle_positions);
-    free(new_obstacle_positions);
-    free_lanes(l);
+    assert(did_move_correctly);
+
+
+    free_obstacles(l->obstacles);
+    free(l);
+    printf("test_trains passed\n");
 }
 
-void testNewWaterlilies(void) {
-    lane* l = generate_lane(NULL, WATER);
-    displayLanes(l);
-    generate_lane(l, WATER);
-    displayLanes(l->next);
-}
 
 int main(void) {
     srand(time(NULL));
-    /*test_vehicles();
+    test_update_vehicles();
     test_trees();
-    test_drowning_slots();
-    test_trains();*/
-    testNewWaterlilies();
+    test_update_drowning_slots();
+    test_trains();
     return 0;
 }

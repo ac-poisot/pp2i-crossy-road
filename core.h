@@ -72,12 +72,18 @@ typedef struct displayedData {
 
 
 void free_obstacles(obstacle* first_obstacle);
+void free_coins(float_list* first_coin);
 void free_lanes(lane* first_lane);
 int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
 lane* random_lane(lane* prev_lane);
+bool* create_obstacles_array(obstacle* o);
+void array_not(bool* array);
+bool* array_and(bool* a, bool* b);
+bool array_exist(bool* array);
+bool reachable(lane* l, bool* a, float speed);
 obstacle* generate_vehicles(lane* l);
 obstacle* generate_trees(lane* l);
 obstacle* generate_waterlilies(lane* l);
