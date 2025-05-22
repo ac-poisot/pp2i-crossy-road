@@ -86,15 +86,29 @@ void test_copy_lane(void) {
     lane* l3 = random_lane(l2);
     int s3 = l3->speed;
 
+    obstacle* o1 = init_obst(NULL, NULL, 3, 2);
+    obstacle* o2 = init_obst(NULL, NULL, 6, 1);
+    obstacle* o3 = init_obst(NULL, NULL, 10, 3);
+    l1->obstacles->next = o1;
+    o1->prev = l1->obstacles;
+    l2->obstacles->next = o2;
+    o2->prev = l2->obstacles;
+    l3->obstacles->next = o3;
+    o3->prev = l3->obstacles;
+
     lane* l4 = copy_lane(l1,2);
     assert(l4->prev == NULL);
     assert(l4 != l1); // must have different pointers
+    assert(l4->obstacles != NULL);
+    assert(l4->obstacles->next != NULL);
     assert(l4->next != l2);
     assert(l4->next->next != l3);
     assert(l4->next->next->next == NULL);
     assert(l4->speed == s1);
     assert(l4->next->speed == s2);
     assert(l4->next->next->speed == s3);
+    assert(l4->next->obstacles != NULL);
+    assert(l4->next->obstacles->next != NULL);
     l4->speed = 4; // normally never obtains
     assert(l1->speed == s1);
     l4->next->speed = 5;
@@ -102,6 +116,8 @@ void test_copy_lane(void) {
     assert(l2->speed == s2);
     assert(l3->speed == s3);
     assert(l1->next->next->speed == s3);
+    assert(l4->next->next->obstacles != NULL);
+    assert(l4->next->next->obstacles->next != NULL);
 
     lane* l5 = copy_lane(l3,2);
     assert(l5->prev != NULL);
@@ -548,7 +564,7 @@ void test_water_one_ahead(void) {
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c1 = minmax_rec(ls->prev,1,todo,p);
+    couple c1 = minmax_rec(ls->prev,2,todo,p);
     printf("%d %d\n", c1.score, c1.move);
     assert(c1.score == 1);
     assert(c1.move == GO_AHEAD);
