@@ -430,7 +430,9 @@ void update_vehicles(lane* l) {
         l->obstacles = new_obst;
         c = new_obst;
     }
+    int a = 1;
     while (c != NULL) { // updates the position of the vehicles
+        a++;
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){ // if the vehicle is going out of the lane at the right side, we delete it
             c-> prev ->next = NULL;
             if(c->next != NULL) {
@@ -610,6 +612,14 @@ void display_obstacles(obstacle* o) {
     }
 }
 
+void display_obstaclesToFile(obstacle* o, FILE* file) {
+    /* displays the position of the vehicles -- debbug function */
+    while (o != NULL) {
+        fprintf(file, "x : %f, size : %d\n", o->x, o->size);
+        o = o->next;
+    }
+}
+
 void displayLanes(lane* l) {
     /* displays the lanes */
     int i = 0;
@@ -659,6 +669,60 @@ void displayLanes(lane* l) {
         }
         i=0; // Wah
         printf("\n");
+        l = l->next;
+    }
+}
+
+
+void displayLanesToFile(lane* l, FILE* file) {
+    /* displays the lanes to a file */
+    int i = 0;
+    while (l != NULL) {
+        display_obstaclesToFile(l->obstacles, file);
+        obstacle* current = NULL;
+        if(l->obstacles != NULL) {
+            current = l->obstacles;
+            while(current != NULL && (int)current->x + current->size <= 0) {
+                current = current->next;
+            }
+            if(current != NULL && current->x < 0) {
+                for(int j = 0; j < current->x + current->size; j++) {
+                    fprintf(file, "🟥");
+                }
+                i = current->x + current->size;
+                current = current->next;
+            }
+        }
+        for (; i < LANE_WIDTH; i++) {
+            if(current != NULL && current->x == (float)i) {
+                for(int j = 0; j < current->size; j++) {
+                    if(i >= LANE_WIDTH) {
+                        break;
+                    }
+                    fprintf(file, "🟥");
+                    i++;
+                }
+                i--;
+                current = current->next;
+            } else {
+                switch (l->type) {
+                    case GRASS:
+                        fprintf(file, "🟩");
+                        break;
+                    case WATER:
+                        fprintf(file, "🟦");
+                        break;
+                    case TRACK:
+                        fprintf(file, "⬜️");
+                        break;
+                    case ROAD:
+                        fprintf(file, "⬛️");
+                        break;
+                }
+            }
+        }
+        i = 0;
+        fprintf(file, "\n");
         l = l->next;
     }
 }

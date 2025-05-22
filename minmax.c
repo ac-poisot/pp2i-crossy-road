@@ -29,17 +29,29 @@ obstacle* copy_obstacle(obstacle* o) {
         copy->next = NULL;
         copy->prev = NULL;
         obstacle* last_copy = copy;
-        obstacle* o_cp = o;
+        obstacle* o_cp = o->next;
         while (o_cp != NULL) {
             obstacle* new = (obstacle*)malloc(sizeof(obstacle));
-            new->x = o->x;
-            new->size = o->size;
+            new->x = o_cp->x;
+            new->size = o_cp->size;
             new->next = NULL;
-            last_copy->next = new;
             new->prev = last_copy;
+            last_copy->next = new;
             last_copy = new;
             o_cp = o_cp->next;
         }
+            FILE* file = fopen("ob.txt", "a");
+            FILE* file2 = fopen("ob_copy.txt", "a");
+
+            fprintf(file, "Obstacle %f:\n", o->x);
+            fprintf(file2, "Obstacle %f:\n", copy->x);
+
+            display_obstaclesToFile(o, file);
+            display_obstaclesToFile(copy, file2);
+
+            fclose(file);
+            fclose(file2);
+
         return copy;
     }
 }
@@ -76,7 +88,7 @@ lane* copy_lane(lane* l, int p) {
             last_copied->next = new_lane;
             last_copied = new_lane;
             sauv = sauv->next;
-            k = k - 1;
+            k--;
         }
         // copies the previous p lanes or stops befores
         sauv = l->prev;
@@ -97,6 +109,19 @@ lane* copy_lane(lane* l, int p) {
             sauv = sauv->prev;
             k = k - 1;
         }
+
+
+            // FILE* file = fopen("lanes.txt", "a");
+            // FILE* file2 = fopen("lanescopy.txt", "a");
+            // fprintf(file, "Lane %d:\n", l->y);
+            // fprintf(file2, "Lane %d:\n", l->y);
+
+            // displayLanesToFile(l, file);
+
+            // displayLanesToFile(copy, file2);
+            // fprintf(file, "\n\n\n", l->y);
+            // fprintf(file2, "\n\n\n", l->y);
+
     return copy;
     }
     

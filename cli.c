@@ -415,6 +415,7 @@ int main(void) {
 
             lane* current_lane = game.camera_first_lane;
             lane* player_lane;
+            lane* ai_lane;
 
             while (current_lane->next != NULL) {
 
@@ -437,6 +438,11 @@ int main(void) {
                 if (current_lane->y == game.player.y) {
                     player_lane = current_lane;
                 }
+
+                if (current_lane->y == game.ai.y) {
+                    ai_lane = current_lane;
+                }
+
                 current_lane = current_lane->next;
             }
 
@@ -499,7 +505,7 @@ int main(void) {
             if (cai != 0) {
                 time_ai++;
                 if (time_ai%20 == 0) {
-                    game.ai = play_ai(cai, player_lane, game.ai);
+                    game.ai = play_ai(cai, ai_lane, game.ai);
                 }
             }
 

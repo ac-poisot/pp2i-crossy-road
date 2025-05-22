@@ -15,7 +15,7 @@
 #define ROAD      4
 
 #define WARNING_TIME 60 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
-#define TRAIN_LENGTH LANE_WIDTH*3 // in tiles, length of a train
+#define TRAIN_LENGTH (LANE_WIDTH*3) // in tiles, length of a train
 #define TRAIN_SPEED 1 // in tiles per frame, speed of a rightwards train
 #define TRAIN_SPACING_MIN 100 // in tiles, minimum of space between two trains
 #define TRAIN_SPACING_MAX 300 // in tiles, maximum of space between two trains
@@ -90,6 +90,8 @@ void update_drowning_slots(lane* l);
 void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
+void displayLanesToFile(lane* l, FILE* file);
+void displayLanesToFile(lane* l, FILE* file);
 obstacle* collides(lane *current_lane, displayedData game);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
