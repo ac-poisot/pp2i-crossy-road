@@ -12,6 +12,7 @@
 #define REFRESH_RATE 60 // in frames per second, refresh rate of the game
 #define GAME_SPEED 60 // in frames, time between each move of the camera
 
+#define AI_SPEED 20
 // Game states
 #define MENU 0
 #define GAME 1
@@ -241,8 +242,7 @@ int main(void) {
     int star = 0;
 
     int cai = 0; // ai chosen, absent by default
-    int time_ai = 0; // timer for the ai
-    
+    int time_ai = AI_SPEED; // timer for the ai
 
     while (true) {
         int ch = getch(); //Get the inputs from the keyboard
@@ -291,7 +291,7 @@ int main(void) {
                 game_state = GAME;
                 move_timer = GAME_SPEED;
                 on_log = NULL;
-                time_ai = 0;
+                time_ai = AI_SPEED;
                 game = init_game(GAME_HEIGHT);
                 if (!cai) {
                     game.ai.skin = -1;
@@ -503,9 +503,10 @@ int main(void) {
             }
 
             if (cai != 0) {
-                time_ai++;
-                if (time_ai%20 == 0) {
+                time_ai--;
+                if (time_ai == 0) {
                     game.ai = play_ai(cai, ai_lane, game.ai);
+                    time_ai = AI_SPEED;
                 }
             }
 
@@ -513,15 +514,15 @@ int main(void) {
                 game_state = GAME_OVER;
             }
 
+            if (game_state == GAME_OVER && cai == 4) {
+                game_state = GAME;
+            }
+
             if (game_state != GAME_OVER) {
                 display(game);
                 // Display the purse
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
                 refresh();
-            } else {
-                if (cai == 4) {
-                    game_state = GAME;
-                }
             }
         
             break;
@@ -547,7 +548,6 @@ int main(void) {
         }
         nanosleep(&request, &remaining); 
     }
-
     endwin();
     return 0;
 }
