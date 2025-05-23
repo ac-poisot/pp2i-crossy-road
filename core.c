@@ -630,7 +630,7 @@ lane* generate_lane(lane* prev_lane, int type) {
             new_lane->speed = 0;
             break;
         case WATER: // generates waterlilies or drowning slots
-            if ((int)(rand()%3) >= 0) {
+            if ((int)(rand()%3) == 0) {
                 new_lane->speed = 0;
                 new_lane->obstacles = generate_waterlilies(new_lane);
             } else {

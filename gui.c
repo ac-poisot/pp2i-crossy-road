@@ -363,6 +363,19 @@ int main() {
     
     int power_time = 0;//Time remaining for the power
 
+    FILE *save_data = fopen("save/data.txt", "a+");
+    fseek(save_data, 0, SEEK_END);
+    long filesize = ftell(save_data);
+    rewind(save_data);
+    if (filesize == 0) {
+        fprintf(save_data, "0");
+        fflush(save_data);
+        rewind(save_data);
+    } else {
+        fscanf(save_data, "%d", &high_score);
+    }
+    
+
     // Buttons
 
     button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
@@ -396,7 +409,7 @@ int main() {
             SDL_RenderClear(renderer);
             display(demo, renderer, textures);
     
-            demo = move_camera(demo, GAME_SPEED*5);
+            demo = move_camera(demo, GAME_SPEED*99);
     
             lane* current_lane = demo.camera_first_lane;
 
@@ -908,6 +921,10 @@ int main() {
             } else {
                 if (high_score < (int) game.player.y) {
                     high_score = (int) game.player.y;
+                    freopen(NULL, "w", save_data);
+                    fprintf(save_data, "%d", high_score);
+                    fflush(save_data);
+                    rewind(save_data);
                 }
                 game_state = MENU;
                 fade = FADE_LENGTH;
@@ -1063,6 +1080,7 @@ int main() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     free(didier);
+    fclose(save_data);
 
     return 0;
 }
