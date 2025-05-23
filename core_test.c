@@ -114,11 +114,19 @@ void test_trains(void) {
     free_lanes(l);
 }
 
+void testNewWaterlilies(void) {
+    lane* l = generate_lane(NULL, WATER);
+    displayLanes(l);
+    generate_lane(l, WATER);
+    displayLanes(l->next);
+}
+
 int main(void) {
     srand(time(NULL));
-    test_vehicles();
+    /*test_vehicles();
     test_trees();
     test_drowning_slots();
-    test_trains();
+    test_trains();*/
+    testNewWaterlilies();
     return 0;
 }
