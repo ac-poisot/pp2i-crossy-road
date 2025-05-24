@@ -27,8 +27,19 @@
 #define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
 #define LOG_SPACING_MAX 5 // in tiles, maximum of space between two logs (minimum is always 1)
 
-#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin
+enum {
+    XIV = 1,
+    NEO,
+    TANK,
+    ECOLO,
+    CRESUS,
+    POWERS_END,
+};
+#define CRESUS_MODIF 3 // The modifier for the CRESUS power
+#define TIME_POWER 15 // In seconds, time the power lasts
 
+#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin on a lane
+#define POWER_PROBABILITY 2 // there is a 1 in POWER_PROBABILITY chance of turning a coin into a power-up
 
 typedef struct obstacle {
     struct obstacle* next;
@@ -39,6 +50,7 @@ typedef struct obstacle {
 
 typedef struct float_list {
     float val;
+    int power;
     struct float_list* next;
 } float_list;
 
@@ -58,6 +70,7 @@ typedef struct player {
     float x; // position of the player
     int orientation; // orientation of the player
     int skin; // skin of the player (?)
+    int power; // power of the player
 } player;
 
 typedef struct displayedData {
@@ -99,3 +112,4 @@ obstacle* collides(lane *current_lane, displayedData game);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);
+displayedData power4 (displayedData data);

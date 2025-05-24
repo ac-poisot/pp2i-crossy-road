@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -6,7 +7,6 @@
 #include "core.h"
 
 int tick;
-
 
 void free_obstacles(obstacle* first_obstacle) {
     /* frees recursively obstacles */
@@ -552,6 +552,17 @@ obstacle* generate_trains(void) {
 }
 
 
+float_list* init_coin(float_list* next,float val) {
+    float_list* new_coin = malloc(sizeof(float_list));
+    new_coin->next = next;
+    new_coin->power = 0;
+    if (rand()%POWER_PROBABILITY == 0) {
+        new_coin->power = rand()%(POWERS_END-1) + 1;
+    }
+    new_coin->val = val;
+    return new_coin;
+}
+
 float_list* generate_coins(lane* l) {
     float_list *new_coins = NULL;
     bool* obstacles_array = NULL;
@@ -562,9 +573,7 @@ float_list* generate_coins(lane* l) {
             while(obstacles_array[pos]) {
                 pos = rand()%LANE_WIDTH;
             }
-            new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = (float) pos;
-            new_coins->next = NULL;
+            new_coins = (float_list*) init_coin(NULL,(float) pos);
             free(obstacles_array);
             return new_coins;
             break;
@@ -575,9 +584,7 @@ float_list* generate_coins(lane* l) {
                 while(!obstacles_array[pos]) {
                     pos = rand()%LANE_WIDTH;
                 }
-                new_coins = (float_list*) malloc(sizeof(float_list));
-                new_coins->val = pos;
-                new_coins->next = NULL;
+                new_coins = (float_list*) init_coin(NULL, pos);
                 free(obstacles_array);
                 return new_coins;
             } else {
@@ -586,9 +593,7 @@ float_list* generate_coins(lane* l) {
                 float_list *last_coin = NULL;
                 while(o != NULL) {
                     if(rand()%COIN_ISSUES == 0 && o->next != NULL) {
-                        float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-                        new_coins->val = o->x + rand()%(o->size);
-                        new_coins->next = NULL;
+                        float_list *new_coins = (float_list*) init_coin(NULL,o->x + rand()%(o->size));
                         if(first_coin == NULL) {
                             first_coin = new_coins;
                         } else {
@@ -604,9 +609,7 @@ float_list* generate_coins(lane* l) {
         case TRACK:
         case ROAD:
 
-            new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = rand()%LANE_WIDTH;
-            new_coins->next = NULL;
+            new_coins = (float_list*) init_coin(NULL,rand()%LANE_WIDTH);
             return new_coins;
             break;
         default:
@@ -632,7 +635,7 @@ lane* generate_lane(lane* prev_lane, int type) {
             new_lane->speed = 0;
             break;
         case WATER: // generates waterlilies or drowning slots
-            if ((int)(rand()%3) >= 0) {
+            if ((int)(rand()%3) == 0) {
                 new_lane->speed = 0;
                 new_lane->obstacles = generate_waterlilies(new_lane);
             } else {
@@ -748,9 +751,7 @@ void update_drowning_slots(lane* l) {
         l->obstacles = new_obst;
         c = new_obst;
         if(rand()%COIN_ISSUES == 0 && c->next != NULL) {
-            float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-            new_coins->val = c->x + rand()%(c->size);
-            new_coins->next = l->coins;
+            float_list *new_coins = (float_list*) init_coin(l->coins,c->x + rand()%(c->size));
             l->coins = new_coins;
         }
     }
@@ -783,9 +784,7 @@ void update_drowning_slots(lane* l) {
             next_obst->size = 1 + (rand()%MAX_LOG_SIZE);
             float current_x = c->x + (float)(next_obst->size + (rand()%LOG_SPACING_MAX));
             if(rand()%COIN_ISSUES == 0) {
-                float_list *new_coins = (float_list*) malloc(sizeof(float_list));
-                new_coins->val = c->x + rand()%(c->size);
-                new_coins->next = l->coins;
+                float_list *new_coins = (float_list*) init_coin(l->coins,c->x + rand()%(c->size));
                 l->coins = new_coins;
             }
             next_obst->x = current_x;
@@ -989,7 +988,7 @@ displayedData move_camera(displayedData data, float speed) {
 
 displayedData init_game(int game_height) {
     // Initialize the game
-    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0};
+    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0, 0};
 
     // Initialize the first lane
     lane* l = empty_lane(NULL, GRASS);
@@ -1017,6 +1016,27 @@ displayedData init_game(int game_height) {
     return res;
 }
 
+displayedData power4 (displayedData data) {
+    lane* current_lane = data.camera_first_lane;
+    while ((int) current_lane->y != (int) data.player.y) {
+        current_lane = current_lane->next;
+    }
+    if (current_lane->y <= data.player.y){
+        current_lane = current_lane->next;
+    }
+    lane* l1 = empty_lane(current_lane->prev, GRASS);
+    lane* l2 = empty_lane(l1, GRASS);
+    lane* l3 = empty_lane(l2, GRASS);
+    l1->next = l2;
+    l2->next = l3;
+    l3->next = current_lane->next->next->next;
+    current_lane->prev->next = l1;
+    current_lane->next->next->next->prev = l3;
+    current_lane->prev = NULL;
+    current_lane->next->next->next = NULL;
+    free_lanes(current_lane);
+    return data;
+}
 
 #ifdef TEST
 int main(void) {

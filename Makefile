@@ -28,6 +28,15 @@ test_minmax.o: test_minmax.c minmax.h
 list.o : list.h list.c
 	$(CC) -c $(CFLAGS) $(CSANI) list.c
 
+button.o :
+	$(CC) -c $(CFLAGS) $(CSANI) gui/button.c
+
+display.o :
+	$(CC) -c $(CFLAGS) $(CSANI) gui/display.c
+
+sprite_management.o :
+	$(CC) -c $(CFLAGS) $(CSANI) gui/sprite_management.c
+
 
 # create executables
 main_only_core: core.o
@@ -36,8 +45,8 @@ main_only_core: core.o
 main_cli: core.o cli.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o -lncurses
 
-main_graphics: core.o gui.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf
+main_graphics: core.o gui.o button.o display.o sprite_management.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o button.o display.o sprite_management.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf -lSDL2_mixer
 
 core_test: core.o core_test.o
 	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o
@@ -50,7 +59,7 @@ test_minmax: minmax.o core.o test_minmax.o list.o
 # executions
 
 clean:
-	rm -f main.o core.o cli.o gui.o main_only_core main_cli main_graphics core_test core_test.o minmax.o main_minmax test_minmax.o test_minmax list.o
+	rm -f *.o gui/*.o main_only_core main_cli main_graphics core_test main_minmax test_minmax
 
 run_only_core: main_only_core
 	./main_only_core
