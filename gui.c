@@ -66,12 +66,30 @@ int main(void) {
     
     int power_time = 0;//Time remaining for the power
 
-    int ai_choice = 0;
-    int sprite_set = 1;
+    FILE *save_data = fopen("save/data.txt", "a+");
+    fseek(save_data, 0, SEEK_END);
+    long filesize = ftell(save_data);
+    rewind(save_data);
+    if (filesize == 0) {
+        reset_savefile();
+    } else {
+        fscanf(save_data, "%d\n", &high_score);
+        fscanf(save_data, "%d\n", &purse);
+        for (int i=1; i<SKINS; i++) {
+            int unlocked = 0;
+            fscanf(save_data, "%d\n", &unlocked);
+            if (unlocked && unlocked != 1) {
+                printf("Error detected in savefile. Erasing savefile.");
+                reset_savefile();
+                break;
+            }
+            unlocked_skins[i] = unlocked;
+        }
+    }
+    fclose(save_data);
+    
 
-    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
-    char** skin_names = (char**) malloc((SKINS)*(sizeof(char*)));
-    load_textures(renderer, textures, skin_names, sprite_set);
+    // Buttons
 
     button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
 
@@ -176,6 +194,13 @@ int main(void) {
                         fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
                         skin_to_unlock = (rand() % (SKINS-1))+1;
+                    } else if (button_clicked(reset, event)) {
+                        reset_savefile();
+                        high_score = 0;
+                        purse = 0;
+                        for (int i=0; i<SKINS; i++) {
+                            unlocked_skins[i] = 0;
+                        }
                     }
                     else if (button_clicked(ai, event)) {
                         ai_choice = (ai_choice + 1) % AI_AMOUNT;
@@ -641,6 +666,7 @@ int main(void) {
                 if (high_score < (int) game.player.y) {
                     high_score = (int) game.player.y;
                 }
+                update_savefile(high_score, purse, unlocked_skins);
                 game_state = MENU;
                 fade = FADE_LENGTH;
             }
@@ -757,6 +783,7 @@ int main(void) {
                     display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer, white, "arial.ttf");
                 }
                 unlocked_skins[skin_to_unlock] = true;
+                update_savefile(high_score, purse, unlocked_skins);
             }
             break;
         }
