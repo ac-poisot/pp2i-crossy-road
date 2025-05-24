@@ -1,5 +1,34 @@
 #include "gui.h"
 
+void reset_savefile(void) {
+    FILE *save_data = fopen("save/data.txt", "w");
+    fprintf(save_data, "0\n0");
+    for (int i=1; i<SKINS; i++) {
+        fprintf(save_data, "\n0");
+    }
+    fclose(save_data);
+}
+
+void update_savefile(int high_score, int purse, bool* unlocked_skins) {
+    FILE *save_data = fopen("save/data.txt", "w");
+    char hs_text[20];
+    sprintf(hs_text, "%d", high_score);
+    char purse_text[20];
+    sprintf(purse_text, "%d", purse);
+
+    fprintf(save_data, hs_text);
+    fprintf(save_data, "\n");
+    fprintf(save_data, purse_text);
+    for (int i=1; i<SKINS; i++) {
+        char unlocked[2];
+        sprintf(unlocked, "%d", unlocked_skins[i]);
+        fprintf(save_data, "\n");
+        fprintf(save_data, unlocked);
+    }
+    fclose(save_data);
+}
+
+
 int main(void) {
     obstacle* didier = malloc(sizeof(obstacle));
     didier->next = NULL;
@@ -65,6 +94,13 @@ int main(void) {
     int fade = FADE_LENGTH;
     
     int power_time = 0;//Time remaining for the power
+
+    int ai_choice = 0;
+    int sprite_set = 1;
+
+    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
+    char** skin_names = (char**) malloc((SKINS)*(sizeof(char*)));
+    load_textures(renderer, textures, skin_names, sprite_set);
 
     FILE *save_data = fopen("save/data.txt", "a+");
     fseek(save_data, 0, SEEK_END);
@@ -180,6 +216,11 @@ int main(void) {
             SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
             SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
             SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
+
+            button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD}; // Temporary, replace texture with CLOUD when gui-dev merged
+            display_button(reset, renderer, textures);
+            display_text("RESET", WIDTH-BUTTON_WIDTH+25, BUTTON_HEIGHT+20, 40, renderer, black, "arial.ttf");
+
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
