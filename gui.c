@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 #include "core.h"
@@ -296,7 +297,36 @@ bool button_clicked(button b, SDL_Event event) {
         && event.button.y <= b.y + b.height;
 }
 
-int main() {
+void reset_savefile(void) {
+    FILE *save_data = fopen("save/data.txt", "w");
+    fprintf(save_data, "0\n0");
+    for (int i=1; i<SKINS; i++) {
+        fprintf(save_data, "\n0");
+    }
+    fclose(save_data);
+}
+
+void update_savefile(int high_score, int purse, bool* unlocked_skins) {
+    FILE *save_data = fopen("save/data.txt", "w");
+    char hs_text[20];
+    sprintf(hs_text, "%d", high_score);
+    char purse_text[20];
+    sprintf(purse_text, "%d", purse);
+
+    fprintf(save_data, hs_text);
+    fprintf(save_data, "\n");
+    fprintf(save_data, purse_text);
+    for (int i=1; i<SKINS; i++) {
+        char unlocked[2];
+        sprintf(unlocked, "%d", unlocked_skins[i]);
+        fprintf(save_data, "\n");
+        fprintf(save_data, unlocked);
+    }
+    fclose(save_data);
+}
+
+
+int main(void) {
     obstacle* didier = malloc(sizeof(obstacle));
     didier->next = NULL;
     didier->prev = NULL;
@@ -368,12 +398,22 @@ int main() {
     long filesize = ftell(save_data);
     rewind(save_data);
     if (filesize == 0) {
-        fprintf(save_data, "0");
-        fflush(save_data);
-        rewind(save_data);
+        reset_savefile();
     } else {
-        fscanf(save_data, "%d", &high_score);
+        fscanf(save_data, "%d\n", &high_score);
+        fscanf(save_data, "%d\n", &purse);
+        for (int i=1; i<SKINS; i++) {
+            int unlocked = 0;
+            fscanf(save_data, "%d\n", &unlocked);
+            if (unlocked && unlocked != 1) {
+                printf("Error detected in savefile. Erasing savefile.");
+                reset_savefile();
+                break;
+            }
+            unlocked_skins[i] = unlocked;
+        }
     }
+    fclose(save_data);
     
 
     // Buttons
@@ -409,7 +449,7 @@ int main() {
             SDL_RenderClear(renderer);
             display(demo, renderer, textures);
     
-            demo = move_camera(demo, GAME_SPEED*99);
+            demo = move_camera(demo, GAME_SPEED*5);
     
             lane* current_lane = demo.camera_first_lane;
 
@@ -447,6 +487,10 @@ int main() {
                 SDL_RenderCopy(renderer, textures[LOCK], &spriteRect, &destRect);
             }
 
+            button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, TREE}; // Temporary, replace texture with CLOUD when gui-dev merged
+            display_button(reset, renderer, textures);
+            display_text("RESET", WIDTH-BUTTON_WIDTH+25, BUTTON_HEIGHT+20, 40, renderer);
+
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
                     if (button_clicked(play, event)) {
@@ -460,6 +504,13 @@ int main() {
                         fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
                         skin_to_unlock = (rand() % (SKINS-1))+1;
+                    } else if (button_clicked(reset, event)) {
+                        reset_savefile();
+                        high_score = 0;
+                        purse = 0;
+                        for (int i=0; i<SKINS; i++) {
+                            unlocked_skins[i] = 0;
+                        }
                     }
                     break;
                 case SDL_KEYUP:
@@ -921,11 +972,8 @@ int main() {
             } else {
                 if (high_score < (int) game.player.y) {
                     high_score = (int) game.player.y;
-                    freopen(NULL, "w", save_data);
-                    fprintf(save_data, "%d", high_score);
-                    fflush(save_data);
-                    rewind(save_data);
                 }
+                update_savefile(high_score, purse, unlocked_skins);
                 game_state = MENU;
                 fade = FADE_LENGTH;
             }
@@ -1034,6 +1082,7 @@ int main() {
                     display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer);
                 }
                 unlocked_skins[skin_to_unlock] = true;
+                update_savefile(high_score, purse, unlocked_skins);
             }
             break;
         }
@@ -1080,7 +1129,6 @@ int main() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     free(didier);
-    fclose(save_data);
 
     return 0;
 }
