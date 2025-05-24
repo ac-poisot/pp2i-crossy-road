@@ -19,7 +19,7 @@ SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, i
     return texture;
 }
 
-void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, int sprite_set) {
+void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_names, int sprite_set) {
 
     for (int i=0; i<END_TEXTURES; i++) {
         textures[i] = NULL;
@@ -111,6 +111,33 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, int sprite_se
         snprintf(path, sizeof(path), "%sskins/skin%d.png", prefix, i);
         textures[SKIN_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
     }
+
+    // Read skin names from prefix/skins/names.txt
+    char names_path[96];
+    snprintf(names_path, sizeof(names_path), "%sskins/names.txt", prefix);
+    FILE *names_file = fopen(names_path, "r");
+    if (names_file) {
+        for (int i = 0; i < SKINS; i++) {
+            if (fgets(path, sizeof(path), names_file)) {
+                // Remove trailing newline
+                size_t len = strlen(path);
+                if (len > 0 && (path[len-1] == '\n' || path[len-1] == '\r')) {
+                    path[len-1] = '\0';
+                    if (len > 1 && path[len-2] == '\r') {
+                        path[len-2] = '\0';
+                    }
+                }
+                skin_names[i] = strdup(path);
+            } else {
+                skin_names[i] = strdup("Unknown");
+            }
+        }
+        fclose(names_file);
+    } else {
+        for (int i = 0; i < SKINS; i++) {
+            skin_names[i] = strdup("Unknown");
+        }
+    }
 }
 
 void free_textures(SDL_Texture** textures) {
@@ -118,5 +145,11 @@ void free_textures(SDL_Texture** textures) {
         if (textures[i] != NULL) {
             SDL_DestroyTexture(textures[i]);
         }
+    }
+}
+
+void free_skin_names(char** skin_names) {
+    for (int i = 0; i < SKINS; i++) {
+        free(skin_names[i]);
     }
 }

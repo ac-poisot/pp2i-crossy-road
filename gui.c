@@ -37,7 +37,7 @@ int main(void) {
 
     int game_state = MENU;
     int player_skin = 0;
-    int purse = 0;
+    int purse = 50;
     bool unlocked_skins[SKINS] = {true};
     for (int i=1; i<SKINS; i++) {
         unlocked_skins[i] = false;
@@ -70,7 +70,8 @@ int main(void) {
     int sprite_set = 1;
 
     SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
-    load_textures(renderer, textures, sprite_set);
+    char** skin_names = (char**) malloc((SKINS)*(sizeof(char*)));
+    load_textures(renderer, textures, skin_names, sprite_set);
 
     button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
 
@@ -152,7 +153,7 @@ int main(void) {
                 sprintf(aiText, "X");
             }
 
-            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 30, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT*0.9, renderer, black);
+            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 30, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT*0.9, renderer, black, "arial.ttf");
             
             // Sprite set choice
             button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
@@ -182,7 +183,8 @@ int main(void) {
                     else if (button_clicked(sprite_set_button, event)) {
                         sprite_set = (sprite_set + 1) % 2;
                         free_textures(textures);
-                        load_textures(renderer, textures, sprite_set);
+                        free_skin_names(skin_names);
+                        load_textures(renderer, textures, skin_names, sprite_set);
                     }
                     break;
                 case SDL_KEYUP:
@@ -198,11 +200,11 @@ int main(void) {
             // Display high score
             char highScoreText[20];
             sprintf(highScoreText, "High Score: %d", high_score);
-            display_text(highScoreText, 0, 0, 24, renderer, white);
+            display_text(highScoreText, 0, 0, 24, renderer, white, "arial.ttf");
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-50, 0, 24, renderer, white);
+            display_text(purseText, WIDTH-50, 0, 24, renderer, white, "arial.ttf");
 
             break;
         }
@@ -271,7 +273,7 @@ int main(void) {
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*3, 0, 24, renderer, white);
+            display_text(purseText, WIDTH-24*3, 0, 24, renderer, white, "arial.ttf");
     
             game = move_camera(game, GAME_SPEED);
     
@@ -670,6 +672,9 @@ int main(void) {
             display_button(menu_button, renderer, textures);
 
             for (int i=0; i<SKINS; i++) {
+
+                char* skin_name = skin_names[i];
+
                 if (player_skin == i) {
                     SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
                     SDL_Rect bg = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
@@ -684,7 +689,10 @@ int main(void) {
                 if (!unlocked_skins[i]) {
                     SDL_Rect lockRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
                     SDL_RenderCopy(renderer, textures[LOCK], &spriteRect, &lockRect);
+                    skin_name = "???";
                 }
+
+                display_text(skin_name, skin_buttons[i].x, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "arial.ttf");
             }
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -742,9 +750,11 @@ int main(void) {
                 fade = GAMBLING_DURATION;
                 game_state = GAMBLED;
                 if (!unlocked_skins[skin_to_unlock]) {
-                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer, white);
+                    char* skin_name = skin_names[skin_to_unlock];
+                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer, white, "arial.ttf");
+                    display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "arial.ttf");
                 } else {
-                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer, white);
+                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer, white, "arial.ttf");
                 }
                 unlocked_skins[skin_to_unlock] = true;
             }
@@ -784,6 +794,8 @@ int main(void) {
 
     free_textures(textures);
     free(textures);
+    free_skin_names(skin_names);
+    free(skin_names);
 
     free_lanes(game.first_lane);
     free_lanes(demo.first_lane);
@@ -791,6 +803,12 @@ int main(void) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     free(didier);
+
+    Mix_FreeChunk(sfx_jump);
+    Mix_CloseAudio();
+    IMG_Quit();
+    TTF_Quit();
+    SDL_Quit();
 
     return 0;
 }

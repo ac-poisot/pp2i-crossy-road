@@ -1,17 +1,22 @@
 #include "display.h"
 
-void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color) {
-
-    TTF_Font* font = TTF_OpenFont("fonts/arial.ttf", size);
-
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
+void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color, char* font) {
+    
+    char font_path[256];
+    snprintf(font_path, sizeof(font_path), "fonts/%s", font);
+    TTF_Font* ttf_font = TTF_OpenFont(font_path, size);
+    if (ttf_font == NULL) {
+        fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
+        return;
+    }
+    SDL_Surface* textSurface = TTF_RenderText_Solid(ttf_font, text, color);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
     SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
-    TTF_CloseFont(font);
+    TTF_CloseFont(ttf_font);
 }
 
 void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SDL_Texture** textures) {
@@ -146,7 +151,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
         char scoreText[20];
         SDL_Color white = {255, 255, 255, 255};
         sprintf(scoreText, "Score: %d", (int) data.player.y);
-        display_text(scoreText, 0, 0, 24, renderer, white);
+        display_text(scoreText, 0, 0, 24, renderer, white, "arial.ttf");
     }
 
     if (data.player.power != 0) {
