@@ -11,19 +11,9 @@ void reset_savefile(void) {
 
 void update_savefile(int high_score, int purse, bool* unlocked_skins) {
     FILE *save_data = fopen("save/data.txt", "w");
-    char hs_text[20];
-    sprintf(hs_text, "%d", high_score);
-    char purse_text[20];
-    sprintf(purse_text, "%d", purse);
-
-    fprintf(save_data, hs_text);
-    fprintf(save_data, "\n");
-    fprintf(save_data, purse_text);
+    fprintf(save_data, "%d\n%d", high_score, purse);
     for (int i=1; i<SKINS; i++) {
-        char unlocked[2];
-        sprintf(unlocked, "%d", unlocked_skins[i]);
-        fprintf(save_data, "\n");
-        fprintf(save_data, unlocked);
+        fprintf(save_data, "\n%d", unlocked_skins[i]);
     }
     fclose(save_data);
 }
@@ -52,7 +42,7 @@ int main(void) {
 
 
     Mix_Volume(1, MIX_MAX_VOLUME/2);
-    Mix_Chunk *sound;
+    //Mix_Chunk *sound;
 
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -217,7 +207,7 @@ int main(void) {
             SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
             SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
 
-            button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD}; // Temporary, replace texture with CLOUD when gui-dev merged
+            button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD};
             display_button(reset, renderer, textures);
             display_text("RESET", WIDTH-BUTTON_WIDTH+25, BUTTON_HEIGHT+20, 40, renderer, black, "arial.ttf");
 
@@ -875,6 +865,7 @@ int main(void) {
     Mix_FreeChunk(sfx_jump);
     Mix_CloseAudio();
     IMG_Quit();
+    Mix_Quit();
     TTF_Quit();
     SDL_Quit();
 
