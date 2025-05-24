@@ -28,9 +28,6 @@ int main(void) {
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
-    load_textures(renderer, textures);
-
     SDL_Event event;
     int running = 1;
     bool action = false;
@@ -70,8 +67,10 @@ int main(void) {
     int power_time = 0;//Time remaining for the power
 
     int ai_choice = 0;
+    int sprite_set = 1;
 
-    // Buttons
+    SDL_Texture** textures = (SDL_Texture**) malloc((END_TEXTURES)*(sizeof(SDL_Texture*)));
+    load_textures(renderer, textures, sprite_set);
 
     button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
 
@@ -154,7 +153,14 @@ int main(void) {
             }
 
             display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 30, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT*0.9, renderer, black);
+            
+            // Sprite set choice
+            button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
+            display_button(sprite_set_button, renderer, textures);
 
+            SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
+            SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
+            SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -172,6 +178,11 @@ int main(void) {
                     }
                     else if (button_clicked(ai, event)) {
                         ai_choice = (ai_choice + 1) % AI_AMOUNT;
+                    }
+                    else if (button_clicked(sprite_set_button, event)) {
+                        sprite_set = (sprite_set + 1) % 2;
+                        free_textures(textures);
+                        load_textures(renderer, textures, sprite_set);
                     }
                     break;
                 case SDL_KEYUP:
@@ -772,6 +783,7 @@ int main(void) {
     }
 
     free_textures(textures);
+    free(textures);
 
     free_lanes(game.first_lane);
     free_lanes(demo.first_lane);

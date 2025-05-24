@@ -2,6 +2,10 @@
 
 SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, int height) {
     SDL_Surface *surface = IMG_Load(filename);
+    if (surface == NULL) {
+        fprintf(stderr, "Failed to load image %s: %s\n", filename, IMG_GetError());
+        surface = IMG_Load("sprites/default.png");
+    }
     SDL_Surface *resizedSurface = SDL_CreateRGBSurface(0, width, height, surface->format->BitsPerPixel,
         surface->format->Rmask, surface->format->Gmask,
         surface->format->Bmask, surface->format->Amask);
@@ -15,52 +19,97 @@ SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, i
     return texture;
 }
 
-void load_textures(SDL_Renderer* renderer, SDL_Texture** textures) {
+void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, int sprite_set) {
 
     for (int i=0; i<END_TEXTURES; i++) {
         textures[i] = NULL;
     }
 
-    textures[GRASS] = create_texture(renderer, "sprites/grass.png", TILE_SIDE, TILE_SIDE);
-    textures[WATER] = create_texture(renderer, "sprites/water.png", TILE_SIDE, TILE_SIDE);
-    textures[ROAD] = create_texture(renderer, "sprites/road.png", TILE_SIDE, TILE_SIDE);   
-    textures[TRACK] = create_texture(renderer, "sprites/track.png", TILE_SIDE, TILE_SIDE);
+    char prefix[32];
+    snprintf(prefix, sizeof(prefix), "sprites/%d/", sprite_set);
 
-    textures[TREE] = create_texture(renderer, "sprites/tree.png", TILE_SIDE, TILE_SIDE);
-    textures[CAR1] = create_texture(renderer, "sprites/car1.png", TILE_SIDE, TILE_SIDE);
-    textures[CAR2] = create_texture(renderer, "sprites/car2.png", TILE_SIDE*2, TILE_SIDE);
-    textures[LILY] = create_texture(renderer, "sprites/lily.png", TILE_SIDE, TILE_SIDE);
-    textures[LOG_SINGLE] = create_texture(renderer, "sprites/log_single.png", TILE_SIDE, TILE_SIDE);
-    textures[LOG_EDGE] = create_texture(renderer, "sprites/log_edge.png", TILE_SIDE, TILE_SIDE);
-    textures[LOG_MID] = create_texture(renderer, "sprites/log_mid.png", TILE_SIDE, TILE_SIDE);
-    textures[TRAIN_EDGE] = create_texture(renderer, "sprites/train_edge.png", TILE_SIDE, TILE_SIDE);
-    textures[TRAIN_MID] = create_texture(renderer, "sprites/train_mid.png", TILE_SIDE, TILE_SIDE);
+    char path[64];
 
-    textures[WARNING] = create_texture(renderer, "sprites/warning.png", TILE_SIDE, TILE_SIDE);
-    textures[CLOUD] = create_texture(renderer, "sprites/cloud.png", TILE_SIDE, TILE_SIDE);
-    textures[COIN] = create_texture(renderer, "sprites/coin.png", TILE_SIDE, TILE_SIDE);
+    snprintf(path, sizeof(path), "%sgrass.png", prefix);
+    textures[GRASS] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%swater.png", prefix);
+    textures[WATER] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%sroad.png", prefix);
+    textures[ROAD] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%strack.png", prefix);
+    textures[TRACK] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%stree.png", prefix);
+    textures[TREE] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%scar1.png", prefix);
+    textures[CAR1] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%scar2.png", prefix);
+    textures[CAR2] = create_texture(renderer, path, TILE_SIDE*2, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%slily.png", prefix);
+    textures[LILY] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%slog_single.png", prefix);
+    textures[LOG_SINGLE] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%slog_edge.png", prefix);
+    textures[LOG_EDGE] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%slog_mid.png", prefix);
+    textures[LOG_MID] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%strain_edge.png", prefix);
+    textures[TRAIN_EDGE] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%strain_mid.png", prefix);
+    textures[TRAIN_MID] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%swarning.png", prefix);
+    textures[WARNING] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%scloud.png", prefix);
+    textures[CLOUD] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%scoin.png", prefix);
+    textures[COIN] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
     for (int i=1; i<POWERS_END; i++) {
-        char s[30];
-        sprintf(s, "sprites/powers/power%d.png", i);
-        textures[POWER_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
+        snprintf(path, sizeof(path), "%spowers/power%d.png", prefix, i);
+        textures[POWER_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
     }
 
-    textures[PLAY_BUTTON] = create_texture(renderer, "sprites/text/play_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[MENU_BUTTON] = create_texture(renderer, "sprites/text/menu_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[SKINS_BUTTON] = create_texture(renderer, "sprites/text/skins_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
-    textures[GAMBLE_BUTTON] = create_texture(renderer, "sprites/text/gamble_button.png", BUTTON_WIDTH, BUTTON_HEIGHT);
+    snprintf(path, sizeof(path), "%stext/play_button.png", prefix);
+    textures[PLAY_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
 
-    textures[LOCK] = create_texture(renderer, "sprites/lock.png", SKIN_SIDE, SKIN_SIDE);
+    snprintf(path, sizeof(path), "%stext/menu_button.png", prefix);
+    textures[MENU_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
 
-    textures[TITLE_CARD] = create_texture(renderer, "sprites/text/title.png", CARD_WIDTH, CARD_HEIGHT);
-    textures[GAME_OVER_CARD] = create_texture(renderer, "sprites/text/game_over.png", CARD_WIDTH, CARD_HEIGHT);
+    snprintf(path, sizeof(path), "%stext/skins_button.png", prefix);
+    textures[SKINS_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
 
-    textures[SKIN_BG] = create_texture(renderer, "sprites/text/skin_bg.png", SKIN_SIDE, SKIN_SIDE);
+    snprintf(path, sizeof(path), "%stext/gamble_button.png", prefix);
+    textures[GAMBLE_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
+
+    snprintf(path, sizeof(path), "%slock.png", prefix);
+    textures[LOCK] = create_texture(renderer, path, SKIN_SIDE, SKIN_SIDE);
+
+    snprintf(path, sizeof(path), "%stext/title.png", prefix);
+    textures[TITLE_CARD] = create_texture(renderer, path, CARD_WIDTH, CARD_HEIGHT);
+
+    snprintf(path, sizeof(path), "%stext/game_over.png", prefix);
+    textures[GAME_OVER_CARD] = create_texture(renderer, path, CARD_WIDTH, CARD_HEIGHT);
+
+    snprintf(path, sizeof(path), "%stext/skin_bg.png", prefix);
+    textures[SKIN_BG] = create_texture(renderer, path, SKIN_SIDE, SKIN_SIDE);
 
     for (int i=0; i<SKINS; i++) {
-        char s[24];
-        sprintf(s, "sprites/skins/skin%d.png", i);
-        textures[SKIN_START+i] = create_texture(renderer, s, TILE_SIDE, TILE_SIDE);
+        snprintf(path, sizeof(path), "%sskins/skin%d.png", prefix, i);
+        textures[SKIN_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
     }
 }
 
@@ -70,6 +119,4 @@ void free_textures(SDL_Texture** textures) {
             SDL_DestroyTexture(textures[i]);
         }
     }
-
-    free(textures);
 }

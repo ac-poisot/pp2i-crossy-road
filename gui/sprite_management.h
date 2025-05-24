@@ -49,5 +49,5 @@ enum {
 };
 
 SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, int height);
-void load_textures(SDL_Renderer* renderer, SDL_Texture** textures);
+void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, int sprite_set);
 void free_textures(SDL_Texture** textures);
