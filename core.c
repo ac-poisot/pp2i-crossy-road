@@ -205,7 +205,7 @@ bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterli
             }
         }
 
-    } else { // If the cars or trunks are going to the left side
+    } else if(speed < 0) { // If the cars or trunks are going to the left side
         int upper = LANE_WIDTH-6 - UNPLAYABLE_WIDTH;
         if(l->prev != NULL && l->prev->type == WATER && l->prev->speed == 0) {
             // If it is a lane of waterlilies before the road or the lane of trunks, we make sure that at least one waterlily is accessible
@@ -226,6 +226,37 @@ bool reachable(lane* l, bool* a, float speed) { // Check if at least one waterli
                 return true;
             }
         }
+    } else { // If the speed is zero, this test is called between the previous lane is a lane of trees and the one before was one with waterlilies
+        bool* reachable_spots = (bool*)malloc(LANE_WIDTH * sizeof(bool));
+        bool* tree_obst_array = create_obstacles_array(l->obstacles);
+        obstacle* current_tree = l->obstacles;
+        while(current_tree != NULL) {
+            if(current_tree->x >= 0 && current_tree->x + current_tree->size <= LANE_WIDTH) {
+                int i = current_tree->x;
+                while(i >= 0 && tree_obst_array[i] != true) {
+                    reachable_spots[i] = true; // We can reach this spot
+                    i--;
+                }
+                i = current_tree->x + 1;
+                while(i < LANE_WIDTH && tree_obst_array[i] != true) {
+                    reachable_spots[i] = true; // We can reach this spot
+                    i++;
+                }
+            }
+            current_tree = current_tree->next;
+        }
+        for(int i =0; i < UNPLAYABLE_WIDTH; i++) {
+            reachable_spots[i] = false; // We cannot reach the unplayable spots
+        }
+        for(int i = LANE_WIDTH - UNPLAYABLE_WIDTH; i < LANE_WIDTH; i++) {
+            reachable_spots[i] = false; // We cannot reach the unplayable spots
+        }
+        bool* res = array_and(reachable_spots, a);
+        bool exists = array_exist(res);
+        free(reachable_spots);
+        free(tree_obst_array);
+        free(res);
+        return exists;
     }
     return false;
 }
@@ -361,7 +392,7 @@ obstacle* generate_waterlilies(lane* l) {
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
             bool* intersection = array_and(current_obst_array, prev_obst);
-            while(!array_exist(intersection)) { // While there isn't an exit to one of the waterlilies, we regenerate the obstacles
+            while(!array_exist(intersection) || (l->prev->prev != NULL && l->prev->prev->type == WATER && l->prev->prev->speed == 0 && !reachable(l->prev, current_obst_array, l->prev->speed))) { // While there isn't an exit to one of the waterlilies, we regenerate the obstacles && if there are waterlilies before, one path must exist between one of the waterlilies of both lanes
                 free_obstacles(current_obst);
                 free(current_obst_array);
                 free(intersection);
@@ -489,11 +520,19 @@ obstacle* generate_waterlilies(lane* l) {
         /* if the previous lane is either a lane of cars or trunks */
         current_obst = generate_random_waterlilies();
         current_obst_array = create_obstacles_array(current_obst);
+        int max_regenerate = 0;
         while(!reachable(l->prev, current_obst_array, l->prev->speed)) { // We regenerate the obstacles if the map isn't playable with them because there isn't an accessible way
             free_obstacles(current_obst);
             free(current_obst_array);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
+            max_regenerate++;
+            if(max_regenerate == 10 && l->prev->prev != NULL && l->prev->prev->type == WATER && l->prev->prev->speed == 0) {
+                l->prev->prev->obstacles = generate_waterlilies(l->prev->prev);
+                l->prev->prev->coins = NULL;
+                l->prev->speed *= -1;
+                max_regenerate = 0;
+            }
         }
         free(current_obst_array);
         return current_obst;
