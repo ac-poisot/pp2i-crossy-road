@@ -520,11 +520,20 @@ obstacle* generate_waterlilies(lane* l) {
         /* if the previous lane is either a lane of cars or trunks */
         current_obst = generate_random_waterlilies();
         current_obst_array = create_obstacles_array(current_obst);
+        int max_regenerate = 0;
         while(!reachable(l->prev, current_obst_array, l->prev->speed)) { // We regenerate the obstacles if the map isn't playable with them because there isn't an accessible way
             free_obstacles(current_obst);
             free(current_obst_array);
             current_obst = generate_random_waterlilies();
             current_obst_array = create_obstacles_array(current_obst);
+            max_regenerate++;
+            if(max_regenerate == 10 && l->prev->prev != NULL && l->prev->prev->type == WATER && l->prev->prev->speed == 0) {
+                l->prev->prev->obstacles = generate_waterlilies(l->prev->prev);
+                display_obstacles(l->prev->prev->obstacles);
+                l->prev->prev->coins = NULL;
+                l->prev->speed *= -1;
+                max_regenerate = 0;
+            }
         }
         free(current_obst_array);
         return current_obst;
