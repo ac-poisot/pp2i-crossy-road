@@ -19,19 +19,24 @@ void free_obstacles(obstacle* first_obstacle) {
     }
 }
 
+void free_coins(float_list* first_coin) {
+    /* frees recursively coins */
+    float_list* current_coin = first_coin;
+    float_list* next_coin;
+    while (current_coin != NULL) {
+        next_coin = current_coin->next;
+        free(current_coin);
+        current_coin = next_coin;
+    }
+}
+
 void free_lanes(lane* first_lane) {
     /* frees recursively lanes */
     lane* current_lane = first_lane;
     lane* next_lane;
     while (current_lane != NULL) {
         next_lane = current_lane->next;
-        float_list* current_coin = current_lane->coins;
-        float_list* next_coin;
-        while (current_coin != NULL) {
-            next_coin = current_coin->next;
-            free(current_coin);
-            current_coin = next_coin;
-        }
+        free_coins(current_lane->coins);
         free_obstacles(current_lane->obstacles);
         free(current_lane);
         current_lane = next_lane;
