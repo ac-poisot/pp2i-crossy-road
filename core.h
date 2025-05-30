@@ -91,7 +91,7 @@ void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
 void displayLanesToFile(lane* l, FILE* file);
-void displayLanesToFile(lane* l, FILE* file);
+void display_obstaclesToFile(obstacle* o, FILE* file);
 obstacle* collides(lane *current_lane, displayedData game);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);

@@ -389,6 +389,11 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
         lane* current_lane = tab[deep-1];
         lane* copy_current = current_lane;
 
+        // update your position if you are on water
+        if (current_lane->type == 2) {
+            p.x = p.x + current_lane->speed;
+        }
+
         player copy_p;
         copy_p.orientation = p.orientation;
         copy_p.skin = p.skin;

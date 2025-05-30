@@ -536,10 +536,14 @@ void test_three_down(void) {
 }
 
 void test_water_stay(void) {
+    /*
+    */
     printf("8\n");
     player p = init_player(15, 4, 1, 1);
     obstacle* o = init_obst(NULL, NULL, 15, 1); 
-    lane* l = init_lane(4, -1, o, 1, 2, NULL, NULL, NULL);
+    lane* l0 = init_lane(4, -1, NULL, 0, 2, NULL, NULL, NULL);
+    lane* l1 = init_lane(4, -1, NULL, 2, 2, NULL, NULL, NULL);
+    lane* l = init_lane(4, -1, o, 1, 2, l1, l0, NULL);
 
     couple todo;
     todo.score = 0;
@@ -550,26 +554,38 @@ void test_water_stay(void) {
     assert(p.x == 15);
     assert(p.y == 4);
 
-    free_lanes(l);
+    lane** tab = n_update(3, l);
+    couple cm = minmax_rec_memo_state(l, 3, todo, p, tab);
+    assert(cm.score == 0);
+    assert(cm.move == STAY);
+    free_update(tab, 3);
+
+    free_lanes(l->prev);
 }
 
 void test_water_one_ahead(void) {
     printf("9\n");
     player p = init_player(15, 4, 1, 1);
     obstacle* o = init_obst(NULL, NULL, 15, 1); 
-    lane* l = init_lane(4, -1, o, 1, 2, NULL, NULL, NULL);
-    lane* ls = init_lane(5, 0, NULL, 0, 1, l, NULL, NULL);
+    lane* ls = init_lane(5, 0, NULL, 0, 1, NULL, NULL, NULL);
+    lane* l = init_lane(4, -1, o, 1, 2, NULL, ls, NULL);
     displayLanes(l);
 
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c1 = minmax_rec(ls->prev,2,todo,p);
+    couple c1 = minmax_rec(l,1,todo,p);
     printf("%d %d\n", c1.score, c1.move);
     assert(c1.score == 1);
     assert(c1.move == GO_AHEAD);
     assert(p.x == 15);
     assert(p.y == 4);
+
+    lane** tab = n_update(2, l);
+    couple cm = minmax_rec_memo_state(l, 2, todo, p, tab);
+    assert(cm.score == 1);
+    assert(cm.move == GO_AHEAD);
+    free_update(tab, 2);
 
     free_lanes(l);
 }
