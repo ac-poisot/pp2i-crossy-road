@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "core.h"
 
 void reset_savefile(void) {
     FILE *save_data = fopen("save/data.txt", "w");
@@ -93,23 +94,30 @@ int main(void) {
     load_textures(renderer, textures, skin_names, sprite_set);
 
     FILE *save_data = fopen("save/data.txt", "a+");
-    fseek(save_data, 0, SEEK_END);
-    long filesize = ftell(save_data);
-    rewind(save_data);
-    if (filesize == 0) {
+    if (save_data == NULL) {
+        printf("Error opening save file. Creating a new one.\n");
         reset_savefile();
-    } else {
-        fscanf(save_data, "%d\n", &high_score);
-        fscanf(save_data, "%d\n", &purse);
-        for (int i=1; i<SKINS; i++) {
-            int unlocked = 0;
-            fscanf(save_data, "%d\n", &unlocked);
-            if (unlocked && unlocked != 1) {
-                printf("Error detected in savefile. Erasing savefile.");
-                reset_savefile();
-                break;
+        save_data = fopen("save/data.txt", "r+");
+    }
+    else {
+        fseek(save_data, 0, SEEK_END);
+        long filesize = ftell(save_data);
+        rewind(save_data);
+        if (filesize == 0) {
+            reset_savefile();
+        } else {
+            fscanf(save_data, "%d\n", &high_score);
+            fscanf(save_data, "%d\n", &purse);
+            for (int i=1; i<SKINS; i++) {
+                int unlocked = 0;
+                fscanf(save_data, "%d\n", &unlocked);
+                if (unlocked && unlocked != 1) {
+                    printf("Error detected in savefile. Erasing savefile.");
+                    reset_savefile();
+                    break;
+                }
+                unlocked_skins[i] = unlocked;
             }
-            unlocked_skins[i] = unlocked;
         }
     }
     fclose(save_data);
@@ -383,6 +391,8 @@ int main(void) {
                         if(collided_coin->power == ECOLO){
                             power_time =1;
                             game = power4(game);
+                            on_log = NULL;
+                            liftboost = 0;
                             break;
                         }
                         else {  
@@ -427,7 +437,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_train(game);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case ROAD:
@@ -435,7 +446,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_road(game,  collided_obstacle,player_top_lane);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case WATER:
@@ -493,6 +505,8 @@ int main(void) {
                         if(collided_coin->power == ECOLO){
                             power_time =1;
                             game = power4(game);
+                            on_log = NULL;
+                            liftboost = 0;
                             break;
                         }
                         else {
@@ -528,7 +542,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_train(game);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case ROAD:
@@ -536,7 +551,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_road(game,collided_obstacle,player_bottom_lane);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case WATER:
