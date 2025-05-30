@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "core.h"
 
 void reset_savefile(void) {
     FILE *save_data = fopen("save/data.txt", "w");
@@ -390,6 +391,8 @@ int main(void) {
                         if(collided_coin->power == ECOLO){
                             power_time =1;
                             game = power4(game);
+                            on_log = NULL;
+                            liftboost = 0;
                             break;
                         }
                         else {  
@@ -434,7 +437,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_train(game);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case ROAD:
@@ -442,7 +446,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_road(game,  collided_obstacle,player_top_lane);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case WATER:
@@ -500,6 +505,8 @@ int main(void) {
                         if(collided_coin->power == ECOLO){
                             power_time =1;
                             game = power4(game);
+                            on_log = NULL;
+                            liftboost = 0;
                             break;
                         }
                         else {
@@ -535,7 +542,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_train(game);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case ROAD:
@@ -543,7 +551,8 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            //Déchiré
+                            game = tank_road(game,collided_obstacle,player_bottom_lane);
+                            collided_obstacle = NULL;
                         }
                         break;
                         case WATER:

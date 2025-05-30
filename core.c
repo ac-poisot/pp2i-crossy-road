@@ -1055,9 +1055,7 @@ displayedData power4 (displayedData data) {
     while ((int) current_lane->y != (int) data.player.y) {
         current_lane = current_lane->next;
     }
-    if (current_lane->y <= data.player.y){
-        current_lane = current_lane->next;
-    }
+
     lane* l1 = empty_lane(current_lane->prev, GRASS);
     lane* l2 = empty_lane(l1, GRASS);
     lane* l3 = empty_lane(l2, GRASS);
@@ -1071,6 +1069,55 @@ displayedData power4 (displayedData data) {
     free_lanes(current_lane);
     return data;
 }
+
+displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane) {
+    if (collided_obstacle->prev!=NULL && collided_obstacle->next!=NULL)
+    {
+        collided_obstacle->prev->next = collided_obstacle->next;
+        collided_obstacle->next->prev = collided_obstacle->prev;
+        free(collided_obstacle);
+    }
+    else {
+    if(collided_obstacle->prev!=NULL && collided_obstacle->next==NULL)
+    {
+        collided_obstacle->prev->next = NULL;
+        free(collided_obstacle);
+    }
+    else {
+    if (collided_obstacle->prev==NULL && collided_obstacle==NULL)
+    {
+        current_lane->obstacles = NULL;
+    }
+    else{
+    if (collided_obstacle->prev==NULL && collided_obstacle!=NULL) 
+    {
+        current_lane->obstacles = collided_obstacle->next;
+        free(collided_obstacle);    
+    }}}}
+    return data;
+}
+displayedData tank_train (displayedData data){
+    lane* current_lane = data.camera_first_lane;
+    while ((int) current_lane->y != (int) data.player.y) {
+        current_lane = current_lane->next;
+    }
+    obstacle* train = current_lane->obstacles;
+    current_lane->obstacles = NULL;
+    free_obstacles(train);
+    return data;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 #ifdef TEST
 int main(void) {
