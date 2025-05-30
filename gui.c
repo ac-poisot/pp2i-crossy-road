@@ -93,23 +93,30 @@ int main(void) {
     load_textures(renderer, textures, skin_names, sprite_set);
 
     FILE *save_data = fopen("save/data.txt", "a+");
-    fseek(save_data, 0, SEEK_END);
-    long filesize = ftell(save_data);
-    rewind(save_data);
-    if (filesize == 0) {
+    if (save_data == NULL) {
+        printf("Error opening save file. Creating a new one.\n");
         reset_savefile();
-    } else {
-        fscanf(save_data, "%d\n", &high_score);
-        fscanf(save_data, "%d\n", &purse);
-        for (int i=1; i<SKINS; i++) {
-            int unlocked = 0;
-            fscanf(save_data, "%d\n", &unlocked);
-            if (unlocked && unlocked != 1) {
-                printf("Error detected in savefile. Erasing savefile.");
-                reset_savefile();
-                break;
+        save_data = fopen("save/data.txt", "r+");
+    }
+    else {
+        fseek(save_data, 0, SEEK_END);
+        long filesize = ftell(save_data);
+        rewind(save_data);
+        if (filesize == 0) {
+            reset_savefile();
+        } else {
+            fscanf(save_data, "%d\n", &high_score);
+            fscanf(save_data, "%d\n", &purse);
+            for (int i=1; i<SKINS; i++) {
+                int unlocked = 0;
+                fscanf(save_data, "%d\n", &unlocked);
+                if (unlocked && unlocked != 1) {
+                    printf("Error detected in savefile. Erasing savefile.");
+                    reset_savefile();
+                    break;
+                }
+                unlocked_skins[i] = unlocked;
             }
-            unlocked_skins[i] = unlocked;
         }
     }
     fclose(save_data);
