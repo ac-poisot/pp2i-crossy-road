@@ -192,7 +192,6 @@ void test_update_lanes(void) {
 }
 
 void test_minmax_rec_begining(void) {
-    printf("1\n");
     /* situation
     4________________________
     3
@@ -225,26 +224,11 @@ void test_minmax_rec_begining(void) {
     assert(p2.x == LANE_WIDTH/2);
     assert(p2.y == 1);
 
-    //couple beg;
-    //beg.score = 0;
-    //beg.move = -1;
-    ////List* vus = create_list(3, p.x, p.y, beg, NULL); // trouve le truc qui marche pas!
-    //List* vus = NULL;
-    //lane** tab2 = n_update(3, l);
-    //couple cma = minmax_rec_memo_all(l, 3, beg, p, tab2, vus);
-    //printf("score final: %d, move : %d\n", cma.score, cma.move);
-    //assert(cma.score == 3);
-    //assert(cma.move == GO_AHEAD);
-    //free_list(vus);
-    //free_update(tab2, 3);
-
     free_update(tab, 3);
-
     free_lanes(l);
 }
 
 void test_one_stay(void) {
-    printf("2\n");
     /* situation
     4____________##__________ <-
     3           P
@@ -270,22 +254,22 @@ void test_one_stay(void) {
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
     assert(c1.score == 0);
-    assert(c1.move == STAY);
+    assert(c1.move == GO_RIGHT); //pas STAY car mis à jour
 
     lane** tab = n_update(1, l1->prev);
     couple cm = minmax_rec_memo_state(l1->prev, 1, todo, p, tab);
     assert(cm.score == 0);
-    assert(cm.move == STAY);
+    assert(cm.move == GO_RIGHT); //pas STAY car mis à jour
     free_update(tab, 1);
 
     player p1 = init_player(LANE_WIDTH/2, 3, 0, 0);
     p1 = minmax_simple(l1->prev, 1, p1);
-    assert(p1.x == LANE_WIDTH/2);
+    assert(p1.x == LANE_WIDTH/2+1);
     assert(p1.y == 3);
 
     player p2 = init_player(LANE_WIDTH/2, 3, 0, 0);
     p2 = minmax_memo_state(l1->prev, 1, p2);
-    assert(p2.x == LANE_WIDTH/2);
+    assert(p2.x == LANE_WIDTH/2+1);
     assert(p2.y == 3);
 
     free_lanes(l);
@@ -293,7 +277,6 @@ void test_one_stay(void) {
 }
 
 void test_one_right(void) {
-    printf("3\n");
     /* situation
     2___________##___________ ->
     1          ##P            ->
@@ -338,7 +321,6 @@ void test_one_right(void) {
 }
 
 void test_two_rigth(void) {
-    printf("4\n");
     /* situation
     4____________##__________ <-
     3           P
@@ -386,7 +368,6 @@ void test_two_rigth(void) {
 }
 
 void test_three_stay(void) {
-    printf("5\n");
     /* situation
     4___________####_________
     3           P
@@ -412,29 +393,28 @@ void test_three_stay(void) {
     assert(p.x == LANE_WIDTH/2); // le joueur ne doit pas avoir bouge
     assert(p.y == 3);
     assert(c3.score == 1);
-    assert(c3.move == STAY);
+    assert(c3.move == GO_RIGHT); //pas STAY car mis a jour
 
     lane** tab = n_update(3, l1->prev);
     couple cm = minmax_rec_memo_state(l1->prev, 3, todo, p, tab);
     assert(cm.score == 1);
-    assert(cm.move == STAY);
+    assert(cm.move == GO_RIGHT); //pas STAY car mis a jour
     free_update(tab, 3);
 
     player p1 = init_player(LANE_WIDTH/2, 3, 0, 0);
     p1 = minmax_simple(l1->prev, 3, p1);
-    assert(p1.x == LANE_WIDTH/2);
+    assert(p1.x == LANE_WIDTH/2+1);
     assert(p1.y == 3);
 
     player p2 = init_player(LANE_WIDTH/2, 3, 0, 0);
     p2 = minmax_memo_state(l1->prev, 3, p2);
-    assert(p2.x == LANE_WIDTH/2);
+    assert(p2.x == LANE_WIDTH/2+1);
     assert(p2.y == 3);
 
     free_lanes(l);
 }
 
-void test_two_left(void) {
-    printf("6\n");
+void test_two_down(void) {
     /* situation
     5 ##                      <-
     4_P##____________________ <-
@@ -463,29 +443,28 @@ void test_two_left(void) {
     assert(p.x == 1); // le joueur ne doit pas avoir bouge
     assert(p.y == 4);
     assert(c4.score == -1);
-    assert(c4.move == GO_LEFT);
+    assert(c4.move == GO_DOWN);
 
     lane** tab = n_update(2, l2->prev);
     couple cm = minmax_rec_memo_state(l2->prev, 2, todo, p, tab);
     assert(cm.score == -1);
-    assert(cm.move == GO_LEFT);
+    assert(cm.move == GO_DOWN);
     free_update(tab, 2);
 
     player p1 = init_player(1, 4, 0, 0);
     p1 = minmax_simple(l2->prev, 2, p1);
-    assert(p1.x == 0);
-    assert(p1.y == 4);
+    assert(p1.x == 1);
+    assert(p1.y == 3);
 
     player p2 = init_player(1, 4, 0, 0);
     p2 = minmax_memo_state(l2->prev, 2, p2);
-    assert(p2.x == 0);
-    assert(p2.y == 4);
+    assert(p2.x == 1);
+    assert(p2.y == 3);
 
     free_lanes(l);
 }
 
 void test_three_down(void) {
-    printf("7\n");
     /* situation
     5 ##                      <-
     4_P##____________________ <-
@@ -537,8 +516,10 @@ void test_three_down(void) {
 
 void test_water_stay(void) {
     /*
+    2~~~~~~~~~~~~~~~~~~~~~~~~
+    1~~~~~~~~~~~~~~~_~~~~~~~~
+    0~~~~~~~~~~~~~~~~~~~~~~~~
     */
-    printf("8\n");
     player p = init_player(15, 4, 1, 1);
     obstacle* o = init_obst(NULL, NULL, 15, 1); 
     lane* l0 = init_lane(4, -1, NULL, 0, 2, NULL, NULL, NULL);
@@ -564,18 +545,19 @@ void test_water_stay(void) {
 }
 
 void test_water_one_ahead(void) {
-    printf("9\n");
+    /*
+    1~~~~~~~~~~~~~~~_~~~~~~~~
+    0~~~~~~~~~~~~~~~~~~~~~~~~
+    */
     player p = init_player(15, 4, 1, 1);
     obstacle* o = init_obst(NULL, NULL, 15, 1); 
     lane* ls = init_lane(5, 0, NULL, 0, 1, NULL, NULL, NULL);
     lane* l = init_lane(4, -1, o, 1, 2, NULL, ls, NULL);
-    displayLanes(l);
 
     couple todo;
     todo.score = 0;
     todo.move = STAY;
-    couple c1 = minmax_rec(l,1,todo,p);
-    printf("%d %d\n", c1.score, c1.move);
+    couple c1 = minmax_rec(l,2,todo,p);
     assert(c1.score == 1);
     assert(c1.move == GO_AHEAD);
     assert(p.x == 15);
@@ -589,6 +571,36 @@ void test_water_one_ahead(void) {
 
     free_lanes(l);
 }
+
+void test_water_one_ahead_bis(void) {
+    /*
+    1~~~~~~~~~~~~~~~~~~~~~~~~
+    0~~~~~~~~~~~~~~~_~~~~~~~~
+    */
+    player p = init_player(15, 4, 1, 1);
+    obstacle* o = init_obst(NULL, NULL, 16, 1);
+    lane* ls = init_lane(4, -1, o, 1, 2, NULL, NULL, NULL); 
+    lane* l = init_lane(5, 0, NULL, 0, 1, NULL, ls, NULL);
+
+    couple todo;
+    todo.score = 0;
+    todo.move = STAY;
+    couple c1 = minmax_rec(l,2,todo,p);
+    assert(c1.score == 1);
+    assert(c1.move == GO_AHEAD);
+    assert(p.x == 15);
+    assert(p.y == 4);
+
+    lane** tab = n_update(2, l);
+    couple cm = minmax_rec_memo_state(l, 2, todo, p, tab);
+    assert(cm.score == 1);
+    assert(cm.move == GO_AHEAD);
+    free_update(tab, 2);
+
+    free_lanes(l);
+}
+
+
 
 void test_n_update(void) {
     obstacle* o1 = init_obst(NULL, NULL, LANE_WIDTH/2, 2);
@@ -629,10 +641,11 @@ int main(void) {
     test_one_right();
     test_two_rigth();
     test_three_stay();
-    test_two_left();
+    test_two_down();
     test_three_down();
     test_water_stay();
     test_water_one_ahead();
+    test_water_one_ahead_bis();
     test_n_update();
     return 0;
 }

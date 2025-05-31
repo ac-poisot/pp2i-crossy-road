@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include <math.h>
-#include <assert.h>
 
 #include "minmax.h"
 #include "list.h"
@@ -40,18 +39,6 @@ obstacle* copy_obstacle(obstacle* o) {
             last_copy = new;
             o_cp = o_cp->next;
         }
-            FILE* file = fopen("ob.txt", "a");
-            FILE* file2 = fopen("ob_copy.txt", "a");
-
-            fprintf(file, "Obstacle %f:\n", o->x);
-            fprintf(file2, "Obstacle %f:\n", copy->x);
-
-            display_obstaclesToFile(o, file);
-            display_obstaclesToFile(copy, file2);
-
-            fclose(file);
-            fclose(file2);
-
         return copy;
     }
 }
@@ -110,18 +97,6 @@ lane* copy_lane(lane* l, int p) {
             k = k - 1;
         }
 
-
-            // FILE* file = fopen("lanes.txt", "a");
-            // FILE* file2 = fopen("lanescopy.txt", "a");
-            // fprintf(file, "Lane %d:\n", l->y);
-            // fprintf(file2, "Lane %d:\n", l->y);
-
-            // displayLanesToFile(l, file);
-
-            // displayLanesToFile(copy, file2);
-            // fprintf(file, "\n\n\n", l->y);
-            // fprintf(file2, "\n\n\n", l->y);
-
     return copy;
     }
     
@@ -133,7 +108,7 @@ bool collides_without_game(lane *current_lane, player p) {
     obstacle* current_obstacle = current_lane->obstacles;
     if (current_lane->type != 2) { // WATER == 2
         while (current_obstacle != NULL) {
-            if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            if (p.x >= current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
                 return true;
             } else {
                 current_obstacle = current_obstacle->next;
@@ -142,7 +117,7 @@ bool collides_without_game(lane *current_lane, player p) {
        return false;
     } else {
         while (current_obstacle != NULL) {
-            if (p.x+1 > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            if (p.x >= current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
                 return false;
             } else {
                 current_obstacle = current_obstacle->next;
@@ -286,7 +261,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
             }
 
             // step 4 : update res if c better than it
-            if (next.move != NOT_POSSIBLE && next.score >= res.score) {
+            if (next.move != NOT_POSSIBLE && next.score > res.score) {
                 res.move = c.move;
                 res.score = next.score;
             }
@@ -331,7 +306,6 @@ lane** n_update(int n, lane* l) {
     lane** tab = (lane**)malloc(sizeof(lane*)*n);
     lane* current_lane = copy_lane(l, n);
     lane* beginning_lane = current_lane;
-    assert(beginning_lane->next != NULL);
 
     for (int i=0; i<n; i=i+1) {
         while (beginning_lane->prev != NULL) {
@@ -402,6 +376,8 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
             couple c;
             c.move = i;
             c.score = previous.score;
+            bool ahead = false;
+            bool back = false;
 
             switch (i) {
                 case GO_AHEAD:
@@ -409,6 +385,7 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
                         copy_p.x = p.x;
                         copy_p.y = p.y + 1;
                         current_lane = copy_current->next;
+                        ahead = true;
                         for (int j=0; j<deep; j=j+1) {
                             tab[j] = tab[j]->next;
                         }
@@ -422,6 +399,7 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
                         copy_p.x = p.x;
                         copy_p.y = p.y - 1;
                         current_lane =  copy_current->prev;
+                        back = true;
                         for (int j=0; j<deep; j=j+1) {
                             tab[j] = tab[j]->prev;
                         }
@@ -469,18 +447,20 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
             }
 
             // change tab if GO_AHEAD or GO_DOWN
-            if (i==GO_AHEAD) {
+            if (i==GO_AHEAD && ahead) {
                 for (int j=0; j<deep; j=j+1) {
                     tab[j] = tab[j]->prev;
                 }
-            } else if (i==GO_DOWN) {
+                ahead = false;
+            } else if (i==GO_DOWN && back) {
                 for (int j=0; j<deep; j=j+1) {
                     tab[j] = tab[j]->next;
                 }
+                back = false;
             }
 
             // step 4 : update res if c better than him
-            if (next.move != NOT_POSSIBLE && next.score >= res.score) {
+            if (next.move != NOT_POSSIBLE && next.score > res.score) {
                 res.move = c.move;
                 res.score = next.score;
             }
