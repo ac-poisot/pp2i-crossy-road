@@ -16,7 +16,7 @@
 
 #define WARNING_TIME 60 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
 #define TRAIN_LENGTH (LANE_WIDTH*3) // in tiles, length of a train
-#define TRAIN_SPEED 1 // in tiles per frame, speed of a rightwards train
+#define TRAIN_SPEED 0.7 // in tiles per frame, speed of a rightwards train
 #define TRAIN_SPACING_MIN 100 // in tiles, minimum of space between two trains
 #define TRAIN_SPACING_MAX 300 // in tiles, maximum of space between two trains
 
@@ -27,8 +27,19 @@
 #define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
 #define LOG_SPACING_MAX 5 // in tiles, maximum of space between two logs (minimum is always 1)
 
-#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin
+enum {
+    XIV = 1,
+    NEO,
+    TANK,
+    ECOLO,
+    CRESUS,
+    POWERS_END,
+};
+#define CRESUS_MODIF 3 // The modifier for the CRESUS power
+#define TIME_POWER 10 // In seconds, time the power lasts
 
+#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin on a lane
+#define POWER_PROBABILITY 2 // there is a 1 in POWER_PROBABILITY chance of turning a coin into a power-up
 
 typedef struct obstacle {
     struct obstacle* next;
@@ -39,6 +50,7 @@ typedef struct obstacle {
 
 typedef struct float_list {
     float val;
+    int power;
     struct float_list* next;
 } float_list;
 
@@ -58,6 +70,7 @@ typedef struct player {
     float x; // position of the player
     int orientation; // orientation of the player
     int skin; // skin of the player (?)
+    int power; // power of the player
 } player;
 
 typedef struct displayedData {
@@ -73,15 +86,21 @@ typedef struct displayedData {
 
 
 void free_obstacles(obstacle* first_obstacle);
+void free_coins(float_list* first_coin);
 void free_lanes(lane* first_lane);
 int biome(int* boules);
 int* probabilite_biomes(lane* l);
 lane* empty_lane(lane* prev_lane, int type);
 lane* initialLanes(void);
 lane* random_lane(lane* prev_lane);
+bool* create_obstacles_array(obstacle* o);
+void array_not(bool* array);
+bool* array_and(bool* a, bool* b);
+bool array_exist(bool* array);
+bool reachable(lane* l, bool* a, float speed);
 obstacle* generate_vehicles(lane* l);
-obstacle* generate_trees(void);
-obstacle* generate_waterlilies(void);
+obstacle* generate_trees(lane* l);
+obstacle* generate_waterlilies(lane* l);
 obstacle* generate_drowning_slots(void);
 obstacle* generate_trains(void);
 lane* generate_lane(lane* prev_lane, int type);
@@ -90,9 +109,14 @@ void update_drowning_slots(lane* l);
 void update_trains(lane* l);
 void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
-void displayLanesToFile(lane* l, FILE* file);
-void display_obstaclesToFile(obstacle* o, FILE* file);
-obstacle* collides(lane *current_lane, player player);
+void updateLanes(lane * l);
+void updateLane(lane * l);
+obstacle* collides(lane *current_lane, displayedData game);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);
+displayedData power4 (displayedData data);
+displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane);
+displayedData tank_train (displayedData data, lane* current_lane);
+
+
