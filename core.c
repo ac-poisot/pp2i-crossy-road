@@ -970,15 +970,12 @@ void updateLanes(lane* l) {
 void updateLane(lane * l) {
     /* updates the position of the obstacles in the lane */
     switch (l->type) {
+        
         case GRASS:
             update_vehicles(l);
             break;
         case WATER:
-            if(l->speed == 0) {
-                update_drowning_slots(l);
-            } else {
-                update_vehicles(l);
-            }
+            update_drowning_slots(l);
             break;
         case TRACK:
             update_trains(l);
