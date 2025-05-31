@@ -111,7 +111,7 @@ void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
 void updateLanes(lane * l);
 void updateLane(lane * l);
-obstacle* collides(lane *current_lane, displayedData game);
+obstacle* collides(lane *current_lane, player player);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);
