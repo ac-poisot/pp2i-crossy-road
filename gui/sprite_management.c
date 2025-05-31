@@ -99,7 +99,7 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_n
     textures[GAMBLE_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
 
     snprintf(path, sizeof(path), "%slock.png", prefix);
-    textures[LOCK] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+    textures[LOCK] = create_texture(renderer, path, SKIN_SIDE, SKIN_SIDE);
 
     snprintf(path, sizeof(path), "%stext/title.png", prefix);
     textures[TITLE_CARD] = create_texture(renderer, path, CARD_WIDTH, CARD_HEIGHT);
@@ -113,9 +113,9 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_n
     for (int i=0; i<SKINS; i++) {
         snprintf(path, sizeof(path), "%sskins/skin%d.png", prefix, i);
         if (sprite_set == 0) {
-            textures[SKIN_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+            textures[SKIN_START+i] = create_texture(renderer, path, SKIN_SIDE, SKIN_SIDE);
         } else {
-            textures[SKIN_START+i] = create_texture(renderer, path, TILE_SIDE*4, TILE_SIDE);
+            textures[SKIN_START+i] = create_texture(renderer, path, SKIN_SIDE*4, SKIN_SIDE);
         }
     }
 

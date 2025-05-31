@@ -134,10 +134,10 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
 void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set) {
     SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
     if (skin_set == 0) {
-        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+        SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
         SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
     } else {
-        SDL_Rect spriteRect = {TILE_SIDE*(((player.orientation+180)/90)%4), 0, TILE_SIDE, TILE_SIDE};
+        SDL_Rect spriteRect = {SKIN_SIDE*(((player.orientation+180)/90)%4), 0, SKIN_SIDE, SKIN_SIDE};
         SDL_RenderCopy(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect);
     }
 }
@@ -160,7 +160,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
         char scoreText[20];
         SDL_Color white = {255, 255, 255, 255};
         sprintf(scoreText, "Score: %d", (int) data.player.y);
-        display_text(scoreText, 0, 0, 24, renderer, white, "arial.ttf");
+        display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
     }
     if (data.player.power != 0 && !(power_time < power_duration*60/5 && (power_time%10) < 5)) {
         int cloud_size = TILE_SIDE*2;

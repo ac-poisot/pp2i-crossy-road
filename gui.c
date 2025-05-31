@@ -205,19 +205,19 @@ int main(void) {
                 sprintf(aiText, "X");
             }
 
-            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 30, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT*0.9, renderer, black, "arial.ttf");
+            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 24, (HEIGHT-BUTTON_HEIGHT)/2 - 20, BUTTON_HEIGHT*0.9, renderer, black, "Symtext.ttf");
             
             // Sprite set choice
             button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
             display_button(sprite_set_button, renderer, textures);
 
-            SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+            SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
             SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
             SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
 
             button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD};
             display_button(reset, renderer, textures);
-            display_text("RESET", WIDTH-BUTTON_WIDTH+25, BUTTON_HEIGHT+20, 40, renderer, black, "arial.ttf");
+            display_text("RESET", WIDTH-BUTTON_WIDTH+28, BUTTON_HEIGHT+20, 40, renderer, black, "Symtext.ttf");
 
 
             switch (event.type) {
@@ -264,11 +264,11 @@ int main(void) {
             // Display high score
             char highScoreText[20];
             sprintf(highScoreText, "High Score: %d", high_score);
-            display_text(highScoreText, 0, 0, 24, renderer, white, "arial.ttf");
+            display_text(highScoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-50, 0, 24, renderer, white, "arial.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
 
             break;
         }
@@ -337,7 +337,7 @@ int main(void) {
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*3, 0, 24, renderer, white, "arial.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
     
             game = move_camera(game, GAME_SPEED);
     
@@ -755,7 +755,7 @@ int main(void) {
                 }
 
                 display_button(skin_buttons[i], renderer, textures);
-                SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+                SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
                 SDL_Rect destRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
                 SDL_RenderCopy(renderer, textures[SKIN_START+i], &spriteRect, &destRect);
 
@@ -765,7 +765,7 @@ int main(void) {
                     skin_name = "???";
                 }
 
-                display_text(skin_name, skin_buttons[i].x, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "arial.ttf");
+                display_text(skin_name, skin_buttons[i].x, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "Symtext.ttf");
             }
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -814,7 +814,7 @@ int main(void) {
 
             int icon_size = SKIN_SIDE*4*((float) GAMBLING_DURATION-fade)/GAMBLING_DURATION;
 
-            SDL_Rect spriteRect = {0, 0, icon_size, icon_size};
+            SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
             SDL_Rect destRect = {WIDTH/2-icon_size/2, HEIGHT/2-icon_size/2, icon_size, icon_size};
             SDL_RenderCopy(renderer, textures[SKIN_START+skin_to_unlock], &spriteRect, &destRect);
 
@@ -824,10 +824,10 @@ int main(void) {
                 game_state = GAMBLED;
                 if (!unlocked_skins[skin_to_unlock]) {
                     char* skin_name = skin_names[skin_to_unlock];
-                    display_text("New skin unlocked!", WIDTH/2-200, HEIGHT/2+icon_size/2, 50, renderer, white, "arial.ttf");
-                    display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "arial.ttf");
+                    display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf");
+                    display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf");
                 } else {
-                    display_text("You already have this skin!", WIDTH/2-300, HEIGHT/2+icon_size/2, 50, renderer, white, "arial.ttf");
+                    display_text("You already have this skin!", WIDTH/2-400, HEIGHT/2+icon_size/2, 45, renderer, white, "Symtext.ttf");
                 }
                 unlocked_skins[skin_to_unlock] = true;
                 update_savefile(high_score, purse, unlocked_skins);
