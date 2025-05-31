@@ -1195,7 +1195,11 @@ displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* c
     }}}}}
     return data;
 }
-displayedData tank_train (displayedData data, lane* current_lane){
+displayedData tank_train (displayedData data){
+    lane* current_lane = data.camera_first_lane;
+    while ((int) current_lane->y != (int) data.player.y) {
+        current_lane = current_lane->next;
+    }
     if (current_lane->type != WATER){
     obstacle* train = current_lane->obstacles;
     current_lane->obstacles = NULL;

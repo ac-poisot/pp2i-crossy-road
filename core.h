@@ -117,6 +117,6 @@ displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);
 displayedData power4 (displayedData data);
 displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane);
-displayedData tank_train (displayedData data, lane* current_lane);
+displayedData tank_train (displayedData data);
 
 

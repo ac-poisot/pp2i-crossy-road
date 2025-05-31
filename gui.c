@@ -441,7 +441,7 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            game = tank_train(game,current_lane);
+                            game = tank_train(game);
                             collided_obstacle = NULL;
                         }
                         break;
@@ -548,7 +548,7 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            game = tank_train(game, current_lane);
+                            game = tank_train(game);
                             collided_obstacle = NULL;
                         }
                         break;
