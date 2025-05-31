@@ -36,7 +36,7 @@ enum {
     POWERS_END,
 };
 #define CRESUS_MODIF 3 // The modifier for the CRESUS power
-#define TIME_POWER 15 // In seconds, time the power lasts
+#define TIME_POWER 10 // In seconds, time the power lasts
 
 #define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin on a lane
 #define POWER_PROBABILITY 2 // there is a 1 in POWER_PROBABILITY chance of turning a coin into a power-up

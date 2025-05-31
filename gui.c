@@ -154,7 +154,7 @@ int main(void) {
         case MENU: {
             // Demo background
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set);
+            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
     
             demo = move_camera(demo, GAME_SPEED*5);
     
@@ -295,7 +295,7 @@ int main(void) {
                         power_time = 0;
                     }
                 } else {
-                    display(game, renderer, textures, sprite_set);
+                    display(game, renderer, textures, sprite_set, power_time, TIME_POWER);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -333,7 +333,7 @@ int main(void) {
             }
     
     
-            display(game, renderer, textures, sprite_set);
+            display(game, renderer, textures, sprite_set, power_time, TIME_POWER);
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
@@ -704,7 +704,7 @@ int main(void) {
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 } else {
-                    display(demo, renderer, textures, sprite_set);
+                    display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -721,7 +721,7 @@ int main(void) {
         }
         case SKIN_SELECT: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set);
+            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
             lane* current_lane = demo.camera_first_lane;
             while (current_lane->next != NULL) {
@@ -790,7 +790,7 @@ int main(void) {
         }
         case GAMBLING: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set);
+            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
             lane* current_lane = demo.camera_first_lane;
             while (current_lane->next != NULL) {
