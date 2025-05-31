@@ -6,16 +6,19 @@
 #include <math.h>
 
 #include "core.h"
+#include "minmax.h"
 
 #define GAME_HEIGHT 20 // in tiles, height of the displayed area
 #define REFRESH_RATE 60 // in frames per second, refresh rate of the game
 #define GAME_SPEED 60 // in frames, time between each move of the camera
 
+#define AI_SPEED 20
 // Game states
 #define MENU 0
 #define GAME 1
 #define GAME_OVER 2
 #define SHOP 3
+#define AI 4
 
 // Shop colors
 #define PLAYER_COLORS 4
@@ -58,6 +61,7 @@ void init_colors() {
         init_pair(10*ROAD+(i+2), UNLOCKABLE_COLORS[i], COLOR_BLACK);
     }
 }
+
 
 void display_lane(lane* lane, int lane_count) {
     attron(COLOR_PAIR(lane->type*10 + 1));
@@ -156,17 +160,24 @@ void display(displayedData data) {
     int lane_count = 0;
     while (lane_count <= GAME_HEIGHT) {
         display_lane(current_lane, lane_count);
-        if (current_lane->y == data.player.y) {
+        if (current_lane->y == data.player.y && data.player.skin != -1) {
             attron(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
             mvprintw(round(data.cameraY - data.player.y + 1), round(data.player.x), "*");
             attroff(COLOR_PAIR(10*current_lane->type + data.player.skin + 2));
+        }
+        if (current_lane->y == data.ai.y && data.ai.skin != -1) {
+            attron(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
+            mvprintw(round(data.cameraY - data.ai.y + 1), round(data.ai.x), "*");
+            attroff(COLOR_PAIR(10*current_lane->type + data.ai.skin + 2));
         }
         current_lane = current_lane->next;
         lane_count++;
     }
 
     // Display the score
-    mvprintw(0, 0, "Score: %d\n", (int) data.player.y); // \n to not have issues going down from powers of 10
+    if (data.ai.skin != -1) {
+        mvprintw(0, 0, "Score: %d\n", (int) data.player.y); // \n to not have issues going down from powers of 10
+    }
     refresh();
 }
 
@@ -231,7 +242,11 @@ int main(void) {
 
     bool menu_anim = true;
     int star = 0;
-    
+
+    int cai = 0; // ai chosen, absent by default
+    int time_ai = AI_SPEED; // timer for the ai
+    obstacle* on_log_ai = NULL; // pointer to the log the ai is currently on, if any
+    bool ai_dead = false;
 
     while (true) {
         int ch = getch(); //Get the inputs from the keyboard
@@ -255,6 +270,7 @@ int main(void) {
 
             mvprintw(GAME_HEIGHT/4 + 3, 3, "Press any key to play");
             mvprintw(GAME_HEIGHT/4 + 4, 2, "Press s to go to the shop");
+            mvprintw(GAME_HEIGHT/4 + 5, 1, "Press a to go choose the ai");
 
             mvprintw(GAME_HEIGHT/4 + 7, 7, "Press q to quit");
             
@@ -268,15 +284,31 @@ int main(void) {
                 clear();
                 game_state = SHOP;
                 break;
+                case 'a':
+                clear();
+                game_state = AI;
+                break;
                 case ERR:
                 break;
                 default:
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
+                ai_dead = false;
                 on_log = NULL;
+                on_log_ai = NULL;
+                time_ai = AI_SPEED;
                 game = init_game(GAME_HEIGHT);
-                game.player.skin = player_color;
+                if (!cai) {
+                    game.ai.skin = -1;
+                } else {
+                    game.ai.skin = 0;
+                }
+                if (cai == 4) {
+                    game.player.skin = -1;
+                } else {
+                    game.player.skin = player_color;
+                }
                 break;
 
             }
@@ -330,6 +362,25 @@ int main(void) {
 
             break;
 
+            case AI:
+            mvprintw(0, 23, "Press m to return to menu");
+            // choix -> jouer seul (0), voir ia (4), jouer avec 1(1), 2(2) 
+            // possiblement3 quand je l'ai fini
+            mvprintw(10, 2, "0: no AI");
+            mvprintw(11, 2, "1: VS. easy AI");
+            mvprintw(12, 2, "2: VS. medium AI");
+            mvprintw(13, 2, "4: AI alone");
+            if (ch=='0' || ch=='1' || ch=='2' || ch=='4') {
+                cai = ch-'0';
+            }
+            mvprintw(20, 2, "AI chosen: %d\n\n\nw", cai);
+            if (ch == 'm') {
+                clear();
+                menu_anim = true;
+                game_state = MENU;
+            }
+            break;
+
             case GAME:
 
             current_y = game.player.y;
@@ -359,7 +410,7 @@ int main(void) {
 
             // Camera movement, automatic or if player is in the top quarter of the game
 
-            if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4)) { 
+            if (move_timer == 0 || game.cameraY - game.player.y < (GAME_HEIGHT/4) || game.cameraY - game.ai.y < (GAME_HEIGHT/4)) { 
                 game = move_camera(game, 1);
                 move_timer = GAME_SPEED;
             } else {
@@ -370,6 +421,7 @@ int main(void) {
 
             lane* current_lane = game.camera_first_lane;
             lane* player_lane;
+            lane* ai_lane;
 
             while (current_lane->next != NULL) {
 
@@ -392,6 +444,11 @@ int main(void) {
                 if (current_lane->y == game.player.y) {
                     player_lane = current_lane;
                 }
+
+                if (current_lane->y == game.ai.y) {
+                    ai_lane = current_lane;
+                }
+
                 current_lane = current_lane->next;
             }
 
@@ -421,7 +478,7 @@ int main(void) {
                 
 
                 // Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_lane, game);
+                obstacle* collided_obstacle = collides(player_lane, game.player);
                 if(collided_obstacle != NULL) {
                     switch (player_lane->type) {
                         case GRASS:
@@ -455,18 +512,104 @@ int main(void) {
                 game_state = GAME_OVER;
             }
 
+            if (cai != 0) {
+                time_ai--;
+                if (time_ai == 0) {
+                    game.ai = play_ai(cai, ai_lane, game.ai);
+                    time_ai = AI_SPEED;
+                }
+
+                if (ai_lane != NULL) {
+
+                if (ai_lane->type == WATER) {
+                    drown_flag = true; // set this to false to disable drowning
+                    }
+                else {
+                    drown_flag = false;
+                    }
+                
+                if (ai_lane->type == WATER && ai_lane->speed != 0) {
+                    if (on_log_ai != NULL) {
+                        game.ai.x += ai_lane->speed;
+                    }
+                } else {
+                    on_log_ai = NULL;
+                    game.ai.x = round(game.ai.x);
+                    game.ai.y = round(game.ai.y);
+                }
+                
+
+                // Check for collisions with obstacles
+                obstacle* collided_obstacle = collides(ai_lane, game.ai);
+                if(collided_obstacle != NULL) {
+                    switch (ai_lane->type) {
+                        case GRASS:
+                        game.ai.x = current_x;
+                        game.ai.y = current_y;
+                        break;
+                        case TRACK:
+                        ai_dead = true;
+                        break;
+                        case ROAD:
+                        ai_dead = true;
+                        break;
+                        case WATER:
+                        drown_flag = false;
+                        if (player_lane->speed != 0) {
+                            if (on_log_ai != collided_obstacle) {
+                                on_log_ai = collided_obstacle;
+                                game.ai.x = collided_obstacle->x + abs((int) round(game.ai.x - collided_obstacle->x));
+                            }
+                        }
+                        break;
+                        break;
+                        default:
+                        break;
+                    }
+                }
+
+            }
+            if (game.ai.y < game.cameraY - GAME_HEIGHT || drown_flag || game.ai.x < UNPLAYABLE_WIDTH || game.ai.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+                ai_dead = true;
+            }
+            }
+
+            if (game_state == GAME_OVER && cai == 4) {
+                game_state = GAME;
+            }
+
             if (game_state != GAME_OVER) {
                 display(game);
                 // Display the purse
                 mvprintw(0, LANE_WIDTH-3, "%d$", purse);
                 refresh();
             }
+
+
+
+            if (ai_dead) {
+                game_state = GAME_OVER;
+            }
         
             break;
 
             case GAME_OVER:
-            mvprintw(0, 0, "Final score: %d", (int) game.player.y);
-            mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
+            if (cai == 0) {
+                mvprintw(0, 0, "Final score: %d", (int) game.player.y);
+            } else if (cai == 4) {
+                mvprintw(0, 0, "AI score: %d", (int) game.ai.y);
+            }
+            
+            if (cai == 1 || cai == 2) {
+                mvprintw(1, 0, "AI chosen: %d", (int)cai);
+                if (ai_dead) {
+                    mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "You won!");
+                } else {
+                    mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "You lost!");
+                }
+            } else {
+                mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "GAME OVER ;-;");
+            }
             mvprintw(GAME_HEIGHT/4 + 3, LANE_WIDTH+2, "Press any key to return to menu");
             if (ch != ERR && ch != KEY_UP && ch != KEY_DOWN && ch != KEY_LEFT && ch != KEY_RIGHT) {
                 clear();
@@ -484,7 +627,6 @@ int main(void) {
         }
         nanosleep(&request, &remaining); 
     }
-
     endwin();
     return 0;
 }

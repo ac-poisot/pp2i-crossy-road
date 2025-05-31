@@ -68,7 +68,7 @@ int main(void) {
     unlocked_skins[0] = true;
 
     // Game-specific variables
-    displayedData game = {0, NULL, NULL, {0,0, 0, 0, 0}, 0, 0};
+    displayedData game = {0, NULL, NULL, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0};
 
     bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
     bool blocked_path = false; // whether the path is currently blocked by a tree or not
@@ -417,7 +417,7 @@ int main(void) {
                     }
 
                 //Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_top_lane, game);
+                obstacle* collided_obstacle = collides(player_top_lane, game.player);
 
                 if(collided_obstacle != NULL) {
                     switch (player_top_lane->type) {
@@ -524,7 +524,7 @@ int main(void) {
                     x_offset = 0.0001;
                 }
                 // Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_bottom_lane, game);
+                obstacle* collided_obstacle = collides(player_bottom_lane, game.player);
 
                 if(collided_obstacle != NULL) {
                     switch (player_bottom_lane->type) {

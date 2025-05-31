@@ -78,6 +78,7 @@ typedef struct displayedData {
     lane* first_lane; // pointer to the first lane of the game
     lane* camera_first_lane; // pointer to the first lane displayed on the screen
     player player; // player
+    player ai; // articifial intelligence
     int score; // score
     int gameOver; // 1 if the game is over, 0 otherwise
 } displayedData;
