@@ -163,26 +163,7 @@ int main(void) {
     
             demo = move_camera(demo, GAME_SPEED*5);
     
-            lane* current_lane = demo.camera_first_lane;
-
-            while (current_lane->next != NULL) {
-                switch (current_lane->type) {
-                    case ROAD:
-                    update_vehicles(current_lane);
-                    break;
-                    case WATER:
-                    update_drowning_slots(current_lane);
-                    break;
-                    case TRACK:
-                    update_trains(current_lane);
-                    break;
-                    default:
-                    break;
-                }
-
-                current_lane = current_lane->next;
-            }
-
+            updateLanes(demo.camera_first_lane);
             // Display buttons
 
             button play = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, PLAY_BUTTON};
@@ -376,19 +357,7 @@ int main(void) {
     
                 // Update lanes
     
-                switch (current_lane->type) {//Power 2
-                    case ROAD:
-                    update_vehicles(current_lane);
-                    break;
-                    case WATER:
-                    update_drowning_slots(current_lane);
-                    break;
-                    case TRACK:
-                    update_trains(current_lane);
-                    break;
-                    default:
-                    break;
-                }
+                updateLane(current_lane);
                 // find the one or two lanes the player is colliding with
                 if (current_lane->y == ceil(game.player.y)) {
                     player_top_lane = current_lane;
@@ -760,19 +729,7 @@ int main(void) {
             demo = move_camera(demo, GAME_SPEED*5);
             lane* current_lane = demo.camera_first_lane;
             while (current_lane->next != NULL) {
-                switch (current_lane->type) {
-                    case ROAD:
-                    update_vehicles(current_lane);
-                    break;
-                    case WATER:
-                    update_drowning_slots(current_lane);
-                    break;
-                    case TRACK:
-                    update_trains(current_lane);
-                    break;
-                    default:
-                    break;
-                }
+                updateLane(current_lane);
                 current_lane = current_lane->next;
             }
 
@@ -827,23 +784,7 @@ int main(void) {
             SDL_RenderClear(renderer);
             display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
-            lane* current_lane = demo.camera_first_lane;
-            while (current_lane->next != NULL) {
-                switch (current_lane->type) {
-                    case ROAD:
-                    update_vehicles(current_lane);
-                    break;
-                    case WATER:
-                    update_drowning_slots(current_lane);
-                    break;
-                    case TRACK:
-                    update_trains(current_lane);
-                    break;
-                    default:
-                    break;
-                }
-                current_lane = current_lane->next;
-            }
+            updateLanes(demo.camera_first_lane);
             
             // Display unlocked skin
 

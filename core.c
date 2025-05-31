@@ -960,6 +960,34 @@ void displayLanes(lane* l) {
         l = l->next;
     }
 }
+void updateLanes(lane* l) {
+    while (l->next != NULL) {
+        updateLane(l);
+        l = l->next;
+    }
+}
+
+void updateLane(lane * l) {
+    /* updates the position of the obstacles in the lane */
+    switch (l->type) {
+        case GRASS:
+            update_vehicles(l);
+            break;
+        case WATER:
+            if(l->speed == 0) {
+                update_drowning_slots(l);
+            } else {
+                update_vehicles(l);
+            }
+            break;
+        case TRACK:
+            update_trains(l);
+            break;
+        case ROAD:
+            update_vehicles(l);
+            break;
+    }
+}
 
 lane* fourLastLanes(lane* l) {
     /* gets the four previous lanes */
