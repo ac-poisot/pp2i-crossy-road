@@ -182,17 +182,21 @@ int main(void) {
             }
 
             // AI choice
-            button ai = {(WIDTH+BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
+            button ai = {(WIDTH+BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH*1.5, BUTTON_HEIGHT, CLOUD};
             display_button(ai, renderer, textures);
 
-            char aiText[2];
-            if (ai_choice) {
-                sprintf(aiText, "%d", ai_choice);
-            } else {
-                sprintf(aiText, "X");
+            char* aiText = "No AI";
+            if (ai_choice == 1) {
+                aiText = "VS. AI 1";
+            } else if (ai_choice == 2) {
+                aiText = "VS. AI 2";
+            } else if (ai_choice == 3) {
+                aiText = "AI1 only";
+            } else if (ai_choice == 4) {
+                aiText = "AI2 only";
             }
 
-            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 24, (HEIGHT-BUTTON_HEIGHT)/2 - 20, BUTTON_HEIGHT*0.9, renderer, black, "Symtext.ttf");
+            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 5, (HEIGHT-BUTTON_HEIGHT)/2 + 20, 46, renderer, black, "Symtext.ttf");
             
             // Sprite set choice
             button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
