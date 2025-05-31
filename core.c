@@ -1100,6 +1100,7 @@ displayedData power4 (displayedData data) {
 }
 
 displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane) {
+        if (current_lane->type != WATER){
     if (collided_obstacle->prev!=NULL && collided_obstacle->next!=NULL)
     {
         collided_obstacle->prev->next = collided_obstacle->next;
@@ -1113,26 +1114,25 @@ displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* c
         free(collided_obstacle);
     }
     else {
-    if (collided_obstacle->prev==NULL && collided_obstacle==NULL)
+    if (collided_obstacle->prev==NULL && collided_obstacle->next==NULL)
     {
         current_lane->obstacles = NULL;
     }
     else{
-    if (collided_obstacle->prev==NULL && collided_obstacle!=NULL) 
+    if (collided_obstacle->prev==NULL && collided_obstacle->next!=NULL) 
     {
         current_lane->obstacles = collided_obstacle->next;
+        collided_obstacle->next->prev = NULL;
         free(collided_obstacle);    
-    }}}}
+    }}}}}
     return data;
 }
-displayedData tank_train (displayedData data){
-    lane* current_lane = data.camera_first_lane;
-    while ((int) current_lane->y != (int) data.player.y) {
-        current_lane = current_lane->next;
-    }
+displayedData tank_train (displayedData data, lane* current_lane){
+    if (current_lane->type != WATER){
     obstacle* train = current_lane->obstacles;
     current_lane->obstacles = NULL;
     free_obstacles(train);
+    }
     return data;
 }
 

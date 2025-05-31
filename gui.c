@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "core.h"
 
 void reset_savefile(void) {
     FILE *save_data = fopen("save/data.txt", "w");
@@ -427,7 +428,8 @@ int main(void) {
                             }
                         }
                         else {
-                            // Faire une fonction pour couper les arbres / Train / Voiture
+                            game = tank_road(game,  collided_obstacle,player_top_lane);
+                            collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
                         }
                         break;
                         case TRACK:
@@ -435,7 +437,7 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            game = tank_train(game);
+                            game = tank_train(game,current_lane);
                             collided_obstacle = NULL;
                         }
                         break;
@@ -533,7 +535,8 @@ int main(void) {
                             }
                         }
                         else {
-                            // Faire une fonction pour couper les arbres / Train / Voiture
+                            game = tank_road(game,collided_obstacle,player_bottom_lane);
+                            collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
                         }
                         break;
                         case TRACK:
@@ -541,7 +544,7 @@ int main(void) {
                             game_state = GAME_OVER;
                         }
                         else {
-                            game = tank_train(game);
+                            game = tank_train(game, current_lane);
                             collided_obstacle = NULL;
                         }
                         break;
