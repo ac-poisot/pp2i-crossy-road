@@ -38,6 +38,8 @@ enum {
     WARNING,
     COIN,
     CLOUD,
+    SOUND_OFF,
+    SOUND_ON,
     PLAY_BUTTON,
     SKINS_BUTTON,
     MENU_BUTTON,

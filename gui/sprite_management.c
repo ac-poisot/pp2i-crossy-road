@@ -81,6 +81,12 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_n
     snprintf(path, sizeof(path), "%scoin.png", prefix);
     textures[COIN] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
 
+    snprintf(path, sizeof(path), "%ssound_off.png", prefix);
+    textures[SOUND_OFF] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
+    snprintf(path, sizeof(path), "%ssound_on.png", prefix);
+    textures[SOUND_ON] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
     for (int i=1; i<POWERS_END; i++) {
         snprintf(path, sizeof(path), "%spowers/power%d.png", prefix, i);
         textures[POWER_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);

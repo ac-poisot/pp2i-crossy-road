@@ -8,6 +8,7 @@
 #include "core.h"
 #include "gui/display.h"
 #include "gui/sprite_management.h"
+#include "gui/sound_management.h"
 #include "gui/button.h"
 
 #define AI_AMOUNT 6 // temp until ai branch merge
@@ -36,7 +37,7 @@ enum {
 #define PRICE 5
 
 #define FADE_LENGTH 50 // in frames, duration of the transitions
-#define GAMBLING_DURATION 50 // in frames, duration of the gambling animation
+#define GAMBLING_DURATION 120 // in frames, duration of the gambling animation
 
 #define REFRESH_RATE 60
 
