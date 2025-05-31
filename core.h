@@ -92,7 +92,7 @@ void display_obstacles(obstacle* l);
 void displayLanes(lane* l);
 void displayLanesToFile(lane* l, FILE* file);
 void display_obstaclesToFile(obstacle* o, FILE* file);
-obstacle* collides(lane *current_lane, displayedData game);
+obstacle* collides(lane *current_lane, player player);
 float_list* collides_coin(lane *current_lane, displayedData game);
 displayedData move_camera(displayedData data, float speed);
 displayedData init_game(int game_height);

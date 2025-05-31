@@ -745,11 +745,11 @@ void generateNNewLanes(lane* l, int n) {
     }
 }
 
-obstacle* collides(lane *current_lane, displayedData game) {
+obstacle* collides(lane *current_lane, player player) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
     while (current_obstacle != NULL) {
-        if (game.player.x+1 > current_obstacle->x && game.player.x < current_obstacle->x + (current_obstacle->size)) {
+        if (player.x+1 > current_obstacle->x && player.x < current_obstacle->x + (current_obstacle->size)) {
             return current_obstacle;
         }
         current_obstacle = current_obstacle->next;
