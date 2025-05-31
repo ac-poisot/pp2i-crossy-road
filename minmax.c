@@ -223,7 +223,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
                     }
                 break;
                 case GO_LEFT:
-                    if (p.x > 0) {
+                    if (p.x >= UNPLAYABLE_WIDTH) {
                         copy_p.x = p.x - 1;
                         copy_p.y = p.y;
                         current_lane = copy_current;
@@ -232,7 +232,7 @@ couple minmax_rec(lane* l, int deep, couple previous, player p) {
                     }
                     break;
                 case GO_RIGHT:
-                    if (copy_p.x < LANE_WIDTH -1 ) {
+                    if (copy_p.x < LANE_WIDTH -1 - UNPLAYABLE_WIDTH ) {
                         copy_p.x = p.x + 1;
                         copy_p.y = p.y;
                         current_lane = copy_current;
@@ -409,7 +409,7 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
                     }
                 break;
                 case GO_LEFT:
-                    if (p.x > 0) {
+                    if (p.x >= UNPLAYABLE_WIDTH) {
                         copy_p.x = p.x - 1;
                         copy_p.y = p.y;
                         current_lane = copy_current;
@@ -418,7 +418,7 @@ couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane*
                     }
                     break;
                 case GO_RIGHT:
-                    if (copy_p.x < LANE_WIDTH -1 ) {
+                    if (copy_p.x < LANE_WIDTH -1 - UNPLAYABLE_WIDTH ) {
                         copy_p.x = p.x + 1;
                         copy_p.y = p.y;
                         current_lane = copy_current;
