@@ -970,7 +970,6 @@ void updateLanes(lane* l) {
 void updateLane(lane * l) {
     /* updates the position of the obstacles in the lane */
     switch (l->type) {
-        
         case GRASS:
             update_vehicles(l);
             break;

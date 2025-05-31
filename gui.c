@@ -356,8 +356,9 @@ int main(void) {
             while (current_lane->next != NULL) {
     
                 // Update lanes
-    
-                updateLane(current_lane);
+                if (!(game.player.power == NEO && power_time%2 == 0)) {
+                    updateLane(current_lane);
+                }
                 // find the one or two lanes the player is colliding with
                 if (current_lane->y == ceil(game.player.y)) {
                     player_top_lane = current_lane;
@@ -596,8 +597,9 @@ int main(void) {
             } 
 
             // Update player
-
-            game.player.x += liftboost; // apply liftboost
+            if (!(game.player.power == NEO && power_time%2 == 0)) {
+                game.player.x += liftboost; // apply liftboost
+            }
 
             // a new action needs to be performed!
             if (!player_anim && buffer && buffer_key_flag && !blocked_path && !drown_flag) {
@@ -727,11 +729,7 @@ int main(void) {
             SDL_RenderClear(renderer);
             display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
-            lane* current_lane = demo.camera_first_lane;
-            while (current_lane->next != NULL) {
-                updateLane(current_lane);
-                current_lane = current_lane->next;
-            }
+            updateLanes(demo.camera_first_lane);
 
             button menu_button = {0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
             display_button(menu_button, renderer, textures);
