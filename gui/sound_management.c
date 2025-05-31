@@ -15,8 +15,8 @@ void load_sounds(Mix_Chunk** sounds, Mix_Music** music) {
     sounds[SOUND_NEW_SKIN] = Mix_LoadWAV("sound/sfx/new_skin.wav");
 
 
-    music[MUSIC_MENU] = Mix_LoadMUS("sound/music/menu.wav");
-    music[MUSIC_MAIN] = Mix_LoadMUS("sound/music/main.wav");
+    music[MUSIC_MENU] = Mix_LoadMUS("sound/music/menu.mp3");
+    music[MUSIC_MAIN] = Mix_LoadMUS("sound/music/main.mp3");
 
     if (!sounds[SOUND_COIN] || !sounds[SOUND_DEATH] || !sounds[SOUND_GAMBLING] || !sounds[SOUND_NEW_SKIN]) {
         fprintf(stderr, "Failed to load sound effects: %s\n", Mix_GetError());

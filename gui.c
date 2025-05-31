@@ -224,6 +224,13 @@ int main(void) {
             display_button(reset, renderer, textures);
             display_text("RESET", WIDTH-BUTTON_WIDTH+28, BUTTON_HEIGHT+20, 40, renderer, black, "Symtext.ttf");
 
+            // Sound volume
+            button sound_button = {WIDTH-BUTTON_HEIGHT*1.5, HEIGHT-BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, SOUND_ON};
+            if (Mix_VolumeMusic(-1) == 0) {
+                sound_button.texture = SOUND_OFF;
+            }
+            display_button(sound_button, renderer, textures);
+
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -257,6 +264,15 @@ int main(void) {
                         free_skin_names(skin_names);
                         load_textures(renderer, textures, skin_names, sprite_set);
                     }
+                    else if (button_clicked(sound_button, event)) {
+                        if (Mix_VolumeMusic(-1) == 0) {
+                            Mix_Volume(1, MIX_MAX_VOLUME/2);
+                            Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+                        } else {
+                            Mix_Volume(1, 0);
+                            Mix_VolumeMusic(0);
+                        }
+                    }
                     break;
                 case SDL_KEYUP:
                     if (event.key.keysym.sym == SDLK_RETURN) {
@@ -275,7 +291,7 @@ int main(void) {
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.1))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
 
             break;
         }
@@ -391,7 +407,7 @@ int main(void) {
                 float_list* collided_coin =  collides_coin(player_top_lane, game);
                 if (collided_coin != NULL) {
                     if(collided_coin->power == 0){
-                        Mix_PlayChannel(-1, sounds[SOUND_COIN], 0);
+                        Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
                         if (game.player.power == CRESUS) {
                             purse += CRESUS_MODIF;
                         }
@@ -506,7 +522,7 @@ int main(void) {
                 float_list* collided_coin =  collides_coin(player_bottom_lane, game);
                 if (collided_coin != NULL) {
                     if(collided_coin->power == 0){
-                        Mix_PlayChannel(-1, sounds[SOUND_COIN], 0);
+                        Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
                         if (game.player.power == CRESUS) {
                             purse += CRESUS_MODIF;
                         }
@@ -692,7 +708,7 @@ int main(void) {
             Mix_HaltMusic();
             if (!sound_played) {
                 sound_played = true;
-                Mix_PlayChannel(-1, sounds[SOUND_DEATH], 0);
+                Mix_PlayChannel(1, sounds[SOUND_DEATH], 0);
             }
 
             button menu_button = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
@@ -842,7 +858,7 @@ int main(void) {
                 fade = GAMBLING_DURATION;
                 game_state = GAMBLED;
                 if (!unlocked_skins[skin_to_unlock]) {
-                    Mix_PlayChannel(-1, sounds[SOUND_NEW_SKIN], 0);
+                    Mix_PlayChannel(1, sounds[SOUND_NEW_SKIN], 0);
                     char* skin_name = skin_names[skin_to_unlock];
                     display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf");
                     display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf");
