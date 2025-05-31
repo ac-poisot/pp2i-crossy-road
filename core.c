@@ -535,6 +535,7 @@ obstacle* generate_waterlilies(lane* l) {
             max_regenerate++;
             if(max_regenerate == 10 && l->prev->prev != NULL && l->prev->prev->type == WATER && l->prev->prev->speed == 0) {
                 l->prev->prev->obstacles = generate_waterlilies(l->prev->prev);
+                free_coins(l->prev->prev->coins);
                 l->prev->prev->coins = NULL;
                 l->prev->speed *= -1;
                 max_regenerate = 0;
