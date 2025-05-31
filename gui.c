@@ -1,5 +1,4 @@
 #include "gui.h"
-#include "core.h"
 
 void reset_savefile(void) {
     FILE *save_data = fopen("save/data.txt", "w");
@@ -38,12 +37,15 @@ int main(void) {
        printf("%s", Mix_GetError());
     }
     Mix_AllocateChannels(10);
-    Mix_Chunk *sfx_jump = Mix_LoadWAV("sound/sfx/jump.wav");
-    Mix_VolumeChunk(sfx_jump, MIX_MAX_VOLUME);
 
+    Mix_Chunk *sounds[SOUND_COUNT];
+    Mix_Music *music[MUSIC_COUNT];
+    load_sounds(sounds, music);
 
     Mix_Volume(1, MIX_MAX_VOLUME/2);
-    //Mix_Chunk *sound;
+    Mix_VolumeMusic(MIX_MAX_VOLUME/2);
+
+    bool sound_played = false;
 
     SDL_Window *window = SDL_CreateWindow("Crossy Road", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -152,6 +154,9 @@ int main(void) {
 
         switch(game_state) {
         case MENU: {
+            if (!Mix_PlayingMusic()) {
+                Mix_PlayMusic(music[MUSIC_MENU], -1);
+            }
             // Demo background
             SDL_RenderClear(renderer);
             display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
@@ -229,6 +234,8 @@ int main(void) {
                         game_state = SKIN_SELECT;
                     }
                     else if (button_clicked(gamble, event) && purse >= PRICE) {
+                        Mix_HaltMusic();
+                        Mix_PlayChannel(1, sounds[SOUND_GAMBLING], 0);
                         purse -= PRICE;
                         fade = GAMBLING_DURATION;
                         game_state = GAMBLING;
@@ -276,6 +283,7 @@ int main(void) {
         case MENU_TO_GAME: {
             
             if (fade) {
+                Mix_FadeOutMusic(FADE_LENGTH*1000/REFRESH_RATE);
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
                 if (fade >= FADE_LENGTH/2) {
@@ -308,6 +316,9 @@ int main(void) {
         }
 
         case GAME:
+            if (!Mix_PlayingMusic()) {
+                Mix_PlayMusic(music[MUSIC_MAIN], -1);
+            }
             if (action) {
                 switch (event.type) {
                 case SDL_KEYDOWN:
@@ -380,6 +391,7 @@ int main(void) {
                 float_list* collided_coin =  collides_coin(player_top_lane, game);
                 if (collided_coin != NULL) {
                     if(collided_coin->power == 0){
+                        Mix_PlayChannel(-1, sounds[SOUND_COIN], 0);
                         if (game.player.power == CRESUS) {
                             purse += CRESUS_MODIF;
                         }
@@ -494,6 +506,7 @@ int main(void) {
                 float_list* collided_coin =  collides_coin(player_bottom_lane, game);
                 if (collided_coin != NULL) {
                     if(collided_coin->power == 0){
+                        Mix_PlayChannel(-1, sounds[SOUND_COIN], 0);
                         if (game.player.power == CRESUS) {
                             purse += CRESUS_MODIF;
                         }
@@ -603,7 +616,6 @@ int main(void) {
 
             // a new action needs to be performed!
             if (!player_anim && buffer && buffer_key_flag && !blocked_path && !drown_flag) {
-                Mix_PlayChannel(1, sfx_jump, 0);
                 game.player.orientation = buffer;
                 player_anim = ANIM_LENGTH;// FOR TANK, should be  double
                 buffer_key_flag = false;
@@ -677,6 +689,12 @@ int main(void) {
             }
             break;
         case GAME_OVER: {
+            Mix_HaltMusic();
+            if (!sound_played) {
+                sound_played = true;
+                Mix_PlayChannel(-1, sounds[SOUND_DEATH], 0);
+            }
+
             button menu_button = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
             display_button(menu_button, renderer, textures);
 
@@ -716,6 +734,7 @@ int main(void) {
                 update_savefile(high_score, purse, unlocked_skins);
                 game_state = MENU;
                 fade = FADE_LENGTH;
+                sound_played = false;
             }
             break;
         }
@@ -823,6 +842,7 @@ int main(void) {
                 fade = GAMBLING_DURATION;
                 game_state = GAMBLED;
                 if (!unlocked_skins[skin_to_unlock]) {
+                    Mix_PlayChannel(-1, sounds[SOUND_NEW_SKIN], 0);
                     char* skin_name = skin_names[skin_to_unlock];
                     display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf");
                     display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf");
@@ -878,8 +898,8 @@ int main(void) {
     SDL_DestroyWindow(window);
     free(didier);
 
-    Mix_FreeChunk(sfx_jump);
-    Mix_CloseAudio();
+    free_sounds(sounds, music);
+
     IMG_Quit();
     Mix_Quit();
     TTF_Quit();
