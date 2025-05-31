@@ -127,13 +127,18 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
     }
 }
 
-void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures) {
-    SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set) {
     SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-    SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
+    if (skin_set == 0) {
+        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+        SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
+    } else {
+        SDL_Rect spriteRect = {TILE_SIDE*(((player.orientation+180)/90)%4), 0, TILE_SIDE, TILE_SIDE};
+        SDL_RenderCopy(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect);
+    }
 }
 
-void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures) {
+void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
     
@@ -145,7 +150,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures)
     }
 
     if (data.player.skin != -1) {
-        displayPlayer(data.player, data.cameraY, renderer, textures);
+        displayPlayer(data.player, data.cameraY, renderer, textures, skin_set);
 
         // Display score
         char scoreText[20];

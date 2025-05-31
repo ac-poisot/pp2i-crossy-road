@@ -154,7 +154,7 @@ int main(void) {
         case MENU: {
             // Demo background
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures);
+            display(demo, renderer, textures, sprite_set);
     
             demo = move_camera(demo, GAME_SPEED*5);
     
@@ -211,7 +211,7 @@ int main(void) {
             button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
             display_button(sprite_set_button, renderer, textures);
 
-            SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
+            SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
             SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
             SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
 
@@ -295,7 +295,7 @@ int main(void) {
                         power_time = 0;
                     }
                 } else {
-                    display(game, renderer, textures);
+                    display(game, renderer, textures, sprite_set);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -333,7 +333,7 @@ int main(void) {
             }
     
     
-            display(game, renderer, textures);
+            display(game, renderer, textures, sprite_set);
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
@@ -704,7 +704,7 @@ int main(void) {
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 } else {
-                    display(demo, renderer, textures);
+                    display(demo, renderer, textures, sprite_set);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -721,7 +721,7 @@ int main(void) {
         }
         case SKIN_SELECT: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures);
+            display(demo, renderer, textures, sprite_set);
             demo = move_camera(demo, GAME_SPEED*5);
             lane* current_lane = demo.camera_first_lane;
             while (current_lane->next != NULL) {
@@ -755,7 +755,7 @@ int main(void) {
                 }
 
                 display_button(skin_buttons[i], renderer, textures);
-                SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
+                SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
                 SDL_Rect destRect = {skin_buttons[i].x, skin_buttons[i].y, SKIN_SIDE, SKIN_SIDE};
                 SDL_RenderCopy(renderer, textures[SKIN_START+i], &spriteRect, &destRect);
 
@@ -790,7 +790,7 @@ int main(void) {
         }
         case GAMBLING: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures);
+            display(demo, renderer, textures, sprite_set);
             demo = move_camera(demo, GAME_SPEED*5);
             lane* current_lane = demo.camera_first_lane;
             while (current_lane->next != NULL) {
