@@ -29,6 +29,7 @@ enum {
     CAR1,
     CAR2,
     LILY,
+    DUCK,
     LOG_SINGLE,
     LOG_MID,
     LOG_EDGE,

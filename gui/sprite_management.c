@@ -54,6 +54,9 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_n
     snprintf(path, sizeof(path), "%slily.png", prefix);
     textures[LILY] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
 
+    snprintf(path, sizeof(path), "%sduck.png", prefix);
+    textures[DUCK] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
     snprintf(path, sizeof(path), "%slog_single.png", prefix);
     textures[LOG_SINGLE] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
 

@@ -42,7 +42,11 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
     for (int i = 0; i < LANE_WIDTH; i++) {
         SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
         SDL_Rect destRect = {i*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-        SDL_RenderCopy(renderer, textures[lane->type], &spriteRect, &destRect);
+        if (lane->type == WATER && (i*4+lane->y)%10 == 0) {
+            SDL_RenderCopy(renderer, textures[DUCK], &spriteRect, &destRect);
+        } else {
+            SDL_RenderCopy(renderer, textures[lane->type], &spriteRect, &destRect);
+        }
     }
 
     // Display coins

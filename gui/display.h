@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "../core.h"
 #include "sprite_management.h"
+#include <stdio.h>
 
 void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color, char* font);
 void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SDL_Texture** textures);
