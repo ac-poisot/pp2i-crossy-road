@@ -291,7 +291,7 @@ int main(void) {
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.1))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
 
             break;
         }
@@ -364,7 +364,7 @@ int main(void) {
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
     
             game = move_camera(game, GAME_SPEED);
     

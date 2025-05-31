@@ -87,13 +87,13 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
                 }   
                 break;
             case TRACK:
-                SDL_RenderCopyEx(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect, 0.0, NULL, flip);
-                for (int i=1; i<(current_obstacle->size); i++) {
+                SDL_RenderCopyEx(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect, 0.0, NULL, SDL_FLIP_HORIZONTAL);
+                for (int i=1; i<(current_obstacle->size-1); i++) {
                     SDL_Rect destRect2 = {(current_obstacle->x+i)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
                     SDL_RenderCopy(renderer, textures[TRAIN_MID], &spriteRect, &destRect2);
                 }
                 SDL_Rect destRect3 = {(current_obstacle->x+current_obstacle->size-1)*TILE_SIDE, screen_y*TILE_SIDE, TILE_SIDE, TILE_SIDE};
-                SDL_RenderCopy(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect3);
+                SDL_RenderCopyEx(renderer, textures[TRAIN_EDGE], &spriteRect, &destRect3, 0.0, NULL, 0);
 
                 if (!flip) {
                     if (current_obstacle->x + current_obstacle->size > -WARNING_TIME*TRAIN_SPEED && current_obstacle->x + current_obstacle->size < 0) {
@@ -132,11 +132,13 @@ void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Text
 }
 
 void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set) {
-    SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
+    
     if (skin_set == 0) {
+        SDL_Rect destRect = {player.x*TILE_SIDE, (cameraY- player.y)*TILE_SIDE, TILE_SIDE, TILE_SIDE};
         SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
         SDL_RenderCopyEx(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect, player.orientation, NULL, false);
     } else {
+        SDL_Rect destRect = {player.x*TILE_SIDE-TILE_SIDE*0.2, (cameraY- player.y)*TILE_SIDE-TILE_SIDE*0.5, TILE_SIDE*1.5, TILE_SIDE*1.5};
         SDL_Rect spriteRect = {SKIN_SIDE*(((player.orientation+180)/90)%4), 0, SKIN_SIDE, SKIN_SIDE};
         SDL_RenderCopy(renderer, textures[player.skin+SKIN_START], &spriteRect, &destRect);
     }

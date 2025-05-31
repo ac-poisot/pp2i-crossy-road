@@ -15,8 +15,8 @@
 #define ROAD      4
 
 #define WARNING_TIME 60 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
-#define TRAIN_LENGTH LANE_WIDTH*3 // in tiles, length of a train
-#define TRAIN_SPEED 1 // in tiles per frame, speed of a rightwards train
+#define TRAIN_LENGTH (LANE_WIDTH*3) // in tiles, length of a train
+#define TRAIN_SPEED 0.7 // in tiles per frame, speed of a rightwards train
 #define TRAIN_SPACING_MIN 100 // in tiles, minimum of space between two trains
 #define TRAIN_SPACING_MAX 300 // in tiles, maximum of space between two trains
 
