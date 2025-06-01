@@ -43,4 +43,7 @@ enum {
 
 #define REFRESH_RATE 60
 
+void reset_savefile(void);
+void update_savefile(int high_score, int purse, bool* unlocked_skins);
+int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai);
 int main(void);

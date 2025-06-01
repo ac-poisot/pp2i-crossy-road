@@ -1,33 +1,4 @@
-#include <ncurses.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdbool.h>
-#include <math.h>
-
-#include "core.h"
-#include "minmax.h"
-
-#define GAME_HEIGHT 20 // in tiles, height of the displayed area
-#define REFRESH_RATE 60 // in frames per second, refresh rate of the game
-#define GAME_SPEED 60 // in frames, time between each move of the camera
-
-#define AI_SPEED 20
-// Game states
-#define MENU 0
-#define GAME 1
-#define GAME_OVER 2
-#define SHOP 3
-#define AI 4
-
-// Shop colors
-#define PLAYER_COLORS 4
-#define UNLOCKABLE_COLORS (int[PLAYER_COLORS]){COLOR_RED, COLOR_CYAN, COLOR_MAGENTA, COLOR_YELLOW}
-#define PRICE 5
-
-// Color pairs
-#define RED_TEXT ((LANE_TYPES+2)*10)
-#define COLOR_PAIR_LILY (WATER*10 + 9)
+#include "cli.h"
 
 void init_colors() {
     if (has_colors() == FALSE) {

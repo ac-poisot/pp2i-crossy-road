@@ -1,6 +1,11 @@
 #pragma once
-#include <stdbool.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <math.h>
+#include "minmax.h"
 
 #define LANE_WIDTH 24 // width of the displayed area
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
