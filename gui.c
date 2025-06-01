@@ -19,6 +19,342 @@ void update_savefile(int high_score, int purse, bool* unlocked_skins) {
     fclose(save_data);
 }
 
+int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag, bool is_ai) {
+    bool drown_flag = false; // whether the player is drowning
+    bool blocked_path = false;
+
+    lane* current_lane = game->camera_first_lane;
+    lane* player_top_lane = NULL; // lane on or above the player
+    lane* player_bottom_lane = NULL; // lane below the player
+
+
+    while (current_lane->next != NULL) {
+        // find the one or two lanes the player is colliding with
+        if (current_lane->y == ceil(current_p->y)) {
+            player_top_lane = current_lane;
+        } else if (current_lane->y == floor(current_p->y)) {
+            player_bottom_lane = current_lane;
+        }
+        current_lane = current_lane->next;
+    }
+
+    // Collision check
+    
+
+    if (player_top_lane != NULL) {
+
+        // Check for collisions with coins
+        float_list* collided_coin =  collides_coin(player_top_lane, *game);
+        if (collided_coin != NULL) {
+            if(collided_coin->power == 0 && !is_ai){
+                Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
+                if (current_p->power == CRESUS) {
+                    *purse += CRESUS_MODIF;
+                }
+                else {
+                    (*purse)++;
+                }
+            }
+            else {
+                if(collided_coin->power == ECOLO){
+                    current_p->power_time =1;
+                    *game = power4(*game);
+                    current_p->on_log = NULL;
+                    current_p->liftboost = 0;
+                }
+                else {  
+                    current_p->power = collided_coin->power;
+                    current_p->power_time = TIME_POWER*REFRESH_RATE;
+                }
+            }
+            
+        }
+
+        if (player_top_lane->type == WATER && current_p->power != XIV) {
+            drown_flag = true; // only matters for the top lane, which is the lane the player is on or is going to
+            }
+        else {
+            drown_flag = false;
+            }
+
+        if (current_p->x_offset == 0 && current_p->on_log == NULL && player_top_lane->type == WATER && player_top_lane->speed != 0 && current_p->power == XIV) {
+                current_p->liftboost = player_top_lane->speed;
+                current_p->on_log = didier;
+                current_p->x_offset = 0.0001;
+            }
+
+        //Check for collisions with obstacles
+        obstacle* collided_obstacle = collides(player_top_lane, *current_p);
+
+        if(collided_obstacle != NULL) {
+            switch (player_top_lane->type) {
+                case GRASS:
+                if (current_p->power != TANK){
+                    if (current_p->x_offset == 0) {
+                        blocked_path = true;
+                    }
+                }
+                else {
+                    *game = tank_road(*game,  collided_obstacle,player_top_lane);
+                    collided_obstacle = NULL;
+                }
+                break;
+                case TRACK:
+                if (current_p->power != TANK){
+                    return 1;
+                }
+                else {
+                    *game = tank_train(*game);
+                    collided_obstacle = NULL;
+                }
+                break;
+                case ROAD:
+                if (current_p->power != TANK){
+                    return 1;
+                }
+                else {
+                    *game = tank_road(*game,  collided_obstacle,player_top_lane);
+                    collided_obstacle = NULL;
+                }
+                break;
+                case WATER:
+                drown_flag = false; // an obstacle has been found, player now should not drown
+                if (player_top_lane->speed != 0 && current_p->power != XIV) { // if logs are on the lane
+
+                    // case where we are going up to different log than before or from ground
+                    if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == UP) {
+                        int pos_on_log = (int) round(current_p->x - collided_obstacle->x); // in tiles, position of the player relative to the log
+                        current_p->on_log = collided_obstacle;
+                        current_p->liftboost = player_top_lane->speed;
+                        current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
+
+                        // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
+                        if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
+                            current_p->on_log = collided_obstacle->next;
+                            
+                            current_p->x_offset = (collided_obstacle->next->x - current_p->x)/(ANIM_LENGTH);
+                            
+                        }
+                    }
+                }
+                break;
+                default:
+                break;
+            }
+        }
+
+        // leaving a log
+        if (current_p->on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && current_p->orientation == UP) {
+            
+            if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
+                blocked_path = true;
+            } else {
+                current_p->liftboost = 0;
+                current_p->x_offset = (round(current_p->x) - current_p->x)/ANIM_LENGTH;
+                current_p->on_log = NULL;
+            }
+        }
+    }
+
+    if (player_bottom_lane != NULL) {
+        // Check for collisions with coins
+        float_list* collided_coin =  collides_coin(player_bottom_lane, *game);
+        if (collided_coin != NULL) {
+            if(collided_coin->power == 0){
+                Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
+                if (current_p->power == CRESUS) {
+                    *purse += CRESUS_MODIF;
+                }
+                else {
+                    (*purse)++;
+                }
+            }
+            else {
+                if(collided_coin->power == ECOLO){
+                    current_p->power_time =1;
+                    *game = power4(*game);
+                    current_p->on_log = NULL;
+                    current_p->liftboost = 0;
+                }
+                else {
+                    current_p->power = collided_coin->power;
+                    current_p->power_time = TIME_POWER*REFRESH_RATE;
+                }
+            }
+            
+        }
+
+        if (current_p->x_offset == 0 && current_p->on_log == NULL && player_bottom_lane->type == WATER && player_bottom_lane->speed != 0 && current_p->power == XIV) {
+            current_p->liftboost = player_bottom_lane->speed;
+            current_p->on_log = didier;
+            current_p->x_offset = 0.0001;
+        }
+        // Check for collisions with obstacles
+        obstacle* collided_obstacle = collides(player_bottom_lane, *current_p);
+
+        if(collided_obstacle != NULL) {
+            switch (player_bottom_lane->type) {
+                case GRASS:
+                if (current_p->power != TANK){
+                    if (current_p->x_offset == 0) {
+                        blocked_path = true;
+                    }
+                }
+                else {
+                    *game = tank_road(*game,collided_obstacle,player_bottom_lane);
+                    collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
+                }
+                break;
+                case TRACK:
+                if (current_p->power != TANK){
+                    return 1;
+                }
+                else {
+                    *game = tank_train(*game);
+                    collided_obstacle = NULL;
+                }
+                break;
+                case ROAD:
+                if (current_p->power != TANK){
+                    return 1;
+                }
+                else {
+                    *game = tank_road(*game,collided_obstacle,player_bottom_lane);
+                    collided_obstacle = NULL;
+                }
+                break;
+                case WATER:
+                if (player_bottom_lane->speed != 0 && current_p->power != XIV) {
+
+                    // case where we are going down to different log than before or from ground
+                    if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == DOWN) {
+                        int pos_on_log = (int) round(current_p->x - collided_obstacle->x);
+                        current_p->on_log = collided_obstacle;
+                        current_p->liftboost = player_bottom_lane->speed;
+                        current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
+
+                        // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
+                        if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
+                            current_p->on_log = collided_obstacle->next;
+                            current_p->x_offset = (collided_obstacle->next->x - current_p->x)/(ANIM_LENGTH);
+                        }
+                    }
+                }
+                break;
+                default:
+                break;
+            }
+        }
+
+        if (current_p->on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && current_p->orientation == DOWN) {                
+            
+            if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
+                blocked_path = true;
+            } else {
+                current_p->liftboost = 0;
+                current_p->x_offset = (round(current_p->x) - current_p->x)/ANIM_LENGTH;
+                current_p->on_log = NULL;
+            }
+        }
+    
+
+    }
+
+    // screen edges
+    if (current_p->x < UNPLAYABLE_WIDTH || current_p->x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+        blocked_path = true;
+    } 
+
+    // Update player
+    if (!(current_p->power == NEO && current_p->power_time%2 == 0)) {
+        current_p->x += current_p->liftboost; // apply liftboost
+    }
+
+    // a new action needs to be performed!
+    if (!current_p->anim && current_p->buffer && *buffer_key_flag && !blocked_path && !drown_flag) {
+        current_p->orientation = current_p->buffer;
+        current_p->anim = ANIM_LENGTH;// FOR TANK, should be  double
+        *buffer_key_flag = false;
+        current_p->buffer = 0;
+    }
+
+    // player is currently moving, update everything accordingly
+    if (current_p->anim) {
+        if (blocked_path) {
+            current_p->anim = 0;
+        } else {
+            switch (current_p->orientation) {
+                case UP:
+                    current_p->y += PLAYER_SPEED;
+                    break;
+                case DOWN:
+                    current_p->y -= PLAYER_SPEED;
+                    break;
+                case RIGHT:
+                    current_p->x += PLAYER_SPEED;
+                    break;
+                case LEFT:
+                    current_p->x -= PLAYER_SPEED;
+                    break;
+            }
+            current_p->x += current_p->x_offset;
+            current_p->anim--;
+        }
+
+        // if action is ending, recenter the player and reset variables
+        if (!current_p->anim) {
+            current_p->y = round(current_p->y); // Recenter player position to avoid float drifting
+            *buffer_key_flag = true;
+            current_p->x_offset = 0;
+
+            if (current_p->on_log == NULL) {
+                current_p->x = round(current_p->x);  // Recenter player position to avoid float drifting
+            }
+        }
+
+    }
+
+    if (game->cameraY - current_p->y < (GAME_HEIGHT/4)) {
+        *game = move_camera(*game, PLAYER_SPEED); // move the camera if the player is too high
+    }
+
+    if (current_p->power_time>0){
+        current_p->power_time--;
+    }//Decrease time remaining for the power;
+    if (current_p->power_time<=0) {
+        current_p->power = 0;
+    }
+
+
+    // checking for game over
+
+    if (current_p->y < game->cameraY - GAME_HEIGHT || // player is too low
+        (drown_flag && !current_p->anim) || // player is drowning
+        (current_p->x < UNPLAYABLE_WIDTH && current_p->on_log != NULL) || // player is being carried offscreen
+        (current_p->x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && current_p->on_log != NULL)) // player is being carreid offscreen
+    {
+        return 1;
+    }
+
+    if (!current_p->anim && current_p->on_log != NULL && current_p->power != XIV) {
+        if (current_p->x > current_p->on_log->x + current_p->on_log->size - 0.1) { // check if player is too far right on the log it's currently on
+            if (current_p->on_log->next != NULL && floor(current_p->on_log->x + current_p->on_log->size) == floor(current_p->on_log->next->x)) { // check if player can move right to a different adjacent log
+                current_p->on_log = current_p->on_log->next;
+            } else {
+                return 1; // if not, game over
+            }
+        }
+        else if (current_p->x+0.1 < current_p->on_log->x) { // check if player is too far left on the log it's currently on
+            if (current_p->on_log->prev != NULL && floor(current_p->on_log->prev->x + current_p->on_log->prev->size) == floor(current_p->on_log->x)) { // check if player can move left to a different adjacent log
+                current_p->on_log = current_p->on_log->prev;
+            } else {
+                return 1; // if not, game over
+            }
+        }
+    }
+    return 0;
+}
+
 
 int main(void) {
     obstacle* didier = malloc(sizeof(obstacle));
@@ -54,6 +390,7 @@ int main(void) {
     SDL_Event event;
     int running = 1;
     bool action = false;
+    lane* ai_lane = NULL;
 
     SDL_Color white = {255, 255, 255, 255};
     SDL_Color black = {0, 0, 0, 255};
@@ -68,17 +405,10 @@ int main(void) {
     unlocked_skins[0] = true;
 
     // Game-specific variables
-    displayedData game = {0, NULL, NULL, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, 0, 0};
+    displayedData game;
 
-    bool drown_flag = false; // keeps track of whether the player is fully in empty waters or not
-    bool blocked_path = false; // whether the path is currently blocked by a tree or not
-    obstacle* on_log = NULL; // the log on which the player is
-    float x_offset = 0; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
-    float liftboost = 0; // in tiles per frame, speed at which the player is being carried (specifically for logs)
     int high_score = 0;
 
-    int player_anim = 0; // timer for player animation (0 = stopped, anything else = moving)
-    int buffer = 0; // stores the next movement to be performed
     bool buffer_key_flag = true; // whether the key for the last movement has been released or not
     
     int skin_to_unlock = 0;
@@ -86,8 +416,6 @@ int main(void) {
     displayedData demo = init_game(GAME_HEIGHT);
     demo.player.skin = -1;
     int fade = FADE_LENGTH;
-    
-    int power_time = 0;//Time remaining for the power
 
     int ai_choice = 0;
     int sprite_set = 1;
@@ -160,7 +488,7 @@ int main(void) {
             }
             // Demo background
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
+            display(demo, renderer, textures, sprite_set, TIME_POWER);
     
             demo = move_camera(demo, GAME_SPEED*5);
     
@@ -295,17 +623,17 @@ int main(void) {
                     if (fade == FADE_LENGTH/2) {
                         free_lanes(game.first_lane);
                         game = init_game(GAME_HEIGHT);
-                        on_log = NULL;
-                        x_offset = 0;
-                        liftboost = 0;
-                        player_anim = 0;
                         game.player.skin = player_skin;
-                        buffer = 0;
-                        buffer_key_flag = true;
-                        power_time = 0;
+                        game.ai.skin = -1;
+                        if (ai_choice != 0) {
+                            game.ai.skin = player_skin;
+                        }
+                        if (ai_choice >= 3) {
+                            game.player.skin = -1;
+                        }
                     }
                 } else {
-                    display(game, renderer, textures, sprite_set, power_time, TIME_POWER);
+                    display(game, renderer, textures, sprite_set, TIME_POWER);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -321,21 +649,35 @@ int main(void) {
             if (!Mix_PlayingMusic()) {
                 Mix_PlayMusic(music[MUSIC_MAIN], -1);
             }
-            if (action) {
+    
+            display(game, renderer, textures, sprite_set, TIME_POWER);
+            // Display the purse
+            char purseText[20];
+            sprintf(purseText, "%d$", purse);
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+    
+            game = move_camera(game, GAME_SPEED);
+                   
+            // Update lanes
+            if (!(game.player.power == NEO && game.player.power_time%2 == 0) && !(game.ai.power == NEO && game.ai.power_time%2 == 0)) {
+                updateLanes(game.camera_first_lane);
+            }
+
+            if (action && ai_choice < 4) {
                 switch (event.type) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                     case SDLK_DOWN:
-                        buffer = DOWN;
+                        game.player.buffer = DOWN;
                         break;
                     case SDLK_UP:
-                        buffer = UP;
+                        game.player.buffer = UP;
                         break;
                     case SDLK_LEFT:
-                        buffer = LEFT;
+                        game.player.buffer = LEFT;
                         break;
                     case SDLK_RIGHT:
-                        buffer = RIGHT;
+                        game.player.buffer = RIGHT;
                         break;
                     }
                     break;
@@ -344,343 +686,38 @@ int main(void) {
                     break;
                 }
             }
-    
-    
-            display(game, renderer, textures, sprite_set, power_time, TIME_POWER);
-            // Display the purse
-            char purseText[20];
-            sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
-    
-            game = move_camera(game, GAME_SPEED);
-    
-            lane* current_lane = game.camera_first_lane;
-            lane* player_top_lane = NULL; // lane on or above the player
-            lane* player_bottom_lane = NULL; // lane below the player
 
-            while (current_lane->next != NULL) {
-    
-                // Update lanes
-                if (!(game.player.power == NEO && power_time%2 == 0)) {
-                    updateLane(current_lane);
-                }
-                // find the one or two lanes the player is colliding with
-                if (current_lane->y == ceil(game.player.y)) {
-                    player_top_lane = current_lane;
-                } else if (current_lane->y == floor(game.player.y)) {
-                    player_bottom_lane = current_lane;
-                }
-                current_lane = current_lane->next;
-            }
+            if (ai_choice != 0) {
+                if (game.ai.anim == 0) {
+                    game.ai.anim = ANIM_LENGTH; // reset AI animation
 
-            // Collision check
-            blocked_path = false;
-
-            if (player_top_lane != NULL) {
-
-                // Check for collisions with coins
-                float_list* collided_coin =  collides_coin(player_top_lane, game);
-                if (collided_coin != NULL) {
-                    if(collided_coin->power == 0){
-                        Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
-                        if (game.player.power == CRESUS) {
-                            purse += CRESUS_MODIF;
-                        }
-                        else {
-                            purse++;
-                        }
-                    }
-                    else {
-                        if(collided_coin->power == ECOLO){
-                            power_time =1;
-                            game = power4(game);
-                            on_log = NULL;
-                            liftboost = 0;
+                    lane* current_lane = game.camera_first_lane;
+                    while (current_lane->next != NULL) {
+                        if (current_lane->y == ceil(game.ai.y)) {
+                            ai_lane = current_lane;
                             break;
                         }
-                        else {  
-                            game.player.power = collided_coin->power;
-                            power_time = TIME_POWER*REFRESH_RATE;
+                        current_lane = current_lane->next;
                         }
-                    }
                     
+                    game.ai = play_ai(ai_choice, ai_lane, game.ai);
                 }
-
-
-                if (player_top_lane->type == WATER && game.player.power != XIV) {
-                    drown_flag = true; // only matters for the top lane, which is the lane the player is on or is going to
-                    }
-                else {
-                    drown_flag = false;
-                    }
-
-                if (x_offset == 0 && on_log == NULL && player_top_lane->type == WATER && player_top_lane->speed != 0 && game.player.power == XIV) {
-                        liftboost = player_top_lane->speed;
-                        on_log = didier;
-                        x_offset = 0.0001;
-                    }
-
-                //Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_top_lane, game.player);
-
-                if(collided_obstacle != NULL) {
-                    switch (player_top_lane->type) {
-                        case GRASS:
-                        if (game.player.power != TANK){
-                            if (x_offset == 0) {
-                                blocked_path = true;
-                            }
-                        }
-                        else {
-                            game = tank_road(game,  collided_obstacle,player_top_lane);
-                            collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
-                        }
-                        break;
-                        case TRACK:
-                        if (game.player.power != TANK){
-                            game_state = GAME_OVER;
-                        }
-                        else {
-                            game = tank_train(game);
-                            collided_obstacle = NULL;
-                        }
-                        break;
-                        case ROAD:
-                        if (game.player.power != TANK){
-                            game_state = GAME_OVER;
-                        }
-                        else {
-                            game = tank_road(game,  collided_obstacle,player_top_lane);
-                            collided_obstacle = NULL;
-                        }
-                        break;
-                        case WATER:
-                        drown_flag = false; // an obstacle has been found, player now should not drown
-                        if (player_top_lane->speed != 0 && game.player.power != XIV) { // if logs are on the lane
-
-                            // case where we are going up to different log than before or from ground
-                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && game.player.orientation == UP) {
-                                int pos_on_log = (int) round(game.player.x - collided_obstacle->x); // in tiles, position of the player relative to the log
-                                on_log = collided_obstacle;
-                                liftboost = player_top_lane->speed;
-                                x_offset = ((collided_obstacle->x + pos_on_log)-game.player.x)/(ANIM_LENGTH);
-
-                                // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
-                                if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
-                                    on_log = collided_obstacle->next;
-                                    
-                                    x_offset = (collided_obstacle->next->x - game.player.x)/(ANIM_LENGTH);
-                                    
-                                }
-                            }
-                        }
-                        break;
-                        default:
-                        break;
-                    }
-                }
-
-                // leaving a log
-                if (on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && game.player.orientation == UP) {
-                    
-                    if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
-                        blocked_path = true;
-                    } else {
-                        liftboost = 0;
-                        x_offset = (round(game.player.x) - game.player.x)/ANIM_LENGTH;
-                        on_log = NULL;
-                    }
-                }
+                game.ai.anim--;
             }
-
-            if (player_bottom_lane != NULL) {
-                // Check for collisions with coins
-                float_list* collided_coin =  collides_coin(player_bottom_lane, game);
-                if (collided_coin != NULL) {
-                    if(collided_coin->power == 0){
-                        Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
-                        if (game.player.power == CRESUS) {
-                            purse += CRESUS_MODIF;
-                        }
-                        else {
-                            purse++;
-                        }
-                    }
-                    else {
-                        if(collided_coin->power == ECOLO){
-                            power_time =1;
-                            game = power4(game);
-                            on_log = NULL;
-                            liftboost = 0;
-                            break;
-                        }
-                        else {
-                            game.player.power = collided_coin->power;
-                            power_time = TIME_POWER*REFRESH_RATE;
-                        }
-                    }
-                    
-                }
-
-                if (x_offset == 0 && on_log == NULL && player_bottom_lane->type == WATER && player_bottom_lane->speed != 0 && game.player.power == XIV) {
-                    liftboost = player_bottom_lane->speed;
-                    on_log = didier;
-                    x_offset = 0.0001;
-                }
-                // Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_bottom_lane, game.player);
-
-                if(collided_obstacle != NULL) {
-                    switch (player_bottom_lane->type) {
-                        case GRASS:
-                        if (game.player.power != TANK){
-                            if (x_offset == 0) {
-                                blocked_path = true;
-                            }
-                        }
-                        else {
-                            game = tank_road(game,collided_obstacle,player_bottom_lane);
-                            collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
-                        }
-                        break;
-                        case TRACK:
-                        if (game.player.power != TANK){
-                            game_state = GAME_OVER;
-                        }
-                        else {
-                            game = tank_train(game);
-                            collided_obstacle = NULL;
-                        }
-                        break;
-                        case ROAD:
-                        if (game.player.power != TANK){
-                            game_state = GAME_OVER;
-                        }
-                        else {
-                            game = tank_road(game,collided_obstacle,player_bottom_lane);
-                            collided_obstacle = NULL;
-                        }
-                        break;
-                        case WATER:
-                        if (player_bottom_lane->speed != 0 && game.player.power != XIV) {
-
-                            // case where we are going down to different log than before or from ground
-                            if (on_log != collided_obstacle && on_log != collided_obstacle->next && game.player.orientation == DOWN) {
-                                int pos_on_log = (int) round(game.player.x - collided_obstacle->x);
-                                on_log = collided_obstacle;
-                                liftboost = player_bottom_lane->speed;
-                                x_offset = ((collided_obstacle->x + pos_on_log)-game.player.x)/(ANIM_LENGTH);
-
-                                // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
-                                if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
-                                    on_log = collided_obstacle->next;
-                                    x_offset = (collided_obstacle->next->x - game.player.x)/(ANIM_LENGTH);
-                               }
-                            }
-                        }
-                        break;
-                        default:
-                        break;
-                    }
-                }
-
-                if (on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && game.player.orientation == DOWN) {                
-                    
-                    if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
-                        blocked_path = true;
-                    } else {
-                        liftboost = 0;
-                        x_offset = (round(game.player.x) - game.player.x)/ANIM_LENGTH;
-                        on_log = NULL;
-                    }
-                }
             
-
+            if (ai_choice < 3) {
+                game.player.dead = process_player(&game.player, &game, sounds, didier, &purse, &buffer_key_flag, false);
             }
 
-            // screen edges
-            if (game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
-                blocked_path = true;
-            } 
-
-            // Update player
-            if (!(game.player.power == NEO && power_time%2 == 0)) {
-                game.player.x += liftboost; // apply liftboost
+            if (ai_choice != 0) {
+                game.ai.dead = process_player(&game.ai, &game, sounds, didier, &purse, &buffer_key_flag, true);
             }
 
-            // a new action needs to be performed!
-            if (!player_anim && buffer && buffer_key_flag && !blocked_path && !drown_flag) {
-                game.player.orientation = buffer;
-                player_anim = ANIM_LENGTH;// FOR TANK, should be  double
-                buffer_key_flag = false;
-                buffer = 0;
-            }
-
-            // player is currently moving, update everything accordingly
-            if (player_anim) {
-                if (blocked_path) {
-                    player_anim = 0;
-                } else {
-                    switch (game.player.orientation) {
-                        case UP:
-                            game.player.y += PLAYER_SPEED;
-                            if (game.cameraY - game.player.y < (GAME_HEIGHT/4)) {
-                                game = move_camera(game, PLAYER_SPEED); // move the camera if the player is too high
-                            }
-                            break;
-                        case DOWN:
-                            game.player.y -= PLAYER_SPEED;
-                            break;
-                        case RIGHT:
-                            game.player.x += PLAYER_SPEED;
-                            break;
-                        case LEFT:
-                            game.player.x -= PLAYER_SPEED;
-                            break;
-                    }
-                    game.player.x += x_offset;
-                    player_anim--;
-                }
-
-                // if action is ending, recenter the player and reset variables
-                if (!player_anim) {
-                    game.player.y = round(game.player.y); // Recenter player position to avoid float drifting
-                    buffer_key_flag = true;
-                    x_offset = 0;
-
-                    if (on_log == NULL) {
-                        game.player.x = round(game.player.x);  // Recenter player position to avoid float drifting
-                    }
-                }
-
-            }
-
-            // checking for game over
-
-            if (game.player.y < game.cameraY - GAME_HEIGHT || // player is too low
-                (drown_flag && !player_anim) || // player is drowning
-                (game.player.x < UNPLAYABLE_WIDTH && on_log != NULL) || // player is being carried offscreen
-                (game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && on_log != NULL)) // player is being carreid offscreen
-            {
+            if (game.player.dead || game.ai.dead) {
                 game_state = GAME_OVER;
+                fade = FADE_LENGTH;
             }
 
-            if (!player_anim && on_log != NULL && game.player.power != XIV) {
-                if (game.player.x > on_log->x + on_log->size - 0.1) { // check if player is too far right on the log it's currently on
-                    if (on_log->next != NULL && floor(on_log->x + on_log->size) == floor(on_log->next->x)) { // check if player can move right to a different adjacent log
-                        on_log = on_log->next;
-                    } else {
-                        game_state = GAME_OVER; // if not, game over
-                    }
-                }
-                else if (game.player.x+0.1 < on_log->x) { // check if player is too far left on the log it's currently on
-                    if (on_log->prev != NULL && floor(on_log->prev->x + on_log->prev->size) == floor(on_log->x)) { // check if player can move left to a different adjacent log
-                        on_log = on_log->prev;
-                    } else {
-                        game_state = GAME_OVER; // if not, game over
-                    }
-                }
-            }
             break;
         case GAME_OVER: {
             Mix_HaltMusic();
@@ -703,9 +740,18 @@ int main(void) {
                         game_state = GO_TO_MENU;
                     }
             }
-            SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
-            SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
-            SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
+
+
+            if (game.player.dead || game.player.skin == -1) {
+                SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
+                SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+                SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
+            }
+
+            if (game.ai.dead && game.player.skin != -1) {
+                display_text("AI defeated!", (WIDTH-CARD_WIDTH)/2 + 20, (HEIGHT/2-CARD_HEIGHT)/2 + CARD_HEIGHT + 20, 40, renderer, white, "Symtext.ttf");
+            }
+
             break;
         }
         case GO_TO_MENU: {
@@ -716,7 +762,7 @@ int main(void) {
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (FADE_LENGTH-fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 } else {
-                    display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
+                    display(demo, renderer, textures, sprite_set, TIME_POWER);
                     SDL_Rect bg = {0, 0, WIDTH, (int) ((float) (fade)/FADE_LENGTH*HEIGHT*2)};
                     SDL_RenderFillRect(renderer, &bg);
                 }
@@ -734,7 +780,7 @@ int main(void) {
         }
         case SKIN_SELECT: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
+            display(demo, renderer, textures, sprite_set, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
             updateLanes(demo.camera_first_lane);
 
@@ -787,7 +833,7 @@ int main(void) {
         }
         case GAMBLING: {
             SDL_RenderClear(renderer);
-            display(demo, renderer, textures, sprite_set, power_time, TIME_POWER);
+            display(demo, renderer, textures, sprite_set, TIME_POWER);
             demo = move_camera(demo, GAME_SPEED*5);
             updateLanes(demo.camera_first_lane);
             
@@ -839,12 +885,6 @@ int main(void) {
         }
 
         SDL_RenderPresent(renderer);
-        if (power_time>0){
-            power_time--;
-        }//Decrease time remaining for the power;
-         if (power_time<=0) {
-            game.player.power = 0;
-        }
         nanosleep(&request, &remaining);
     }
 
