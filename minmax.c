@@ -493,17 +493,18 @@ player minmax_memo_state(lane* l, int deep, player p) {
 
 player play_ai(int cai, lane* player_lane, player ai) {
     // make the move for the ai
+    int depth = 8;
     switch (cai) {
         case 1:
-        return minmax_simple(player_lane, 5, ai);
+        return minmax_simple(player_lane, depth, ai);
         break;
         case 2:
-        return minmax_memo_state(player_lane, 5, ai);
+        return minmax_memo_state(player_lane, depth, ai);
         break;
         case 3:
-        return minmax_simple(player_lane, 5, ai);
+        return minmax_simple(player_lane, depth, ai);
         case 4:
-        return minmax_memo_state(player_lane, 5, ai);
+        return minmax_memo_state(player_lane, depth, ai);
         break;
         default:
         return ai;

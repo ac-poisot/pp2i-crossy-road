@@ -594,6 +594,10 @@ int main(void) {
 
             SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
             SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+            SDL_SetRenderDrawColor(renderer, 30, 30, 60, 220);
+            SDL_Rect bgRect = {destRect2.x - 20, destRect2.y - 20, CARD_WIDTH + 40, CARD_HEIGHT + 40};
+            SDL_RenderFillRect(renderer, &bgRect);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderCopy(renderer, textures[TITLE_CARD], &spriteRect2, &destRect2);
 
             // Display high score
@@ -745,6 +749,10 @@ int main(void) {
                 }
                 SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
                 SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
+                SDL_Rect bgRect = {destRect2.x - 20, destRect2.y - 20, CARD_WIDTH + 40, CARD_HEIGHT + 40};
+                SDL_RenderFillRect(renderer, &bgRect);
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
                 SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
             }
 
