@@ -13,20 +13,17 @@ cli.o: cli.c cli.h core.h
 gui.o: gui.c gui.h
 	$(CC) -c $(CFLAGS) $(CSANI) gui.c
 
-minmax.o: minmax.c minmax.h list.h
+minmax.o: minmax.c minmax.h
 	$(CC) -c $(CFLAGS) $(CSANI) minmax.c
 
 main.o: main.c
 	$(CC) -c $(CFLAGS) $(CSANI) main.c
 
-core_test.o: core_test.c core.h minmax.h list.h
+core_test.o: core_test.c core.h minmax.h
 	$(CC) -c $(CFLAGS) $(CSANI) core_test.c
 
 test_minmax.o: test_minmax.c minmax.h
 	$(CC) -c $(CFLAGS) $(CSANI) test_minmax.c
-
-list.o : list.h list.c
-	$(CC) -c $(CFLAGS) $(CSANI) list.c
 
 button.o :
 	$(CC) -c $(CFLAGS) $(CSANI) gui/button.c
@@ -45,8 +42,8 @@ sound_management.o :
 main_only_core: core.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_only_core core.o
 
-main_cli: core.o cli.o minmax.o list.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o minmax.o list.o -lncurses
+main_cli: core.o cli.o minmax.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o minmax.o -lncurses
 
 main_graphics: core.o gui.o button.o display.o sprite_management.o sound_management.o minmax.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o button.o display.o sprite_management.o sound_management.o minmax.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf -lSDL2_mixer
@@ -54,8 +51,8 @@ main_graphics: core.o gui.o button.o display.o sprite_management.o sound_managem
 core_test: core.o core_test.o
 	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o
 
-test_minmax: minmax.o core.o test_minmax.o list.o
-	$(CC) $(CFLAGS) $(CSANI) -o test_minmax core.o list.o minmax.o test_minmax.o
+test_minmax: minmax.o core.o test_minmax.o
+	$(CC) $(CFLAGS) $(CSANI) -o test_minmax core.o  minmax.o test_minmax.o
 
 
 

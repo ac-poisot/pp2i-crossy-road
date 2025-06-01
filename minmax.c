@@ -5,7 +5,6 @@
 #include <math.h>
 
 #include "minmax.h"
-#include "list.h"
 
 #define LANE_WIDTH 24 // width of the displayed area
 #define UNPLAYABLE_WIDTH 2
