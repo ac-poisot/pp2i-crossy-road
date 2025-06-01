@@ -27,7 +27,6 @@
 #define RED_TEXT ((LANE_TYPES+2)*10)
 #define COLOR_PAIR_LILY (WATER*10 + 9)
 
-#define LANE_WIDTH 20 // width of the displayed area
 #define GAME_HEIGHT 20 // height of the displayed area
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
