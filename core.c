@@ -729,9 +729,7 @@ void update_vehicles(lane* l) {
         l->obstacles = new_obst;
         c = new_obst;
     }
-    int a = 1;
     while (c != NULL) { // updates the position of the vehicles
-        a++;
         if ((c->x + l->speed > LANE_WIDTH) && (l->speed > 0)){ // if the vehicle is going out of the lane at the right side, we delete it
             c-> prev ->next = NULL;
             if(c->next != NULL) {
