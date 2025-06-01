@@ -112,7 +112,7 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - La fonction ajoute des arbres à la *lane*.
 ### obstacle * generate_waterlilies(lane * l)
 - La fonction ajoute des nénuphars à la *lane*.
-### obstacle * generate_drowning_slots(void)
+### obstacle * generate_logs(void)
 - 
 ### obstacle * generate_trains(void)
 - La fonction ajoute des trains à la *lane*.
@@ -120,7 +120,7 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - 
 ### void update_vehicles(lane * l)
 - La fonction met à jour les véhicules de la *lane*.
-### void update_drowning_slots(lane*  l)
+### void update_logs(lane*  l)
 - La fonction met à jour les troncs de la *lane*.
 ### void update_trains(lane * l)
 - La fonction met à jour les trains de la *lane*.

@@ -395,7 +395,7 @@ int main(void) {
                     update_vehicles(current_lane);
                     break;
                     case WATER:
-                    update_drowning_slots(current_lane);
+                    update_logs(current_lane);
                     break;
                     case TRACK:
                     update_trains(current_lane);

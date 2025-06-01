@@ -95,7 +95,7 @@ void test_trees_generation(void) {
 }
 
 
-void test_update_drowning_slots(void) {
+void test_update_logs(void) {
 
     // We create a custom lane with drowning slots
     lane* l = (lane*)malloc(sizeof(lane));
@@ -123,7 +123,7 @@ void test_update_drowning_slots(void) {
 
 
     // We update the drowning slots of the lane
-    update_drowning_slots(l);
+    update_logs(l);
 
 
     // Check if the drowning slot we created still exists and is in the right position
@@ -401,7 +401,7 @@ int main(void) {
     srand(time(NULL));
     test_update_vehicles();
     test_trees_generation();
-    test_update_drowning_slots();
+    test_update_logs();
     test_update_trains();
     test_waterlilies_generation();
     return 0;

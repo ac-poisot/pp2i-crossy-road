@@ -541,7 +541,7 @@ obstacle* generate_waterlilies(lane* l) {
 }
 
 
-obstacle* generate_drowning_slots(void) {
+obstacle* generate_logs(void) {
     /* generates the slots where the player would drown */
     float x = (float)(rand()%LOG_SPACING_MAX - 8); // position of the first slot
     float current_x = x;
@@ -669,12 +669,12 @@ lane* generate_lane(lane* prev_lane, int type) {
             new_lane->obstacles = generate_trees(new_lane);
             new_lane->speed = 0;
             break;
-        case WATER: // generates waterlilies or drowning slots
+        case WATER: // generates waterlilies or logs
             if ((int)(rand()%3) == 0) {
                 new_lane->speed = 0;
                 new_lane->obstacles = generate_waterlilies(new_lane);
             } else {
-                new_lane->obstacles = generate_drowning_slots();
+                new_lane->obstacles = generate_logs();
                 if (rand()%2) {
                     new_lane->speed = -LOG_SPEED;
                 } else {
@@ -771,8 +771,8 @@ void update_vehicles(lane* l) {
     }
 }
 
-void update_drowning_slots(lane* l) {
-    /* updates the position of the drowning slots*/
+void update_logs(lane* l) {
+    /* updates the position of the logs*/
     if(l->obstacles == NULL) {
         return;
     }
@@ -981,7 +981,7 @@ void updateLane(lane * l) {
             update_vehicles(l);
             break;
         case WATER:
-            update_drowning_slots(l);
+            update_logs(l);
             break;
         case TRACK:
             update_trains(l);
