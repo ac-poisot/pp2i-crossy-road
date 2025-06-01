@@ -11,7 +11,7 @@
 #define TILE_SIDE 40
 
 #define SKIN_SIDE 100
-#define SKINS 6
+#define SKINS 10
 
 #define BUTTON_WIDTH 200
 #define BUTTON_HEIGHT 100
