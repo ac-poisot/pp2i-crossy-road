@@ -4,4 +4,4 @@ main_cli
 main_only_core
 main_graphics
 core_test
-save/*
+save/data.txt
