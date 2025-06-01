@@ -232,7 +232,7 @@ int main(void) {
     int player_color = 0;
     bool unlocked_colors[PLAYER_COLORS] = {false};
     unlocked_colors[0] = true;
-    int purse = 13;
+    int purse = 0;
     int move_timer;
     int current_y;
     int current_x;

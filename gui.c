@@ -397,7 +397,7 @@ int main(void) {
 
     int game_state = MENU;
     int player_skin = 0;
-    int purse = 50;
+    int purse = 0;
     bool unlocked_skins[SKINS] = {true};
     for (int i=1; i<SKINS; i++) {
         unlocked_skins[i] = false;

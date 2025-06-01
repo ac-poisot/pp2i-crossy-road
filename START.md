@@ -12,10 +12,10 @@ sudo apt install libsdl2-mixer-dev
 
 ### In command line
 ```
-make run_cli
+./run_cli.sh
 ```
 
 ## In a graphics window
 ```
-make run_graphics
+./run_gui.sh
 ```
