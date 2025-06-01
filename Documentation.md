@@ -1,9 +1,9 @@
 # Introduction
-Le projet est séparé en plusieurs partie, le CORE, l'IA, le CLI, et le GUI :
+Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - Le __CORE__ est le noyau du jeu, toutes les fonctions de calculs majeurs des états du jeu sont réunies dans celui-ci.
-- L'__IA__ et le fichier minmax contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
-- Le __CLI__ permet d'avoir une représentation visuelle du jeu sur shell, pour développer les fonctionnalité finales. Il contient une boucle de jeu, peut être lancée avec la commande `make run_cli`. Il n'a pas de fichiers test.
-- Le __GUI__ est le fichier finale utilisant la bibliothèque SDL pour avoir un exécutable du jeu. Il peut lui aussi être lancée avec la commande `make run_graphics` et n'a pas non plus de fichier test.
+- L'__IA__ et le fichier ``minmax.c`` contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
+- Le __CLI__ permet d'avoir une représentation visuelle du jeu sur shell, pour développer les fonctionnalités finales. Il contient une boucle de jeu, peut être lancée avec la commande `make run_cli`. Il n'a pas de fichier test.
+- Le __GUI__ est le fichier final utilisant la bibliothèque SDL pour avoir un exécutable du jeu. Il peut lui aussi être lancé avec la commande `make run_graphics` et n'a pas non plus de fichier test.
 
 # CORE
 
@@ -11,17 +11,17 @@ Le projet est séparé en plusieurs partie, le CORE, l'IA, le CLI, et le GUI :
 | ------- | ----------------- |
 | Forêt   | 1                 |
 | Rivière | 2                 |
-| Rail    | 3                 |
+| Rails   | 3                 |
 | Route   | 4                 |
 
 | Pouvoir   | Valeurs associées | EFFET                                                  |
 | --------- | ----------------- | ------------------------------------------------------ |
 | XIV       | 1                 | Permet de marcher sur l'eau                            |
-| NEO       | 2                 | Ralenti le temps temporairement                        |
+| NEO       | 2                 | Ralentit le temps temporairement                        |
 | TANK      | 3                 | Permet d'écraser les trains, voitures et arbres        |
-| ECOLO     | 4                 | Transforme la zones environnantes en jolie plaine      |
-| CRESUS    | 5                 | Multiplie temporairement le gains de pièces $\times$ 3 |
-| POWER_END | 6                 | Variable de fin de pouvoir                             |
+| ECOLO     | 4                 | Transforme la zones environnante en jolie plaine      |
+| CRESUS    | 5                 | Multiplie temporairement le gain de pièces $\times$ 3 |
+
 ## Structures
 | obstacle  |      |
 | --------- | ---- |
@@ -75,88 +75,147 @@ Le projet est séparé en plusieurs partie, le CORE, l'IA, le CLI, et le GUI :
 ## Fonctions
 
 ### void free_obstacles(obstacle * first_obstacle)
-La fonction prend une liste d'*obstacle* en entrée est libère toute la liste.
+- La fonction prend une liste d'*obstacle* en entrée et libère toute la liste.
 ### void free_coins(float_list * first_coin)
-
-La fonction prend une liste de *coins* en entrée est la libère.
+- La fonction prend une liste de *coins* en entrée et la libère.
 ### void free_lanes(lane * first_lane)
-La fonction prend une *lane* en entrée et va récursivement libéré la *lane* , les listes d'*obstacles* et de *coins* que les *lanes* contiennent.
+- La fonction prend une *lane* en entrée et va récursivement libérer la *lane* , les listes d'*obstacles* et de pièces/pouvoirs que les *lanes* contiennent.
 
 ### int biome(int * boules)
-La fonction prend une liste de 4 entiers, représentant le poids des 4 biomes en entrée et retourne un biome aléatoirement parmi les 4 .
+- La fonction prend une liste de 4 entiers, représentant le poids des 4 biomes en entrée et retourne un biome aléatoirement parmi les 4.
 ### int * probabilite_biomes(lane * l)
-La fonction prend une liste de 4 *lanes* et calcule le poids des 4 biomes pour la prochaine *lanes* à générer.
+- La fonction prend une liste de 4 *lanes* et calcule le poids des 4 biomes pour la prochaine *lanes* à générer.
 
 ### lane * empty_lane(lane * prev_lane, int type)
-La fonction prend une *lane*, un biome et rattache la nouvelle *lane* vide a la *lane* initiale.
+- La fonction prend une *lane*, un biome et rattache la nouvelle *lane* vide à la *lane* initiale.
 
 ### lane * initialLanes(void)
-La fonction créer les 4 premières *lanes* du jeu, qui sont toutes du biomes forêts.
+- La fonction crée les 4 premières *lanes* du jeu, qui sont toutes du biomes forêts.
 
 ### lane * random_lane(lane * prev_lane)
-Créer aléatoirement une *lane* remplit, elle ne sert que pour des test.
+- Crée aléatoirement une *lane* remplie, sert principalement aux tests.
 
 ### bool * create_obstacles_array(obstacle * o)
-Créer une liste de *booléen* représentant la présence ou non d'un obstacle sur une ligne.
+- Crée un tableau de booléans représentant la présence ou non d'un obstacle sur une ligne.
 
 ### void array_not(bool * array)
-Applique `not` sur une liste de *booléen* 
+- Applique l'opérateur `not` sur un tableau de booléens.
 ### bool * array_and(bool * a, bool * b)
-Applique `and` entre 2 liste de *booléen*
+- Applique l'opérateur `and` entre deux tableaux de booléens.
 ### bool array_exist(bool * array)
-Renvoie true si au moins un *booléen* est true
+- Renvoie true si au moins un booléen du tableau est vrai.
 ### bool reachable(lane * l, bool * a, float speed)
-
+- 
 ### obstacle * generate_vehicles(lane * l)
-La fonction ajoute des voitures à la *lane*
+- La fonction ajoute des voitures à la *lane*.
 ### obstacle * generate_trees(lane * l)
-La fonction ajoute des arbre à la *lane*
+- La fonction ajoute des arbres à la *lane*.
 ### obstacle * generate_waterlilies(lane * l)
-La fonction ajoute des nénuphar à la *lane*
+- La fonction ajoute des nénuphars à la *lane*.
 ### obstacle * generate_drowning_slots(void)
-
+- 
 ### obstacle * generate_trains(void)
-La fonction ajoute des trains à la *lane*
+- La fonction ajoute des trains à la *lane*.
 ### lane * generate_lane(lane * prev_lane, int type)
-
+- 
 ### void update_vehicles(lane * l)
-La fonction met à jour les véhicules de la *lane*
+- La fonction met à jour les véhicules de la *lane*.
 ### void update_drowning_slots(lane*  l)
-La fonction met à jour les troncs de la *lane*
+- La fonction met à jour les troncs de la *lane*.
 ### void update_trains(lane * l)
-La fonction met à jour les trains de la *lane*
+- La fonction met à jour les trains de la *lane*.
 ### void display_obstacles(obstacle* l)
-Fonction de debug, affiche la position des véhicules
+- Fonction de debug, affiche la position des véhicules.
 ### void displayLanes(lane * l)
-Fonction de debug, affiche l'état du jeu à un instant t sur le terminal 
+- Fonction de debug, affiche l'état du jeu à un instant t sur le terminal.
 ### void updateLanes(lane * l)
-La fonction appel met à jour toute les *lanes* de la listeune par une
+- La fonction met à jour toute les *lanes* une par une à partir de celle donnée en entrée.
 ### void updateLane(lane * l)
-La fonction met à jour la *lane* donnée
+- La fonction met à jour la *lane* donnée.
 ### obstacle * collides(lane * current_lane, player player)
-La fonction renvoie un *obstacle* si le personnage entre en contact avec un *obstacle*
+- La fonction renvoie un ``obstacle`` si le personnage entre en contact avec cet ``obstacle``, ``NULL`` sinon.
 ### float_list* collides_coin(lane *current_lane, displayedData game)
-La fonction renvoie un *coin* si le personnage entre en contact avec un *coin*
+- La fonction renvoie un la pièce/pouvoir si le personnage entre en contact avec celui-ci, ``NULL``sinon.
 ### displayedData move_camera(displayedData data, float speed)
-La fonction déplace la caméra d'une *lane* en avant, et re-créer une nouvelle *lane*
+- La fonction déplace la caméra en avant, et re-crée une nouvelle *lane* si nécessaire.
 ### displayedData init_game(int game_height)
-La fonction initialise le jeu
+- La fonction initialise le jeu;
 ### displayedData power4 (displayedData data)
-La fonction applique le pouvoir ECOLO au jeu, transformant les 3 lignes les plus proches en *lane* forêt vide
+- La fonction applique le pouvoir ECOLO au jeu, transformant les 3 lignes les plus proches en *lane* forêts vides.
 ### displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane)
-La fonction supprime la voiture ou l'arbre en collision avec le personnage
+- La fonction supprime la voiture ou l'arbre en collision avec le personnage.
 ### displayedData tank_train (displayedData data)
-La fonction supprime le train en collision avec le personnage
+- La fonction supprime le train en collision avec le personnage.
 # IA
 __Intelligence Artificielle__
 # CLI
+__Command Line Interface__
 
 # GUI
+__Graphics User Interface__
+
+## Structure
+| button  |      |
+| --------- | ---- |
+| int | x |
+| int | y |
+| int     | width    |
+| int       | height |
+| int       | texture |
+
+## Fonctions ``button.c``
+
+### void display_button(button b, SDL_Renderer* renderer, SDL_Texture** textures)
+- Permet d'afficher le bouton spécifié en paramètre dans le *renderer* SDL.
+
+### bool button_clicked(button b, SDL_Event event);
+- Renvoie si le curseur de la souris est sur le bouton et si le clic gauche est appuyé.
+
+## Fonctions ``display.c``
+
+### void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color, char* font, bool bg);
+- Permet d'afficher du texte d'une couleur, taille, et police d'écriture spécifiée. ``bg`` permet d'y ajouter un fond noir pour rendre le texte plus lisible.
+
+### void display_coins(float y, float_list* current_coin, SDL_Renderer* renderer, SDL_Texture** textures);
+- Permet d'afficher toutes les pièces/pouvoirs présents sur une ligne.
+
+### void display_lane(lane* lane, float lane_count, SDL_Renderer* renderer, SDL_Texture** textures);
+- Permet d'afficher toute une *lane* et ce qu'il y a dessus.
+
+### void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set);
+- Permet d'afficher un joueur.
+
+### void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set, int power_duration);
+- Permet d'afficher toutes les informations liées à une partie : les *lanes*, le(s) joueur(s)...
+
+## Fonctions ``sound_management.h``
+
+### void load_sounds(Mix_Chunk** sounds, Mix_Music** music);
+- Permet de charger tous les sons et musiques du jeu.
+### void free_sounds(Mix_Chunk** sounds, Mix_Music** music);
+- Permet de libérer tous les sons et musiques du jeu.
+
+## Fonctions ``sprite_management.h``
+
+### SDL_Texture* create_texture(SDL_Renderer* renderer, char* filename, int width, int height);
+- Permet à partir d'un nom de fichier, de créer une texture SDL.
+
+### void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_names, int sprite_set);
+- Permet de charger l'entièreté des textures du jeu.
+
+### void free_textures(SDL_Texture** textures);
+- Permet de libérer toutes les textures du jeu.
+
+### void free_skin_names(char** skin_names);
+- Permet de libérer les chaines de caractères associées aux noms des différents *skins*.
+
+## Fonctions ``gui.c``
+
 ### void reset_savefile(void)
-LA fonction permet de réinitialiser le fichier data.txt
+- Fonction permettant de réinitialiser le fichier ``data.txt``.
 ### void update_savefile(int high_score, int purse, bool* unlocked_skins)
-La fonction permet de sauvegarder les multiples variables extérieures au jeu entre les parties, et les exécution dans le fichier data.txt
+- Permet de sauvegarder les multiples variables extérieures au jeu entre les parties, dans le fichier ``data.txt``.
 ### int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai)
-IA, je connait pas
+- Réalise tous les tests de collisions pour un joueur et met à jour toutes les variables associées. Renvoie si le joueur est mort ou non.
 ### int main(void)
-La fonction principale
+- La fonction principale.

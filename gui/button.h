@@ -7,7 +7,7 @@
 typedef struct button {
     int x;
     int y;
-    int width; // position of the obstacle
+    int width;
     int height;
     int texture;
 } button;
