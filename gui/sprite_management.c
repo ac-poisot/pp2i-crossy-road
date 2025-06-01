@@ -92,6 +92,9 @@ void load_textures(SDL_Renderer* renderer, SDL_Texture** textures, char** skin_n
         textures[POWER_START+i] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
     }
 
+    snprintf(path, sizeof(path), "%stext/cross.png", prefix);
+    textures[CROSS] = create_texture(renderer, path, TILE_SIDE, TILE_SIDE);
+
     snprintf(path, sizeof(path), "%stext/play_button.png", prefix);
     textures[PLAY_BUTTON] = create_texture(renderer, path, BUTTON_WIDTH, BUTTON_HEIGHT);
 

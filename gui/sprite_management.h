@@ -36,6 +36,7 @@ enum {
     TRAIN_MID,
     TRAIN_EDGE,
     WARNING,
+    CROSS,
     COIN,
     CLOUD,
     SOUND_OFF,

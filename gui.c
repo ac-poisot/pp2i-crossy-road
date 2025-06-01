@@ -543,6 +543,9 @@ int main(void) {
             }
             display_button(sound_button, renderer, textures);
 
+            button quit = {TILE_SIDE, TILE_SIDE*2, BUTTON_HEIGHT, BUTTON_HEIGHT, CROSS};
+            display_button(quit, renderer, textures);
+
 
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -584,6 +587,10 @@ int main(void) {
                             Mix_Volume(1, 0);
                             Mix_VolumeMusic(0);
                         }
+                    }
+                    else if (button_clicked(quit, event)) {
+                        running = 0;
+                        break;
                     }
                     break;
                 case SDL_KEYUP:
