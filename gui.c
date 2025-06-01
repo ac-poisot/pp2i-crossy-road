@@ -61,6 +61,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                     *game = power4(*game);
                     current_p->on_log = NULL;
                     current_p->liftboost = 0;
+                    return 0;
                 }
                 else {  
                     current_p->power = collided_coin->power;
@@ -175,6 +176,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                     *game = power4(*game);
                     current_p->on_log = NULL;
                     current_p->liftboost = 0;
+                    return 0;
                 }
                 else {
                     current_p->power = collided_coin->power;
