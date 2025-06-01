@@ -56,10 +56,12 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
             }
             else {
                 if(collided_coin->power == ECOLO){
-                    current_p->power_time =1;
+                    current_p->power_time = 1;
                     *game = power4(*game);
                     current_p->on_log = NULL;
                     current_p->liftboost = 0;
+                    current_p->x_offset = 0;
+                    current_p->x = round(current_p->x);
                     return 0;
                 }
                 else {  
@@ -117,7 +119,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
                 break;
                 case WATER:
                 drown_flag = false; // an obstacle has been found, player now should not drown
-                if (player_top_lane->speed != 0 && current_p->power != XIV) { // if logs are on the lane
+                if (player_top_lane->speed != 0 && current_p->power != XIV && current_p->anim == ANIM_LENGTH-1) { // if logs are on the lane
 
                     // case where we are going up to different log than before or from ground
                     if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == UP) {
@@ -220,7 +222,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
                 }
                 break;
                 case WATER:
-                if (player_bottom_lane->speed != 0 && current_p->power != XIV) {
+                if (player_bottom_lane->speed != 0 && current_p->power != XIV && current_p->anim == ANIM_LENGTH-1) {
 
                     // case where we are going down to different log than before or from ground
                     if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == DOWN) {
