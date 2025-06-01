@@ -19,11 +19,11 @@ minmax.o: minmax.c minmax.h
 main.o: main.c
 	$(CC) -c $(CFLAGS) $(CSANI) main.c
 
-core_test.o: core_test.c core.h minmax.h
-	$(CC) -c $(CFLAGS) $(CSANI) core_test.c
+core_test.o: tests/core_test.c core.h minmax.h
+	$(CC) -c $(CFLAGS) $(CSANI) tests/core_test.c
 
-test_minmax.o: test_minmax.c minmax.h
-	$(CC) -c $(CFLAGS) $(CSANI) test_minmax.c
+test_minmax.o: tests/test_minmax.c minmax.h
+	$(CC) -c $(CFLAGS) $(CSANI) tests/test_minmax.c
 
 button.o :
 	$(CC) -c $(CFLAGS) $(CSANI) gui/button.c

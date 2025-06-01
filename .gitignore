@@ -4,4 +4,5 @@ main_cli
 main_only_core
 main_graphics
 core_test
+test_minmax
 save/data.txt

@@ -6,7 +6,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "minmax.h"
+#include "../minmax.h"
 
 
 #define LANE_WIDTH 24 // width of the displayed area
