@@ -1,6 +1,6 @@
 # Annexe Gestion de Projet
 
-- WBS (Work Breakdown Structure)
+- **WBS (Work Breakdown Structure)**
 
 
 |  | Lot nº | Description | Estimation du temps-homme |
@@ -31,7 +31,7 @@
 |  | *11.3* | *Skins* | *15 hh* |
 
 
-- matrice RACI
+- **Matrice RACI**
 
 
 | Lot nº | Kévin | Anne-Cécile | Tom | Raphaël |
@@ -58,15 +58,15 @@
 | 11.3 |  |  | R | RA |
 
 
-- matrice SWOT
+- **Matrice SWOT**
 
 
 |  | Positif | Négatif |
 | :---- | :---- | :---- |
-| Interne | Expérience de groupe passée (PP2I—1) Expérience avec pygame | Manque d’expérience en C Problèmes de communication |
-| Externe |  | Volume de cours important Évènements (dont associatifs) (LIAN, portes ouvertes) |
+| Interne | Expérience de groupe passée (PP2I—1), expérience avec pygame | Manque d’expérience en C, problèmes de communication |
+| Externe |  | Volume de cours important, évènements (dont associatifs) (LIAN, portes ouvertes) |
 
 
-- Diagramme de Gantt  
+- **Diagramme de Gantt**  
   [Diagramme de Gantt](https://docs.google.com/spreadsheets/d/11GrluI50gvywJyMt59tYRguGhNyo4bSe5CQRCEl4u38/edit?gid=1115838130#gid=1115838130)  
   
