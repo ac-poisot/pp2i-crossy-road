@@ -1119,8 +1119,8 @@ displayedData move_camera(displayedData data, float speed) {
 
 displayedData init_game(int game_height) {
     // Initialize the game
-    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0, 0};
-    player ai = {PLAYER_START_Y, LANE_WIDTH/2+2, 0, 0, 0};
+    player p = {PLAYER_START_Y, LANE_WIDTH/2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    player ai = {PLAYER_START_Y, LANE_WIDTH/2+2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     // Initialize the first lane
     lane* l = empty_lane(NULL, GRASS);

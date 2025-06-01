@@ -144,7 +144,7 @@ void displayPlayer(player player, float cameraY, SDL_Renderer* renderer, SDL_Tex
     }
 }
 
-void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set, int power_time, int power_duration) {
+void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures, int skin_set, int power_duration) {
     // Display the lanes
     lane* current_lane = data.camera_first_lane;
     
@@ -164,7 +164,9 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
         sprintf(scoreText, "Score: %d", (int) data.player.y);
         display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
     }
-    if (data.player.power != 0 && !(power_time < power_duration*60/5 && (power_time%10) < 5)) {
+
+
+    if (data.player.skin != -1 && data.player.power != 0 && !(data.player.power_time < power_duration*60/5 && (data.player.power_time%10) < 5)) {
         int cloud_size = TILE_SIDE*2;
         SDL_Rect spriteRect2 = {0, 0, cloud_size, cloud_size};
         SDL_Rect destRect2 = {(WIDTH-cloud_size)/2, cloud_size/2, cloud_size, cloud_size};
@@ -173,5 +175,16 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
         SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
         SDL_Rect destRect = {(WIDTH-TILE_SIDE)/2, cloud_size-TILE_SIDE/2, TILE_SIDE, TILE_SIDE};
         SDL_RenderCopy(renderer, textures[POWER_START+data.player.power], &spriteRect, &destRect);
+    }
+
+    if (data.ai.skin != -1 && data.ai.power != 0 && !(data.ai.power_time < power_duration*60/5 && (data.ai.power_time%10) < 5)) {
+        int cloud_size = TILE_SIDE*2;
+        SDL_Rect spriteRect2 = {0, 0, cloud_size, cloud_size};
+        SDL_Rect destRect2 = {(WIDTH-cloud_size)/2 + 2*cloud_size, cloud_size/2, cloud_size, cloud_size};
+        SDL_RenderCopy(renderer, textures[CLOUD], &spriteRect2, &destRect2);
+
+        SDL_Rect spriteRect = {0, 0, TILE_SIDE, TILE_SIDE};
+        SDL_Rect destRect = {(WIDTH-TILE_SIDE)/2 + 2 * cloud_size, cloud_size-TILE_SIDE/2, TILE_SIDE, TILE_SIDE};
+        SDL_RenderCopy(renderer, textures[POWER_START+data.ai.power], &spriteRect, &destRect);
     }
 }

@@ -70,7 +70,16 @@ typedef struct player {
     float x; // position of the player
     int orientation; // orientation of the player
     int skin; // skin of the player (?)
+
+    // gui info
     int power; // power of the player
+    int power_time; // time left for the power
+    int anim;  // timer for player animation (0 = stopped, anything else = moving)
+    int buffer; // stores the next movement to be performed
+    obstacle* on_log; // pointer to the log the player is currently on (if any)
+    float liftboost; // in tiles per frame, speed at which the player is being carried (specifically for logs)
+    float x_offset; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
+
 } player;
 
 typedef struct displayedData {
