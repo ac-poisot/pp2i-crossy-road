@@ -283,15 +283,19 @@ player minmax_simple(lane* l, int deep, player p) {
     switch (c.move) {
         case GO_AHEAD:
             p.y = p.y + 1;
+            p.orientation = 1;
             break;
         case GO_DOWN:
             p.y = p.y - 1;
+            p.orientation = 180;
             break;
         case GO_LEFT:
             p.x = p.x - 1;
+            p.orientation = 270;
             break;
         case GO_RIGHT:
             p.x = p.x + 1;
+            p.orientation = 90;
             break;
         default:
         break;
@@ -482,15 +486,19 @@ player minmax_memo_state(lane* l, int deep, player p) {
     switch (c.move) {
         case GO_AHEAD:
             p.y = p.y + 1;
+            p.orientation = 1;
             break;
         case GO_DOWN:
             p.y = p.y - 1;
+            p.orientation = 180;
             break;
         case GO_LEFT:
             p.x = p.x - 1;
+            p.orientation = 270;
             break;
         case GO_RIGHT:
             p.x = p.x + 1;
+            p.orientation = 90;
             break;
         default:
         break;

@@ -315,7 +315,11 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
     }
 
     if (game->cameraY - current_p->y < (GAME_HEIGHT/4)) {
-        *game = move_camera(*game, PLAYER_SPEED); // move the camera if the player is too high
+        if (is_ai) {
+            *game = move_camera(*game, 1);
+        } else {
+            *game = move_camera(*game, PLAYER_SPEED); // move the camera if the player is too high
+        }
     }
 
     if (current_p->power_time>0){
