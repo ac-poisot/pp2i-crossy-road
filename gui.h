@@ -12,10 +12,11 @@
 #include "gui/button.h"
 #include "minmax.h"
 
-#define AI_AMOUNT 5 // temp until ai branch merge
+#define AI_AMOUNT 5
 
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
-#define ANIM_LENGTH 7 // In frames, time it takes for the player to get to the next tile // Double it for TANK
+#define ANIM_LENGTH 7 // In frames, time it takes for the player to get to the next tile
+#define AI_SPEED (ANIM_LENGTH) // In frames, time it takes for the AI to move one tile
 #define PLAYER_SPEED (1.0f /ANIM_LENGTH) // In tiles per frame, speed of the player
 
 #define UP 1

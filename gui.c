@@ -129,6 +129,10 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
                         current_p->on_log = collided_obstacle;
                         current_p->liftboost = player_top_lane->speed;
                         current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
+
+                        if (is_ai) {
+                            current_p->x = collided_obstacle->x + pos_on_log;
+                        }
                     }
                 }
                 break;
@@ -228,6 +232,10 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
                         current_p->on_log = collided_obstacle;
                         current_p->liftboost = player_bottom_lane->speed;
                         current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
+
+                        if (is_ai) {
+                            current_p->x = collided_obstacle->x + pos_on_log;
+                        }
                     }
                 }
                 break;
@@ -263,13 +271,13 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, i
     // a new action needs to be performed!
     if (!current_p->anim && current_p->buffer && *buffer_key_flag && !blocked_path && !drown_flag) {
         current_p->orientation = current_p->buffer;
-        current_p->anim = ANIM_LENGTH;// FOR TANK, should be  double
+        current_p->anim = ANIM_LENGTH;
         *buffer_key_flag = false;
         current_p->buffer = 0;
     }
 
     // player is currently moving, update everything accordingly
-    if (current_p->anim) {
+    if (current_p->anim && !is_ai) {
         if (blocked_path) {
             current_p->anim = 0;
         } else {
@@ -639,12 +647,6 @@ int main(void) {
                 Mix_PlayMusic(music[MUSIC_MAIN], -1);
             }
     
-            display(game, renderer, textures, sprite_set, TIME_POWER);
-            // Display the purse
-            char purseText[20];
-            sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
-    
             game = move_camera(game, GAME_SPEED);
                    
             // Update lanes
@@ -678,8 +680,7 @@ int main(void) {
 
             if (ai_choice != 0) {
                 if (game.ai.anim == 0) {
-                    game.ai.anim = ANIM_LENGTH; // reset AI animation
-
+                    game.ai.anim = AI_SPEED;
                     lane* current_lane = game.camera_first_lane;
                     while (current_lane->next != NULL) {
                         if (current_lane->y == ceil(game.ai.y)) {
@@ -688,8 +689,11 @@ int main(void) {
                         }
                         current_lane = current_lane->next;
                         }
-                    
                     game.ai = play_ai(ai_choice, ai_lane, game.ai);
+
+                    if (game.ai.on_log != NULL) {
+                        game.ai.x = round(game.ai.x);
+                    }
                 }
                 game.ai.anim--;
             }
@@ -701,6 +705,12 @@ int main(void) {
             if (ai_choice != 0) {
                 game.ai.dead = process_player(&game.ai, &game, sounds, &purse, &buffer_key_flag, true);
             }
+
+            display(game, renderer, textures, sprite_set, TIME_POWER);
+            // Display the purse
+            char purseText[20];
+            sprintf(purseText, "%d$", purse);
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
 
             if (game.player.dead || game.ai.dead) {
                 game_state = GAME_OVER;
