@@ -525,7 +525,7 @@ int main(void) {
             display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 5, (HEIGHT-BUTTON_HEIGHT)/2 + 20, 46, renderer, black, "Symtext.ttf", false);
             
             // Sprite set choice
-            button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
+            button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*2, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
             display_button(sprite_set_button, renderer, textures);
 
             SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
@@ -615,6 +615,10 @@ int main(void) {
             char purseText[20];
             sprintf(purseText, "%d$", purse);
             display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf", true);
+
+
+            // Display credits
+            display_text("2025 KART-PLEB | TELECOM Nancy", 15, HEIGHT-50, 20, renderer, white, "Symtext.ttf", true);
 
             break;
         }

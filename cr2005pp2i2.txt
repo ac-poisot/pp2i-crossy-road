@@ -1,5 +1,0 @@
-Problèmes collisions rondins ?
-Fuites mémoire update drowning slots
-Décaler algos qu'on va faire dans l'état de l'art
-
-Update fonction de collision pour les lanes d'eau dans minmax
