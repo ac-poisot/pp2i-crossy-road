@@ -1,5 +1,4 @@
 #include "gui.h"
-#include "core.h"
 
 void reset_savefile(void) {
     FILE *save_data = fopen("save/data.txt", "w");
@@ -521,7 +520,7 @@ int main(void) {
                 aiText = "AI2 only";
             }
 
-            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 5, (HEIGHT-BUTTON_HEIGHT)/2 + 20, 46, renderer, black, "Symtext.ttf");
+            display_text(aiText, (WIDTH+BUTTON_WIDTH)/2 + BUTTON_HEIGHT/2 - 5, (HEIGHT-BUTTON_HEIGHT)/2 + 20, 46, renderer, black, "Symtext.ttf", false);
             
             // Sprite set choice
             button sprite_set_button = {BUTTON_HEIGHT/2, HEIGHT - BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, CLOUD};
@@ -533,7 +532,7 @@ int main(void) {
 
             button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD};
             display_button(reset, renderer, textures);
-            display_text("RESET", WIDTH-BUTTON_WIDTH+28, BUTTON_HEIGHT+20, 40, renderer, black, "Symtext.ttf");
+            display_text("RESET", WIDTH-BUTTON_WIDTH+28, BUTTON_HEIGHT+20, 40, renderer, black, "Symtext.ttf", false);
 
             // Sound volume
             button sound_button = {WIDTH-BUTTON_HEIGHT*1.5, HEIGHT-BUTTON_HEIGHT*1.5, BUTTON_HEIGHT, BUTTON_HEIGHT, SOUND_ON};
@@ -598,11 +597,11 @@ int main(void) {
             // Display high score
             char highScoreText[20];
             sprintf(highScoreText, "High Score: %d", high_score);
-            display_text(highScoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(highScoreText, 15, 15, 24, renderer, white, "Symtext.ttf", true);
             // Display purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf", true);
 
             break;
         }
@@ -710,7 +709,7 @@ int main(void) {
             // Display the purse
             char purseText[20];
             sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf", true);
 
             if (game.player.dead || game.ai.dead) {
                 game_state = GAME_OVER;
@@ -752,7 +751,7 @@ int main(void) {
                     sound_played = true;
                     Mix_PlayChannel(1, sounds[SOUND_NEW_SKIN], 0);
                 }
-                display_text("AI defeated!", (WIDTH-CARD_WIDTH)/2 + 20, (HEIGHT/2-CARD_HEIGHT)/2 + CARD_HEIGHT + 20, 40, renderer, white, "Symtext.ttf");
+                display_text("AI defeated!", (WIDTH-CARD_WIDTH)/2 + 20, (HEIGHT/2-CARD_HEIGHT)/2 + CARD_HEIGHT + 20, 40, renderer, white, "Symtext.ttf", true);
             }
 
             break;
@@ -811,7 +810,7 @@ int main(void) {
                     skin_name = "???";
                 }
 
-                display_text(skin_name, skin_buttons[i].x+5, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "Symtext.ttf");
+                display_text(skin_name, skin_buttons[i].x+5, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "Symtext.ttf", true);
             }
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:
@@ -855,10 +854,10 @@ int main(void) {
                 if (!unlocked_skins[skin_to_unlock]) {
                     Mix_PlayChannel(1, sounds[SOUND_NEW_SKIN], 0);
                     char* skin_name = skin_names[skin_to_unlock];
-                    display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf");
-                    display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf");
+                    display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf", true);
+                    display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf", true);
                 } else {
-                    display_text("You already have this skin!", WIDTH/2-400, HEIGHT/2+icon_size/2, 45, renderer, white, "Symtext.ttf");
+                    display_text("You already have this skin!", WIDTH/2-400, HEIGHT/2+icon_size/2, 45, renderer, white, "Symtext.ttf", true);
                 }
                 unlocked_skins[skin_to_unlock] = true;
                 update_savefile(high_score, purse, unlocked_skins);

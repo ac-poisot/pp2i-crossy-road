@@ -1,6 +1,6 @@
 #include "display.h"
 
-void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color, char* font) {
+void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SDL_Color color, char* font, bool bg) {
     
     char font_path[256];
     snprintf(font_path, sizeof(font_path), "fonts/%s", font);
@@ -13,7 +13,15 @@ void display_text(char* text, int x, int y, int size, SDL_Renderer* renderer, SD
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
     SDL_Rect textRect = {x, y, textSurface->w, textSurface->h};
+
+    if (bg) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+        SDL_Rect bgRect = {x-5, y-5, textSurface->w+10, textSurface->h+10};
+        SDL_RenderFillRect(renderer, &bgRect);
+    }
+
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
     TTF_CloseFont(ttf_font);
@@ -174,7 +182,7 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
     SDL_Color white = {255, 255, 255, 255};
     
     if (data.player.skin != -1 || data.ai.skin != -1) {
-        display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
+        display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf", true);
     }
 
 
