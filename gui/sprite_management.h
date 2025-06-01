@@ -10,7 +10,7 @@
 
 #define TILE_SIDE 40
 
-#define SKIN_SIDE 100
+#define SKIN_SIDE 150
 #define SKINS 10
 
 #define BUTTON_WIDTH 200

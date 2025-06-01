@@ -448,7 +448,7 @@ int main(void) {
     button skin_buttons[SKINS] = {{0, 0, SKIN_SIDE, SKIN_SIDE, SKIN_BG}};
 
     for (int i=0; i<SKINS; i++) {
-        skin_buttons[i].x = ((i%SKINS_PER_LINE)*SKIN_SIDE*1.5)+SKIN_SIDE;
+        skin_buttons[i].x = ((i%SKINS_PER_LINE)*SKIN_SIDE*1.5)+SKIN_SIDE/2;
         skin_buttons[i].y = (i/SKINS_PER_LINE*SKIN_SIDE*1.5)+SKIN_SIDE;
         skin_buttons[i].width = SKIN_SIDE;
         skin_buttons[i].height = SKIN_SIDE;
@@ -520,7 +520,7 @@ int main(void) {
             display_button(sprite_set_button, renderer, textures);
 
             SDL_Rect spriteRect = {0, 0, SKIN_SIDE, SKIN_SIDE};
-            SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-SKIN_SIDE/2, sprite_set_button.y+(sprite_set_button.height/2)-SKIN_SIDE/2, SKIN_SIDE, SKIN_SIDE};
+            SDL_Rect destRect = {sprite_set_button.x+(sprite_set_button.width/2)-BUTTON_HEIGHT/2, sprite_set_button.y+(sprite_set_button.height/2)-BUTTON_HEIGHT/2, BUTTON_HEIGHT, BUTTON_HEIGHT};
             SDL_RenderCopy(renderer, textures[SKIN_START], &spriteRect, &destRect);
 
             button reset = {WIDTH-BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT, CLOUD};
@@ -615,7 +615,7 @@ int main(void) {
                         game.player.skin = player_skin;
                         game.ai.skin = -1;
                         if (ai_choice != 0) {
-                            game.ai.skin = player_skin;
+                            game.ai.skin = 6;
                         }
                         if (ai_choice >= 3) {
                             game.player.skin = -1;
@@ -801,7 +801,7 @@ int main(void) {
                     skin_name = "???";
                 }
 
-                display_text(skin_name, skin_buttons[i].x, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "Symtext.ttf");
+                display_text(skin_name, skin_buttons[i].x+5, skin_buttons[i].y + SKIN_SIDE, 24, renderer, white, "Symtext.ttf");
             }
             switch (event.type) {
                 case SDL_MOUSEBUTTONUP:

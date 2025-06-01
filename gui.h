@@ -34,7 +34,7 @@ enum {
     SKIN_SELECT,
 };
 
-#define SKINS_PER_LINE (int) ((WIDTH-SKIN_SIDE*2)/(SKIN_SIDE*1.5)) // how many skins to be displayed by line
+#define SKINS_PER_LINE (int) ((WIDTH-SKIN_SIDE*2)/(SKIN_SIDE*1.5)+2) // how many skins to be displayed by line
 #define PRICE 5
 
 #define FADE_LENGTH 50 // in frames, duration of the transitions
