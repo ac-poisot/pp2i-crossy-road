@@ -563,7 +563,7 @@ int main(void) {
                         reset_savefile();
                         high_score = 0;
                         purse = 0;
-                        for (int i=0; i<SKINS; i++) {
+                        for (int i=1; i<SKINS; i++) {
                             unlocked_skins[i] = 0;
                         }
                     }
@@ -856,7 +856,7 @@ int main(void) {
                 if (!unlocked_skins[skin_to_unlock]) {
                     Mix_PlayChannel(1, sounds[SOUND_NEW_SKIN], 0);
                     char* skin_name = skin_names[skin_to_unlock];
-                    display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2, 50, renderer, white, "Symtext.ttf", true);
+                    display_text("New skin unlocked!", WIDTH/2-280, HEIGHT/2+icon_size/2-30, 50, renderer, white, "Symtext.ttf", true);
                     display_text(skin_name, WIDTH/2-100, HEIGHT/2+icon_size/2+50,50, renderer, white, "Symtext.ttf", true);
                 } else {
                     display_text("You already have this skin!", WIDTH/2-400, HEIGHT/2+icon_size/2, 45, renderer, white, "Symtext.ttf", true);

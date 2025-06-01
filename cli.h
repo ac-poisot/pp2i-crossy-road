@@ -32,10 +32,10 @@
 #define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
 
 #define PLAYER_START_Y 5 // starting position of the player
-#define AI_SPEED 20 // in frames, time it takes for the AI to move one tile
+#define AI_SPEED 10 // in frames, time it takes for the AI to move one tile
 
 #define REFRESH_RATE 60 // refresh rate of the game in frames per second
-#define GAME_SPEED 20 // in frames, time between each move of the camera
+#define GAME_SPEED 60 // in frames, time between each move of the camera
 
 #define GRASS     1
 #define WATER     2

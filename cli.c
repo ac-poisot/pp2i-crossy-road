@@ -208,16 +208,12 @@ int main(void) {
     int current_y;
     int current_x;
     bool drown_flag;
-    obstacle* on_log = NULL; // pointer to the log the player is currently on, if any
     displayedData game;
 
     bool menu_anim = true;
     int star = 0;
 
     int cai = 0; // ai chosen, absent by default
-    int time_ai = AI_SPEED; // timer for the ai
-    obstacle* on_log_ai = NULL; // pointer to the log the ai is currently on, if any
-    bool ai_dead = false;
 
     while (true) {
         int ch = getch(); //Get the inputs from the keyboard
@@ -265,10 +261,6 @@ int main(void) {
                 clear();
                 game_state = GAME;
                 move_timer = GAME_SPEED;
-                ai_dead = false;
-                on_log = NULL;
-                on_log_ai = NULL;
-                time_ai = AI_SPEED;
                 game = init_game(GAME_HEIGHT);
                 if (!cai) {
                     game.ai.skin = -1;
@@ -422,73 +414,75 @@ int main(void) {
 
                 current_lane = current_lane->next;
             }
+            
+            if (cai < 3) {
+                if (player_lane != NULL) {
 
-            if (player_lane != NULL) {
-
-                // Check for collisions with coins
-                if (collides_coin(player_lane, game) != NULL) {
-                    purse++;
-                }
-
-                if (player_lane->type == WATER) {
-                    drown_flag = true; // set this to false to disable drowning
+                    // Check for collisions with coins
+                    if (collides_coin(player_lane, game) != NULL) {
+                        purse++;
                     }
-                else {
-                    drown_flag = false;
-                    }
-                
-                if (player_lane->type == WATER && player_lane->speed != 0) {
-                    if (on_log != NULL) {
-                        game.player.x += player_lane->speed;
-                    }
-                } else {
-                    on_log = NULL;
-                    game.player.x = round(game.player.x);
-                    game.player.y = round(game.player.y);
-                }
-                
 
-                // Check for collisions with obstacles
-                obstacle* collided_obstacle = collides(player_lane, game.player);
-                if(collided_obstacle != NULL) {
-                    switch (player_lane->type) {
-                        case GRASS:
-                        game.player.x = current_x;
-                        game.player.y = current_y;
-                        break;
-                        case TRACK:
-                        game_state = GAME_OVER;
-                        break;
-                        case ROAD:
-                        game_state = GAME_OVER;
-                        break;
-                        case WATER:
-                        drown_flag = false;
-                        if (player_lane->speed != 0) {
-                            if (on_log != collided_obstacle) {
-                                on_log = collided_obstacle;
-                                game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
-                            }
+                    if (player_lane->type == WATER) {
+                        drown_flag = true; // set this to false to disable drowning
                         }
-                        break;
-                        break;
-                        default:
-                        break;
+                    else {
+                        drown_flag = false;
+                        }
+                    
+                    if (player_lane->type == WATER && player_lane->speed != 0) {
+                        if (game.player.on_log != NULL) {
+                            game.player.x += player_lane->speed;
+                        }
+                    } else {
+                        game.player.on_log = NULL;
+                        game.player.x = round(game.player.x);
+                        game.player.y = round(game.player.y);
                     }
+                    
+
+                    // Check for collisions with obstacles
+                    obstacle* collided_obstacle = collides(player_lane, game.player);
+                    if(collided_obstacle != NULL) {
+                        switch (player_lane->type) {
+                            case GRASS:
+                            game.player.x = current_x;
+                            game.player.y = current_y;
+                            break;
+                            case TRACK:
+                            game.player.dead = true;
+                            break;
+                            case ROAD:
+                            game.player.dead = true;
+                            break;
+                            case WATER:
+                            drown_flag = false;
+                            if (player_lane->speed != 0) {
+                                if (game.player.on_log != collided_obstacle) {
+                                    game.player.on_log = collided_obstacle;
+                                    game.player.x = collided_obstacle->x + abs((int) round(game.player.x - collided_obstacle->x));
+                                }
+                            }
+                            break;
+                            break;
+                            default:
+                            break;
+                        }
+                    }
+
                 }
 
-            }
-
-            if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag || game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
-                game_state = GAME_OVER;
+                if (game.player.y < game.cameraY - GAME_HEIGHT || drown_flag || game.player.x < UNPLAYABLE_WIDTH || game.player.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
+                    game.player.dead = true;
+                }
             }
 
             if (cai != 0) {
-                time_ai--;
-                if (time_ai == 0) {
+                if (game.ai.anim == 0) {
                     game.ai = play_ai(cai, ai_lane, game.ai);
-                    time_ai = AI_SPEED;
+                    game.ai.anim = AI_SPEED;
                 }
+                game.ai.anim--;
 
                 if (ai_lane != NULL) {
 
@@ -500,11 +494,11 @@ int main(void) {
                     }
                 
                 if (ai_lane->type == WATER && ai_lane->speed != 0) {
-                    if (on_log_ai != NULL) {
+                    if (game.ai.on_log != NULL) {
                         game.ai.x += ai_lane->speed;
                     }
                 } else {
-                    on_log_ai = NULL;
+                    game.ai.on_log = NULL;
                     game.ai.x = round(game.ai.x);
                     game.ai.y = round(game.ai.y);
                 }
@@ -519,16 +513,16 @@ int main(void) {
                         game.ai.y = current_y;
                         break;
                         case TRACK:
-                        ai_dead = true;
+                        game.ai.dead = true;
                         break;
                         case ROAD:
-                        ai_dead = true;
+                        game.ai.dead = true;
                         break;
                         case WATER:
                         drown_flag = false;
                         if (player_lane->speed != 0) {
-                            if (on_log_ai != collided_obstacle) {
-                                on_log_ai = collided_obstacle;
+                            if (game.ai.on_log != collided_obstacle) {
+                                game.ai.on_log = collided_obstacle;
                                 game.ai.x = collided_obstacle->x + abs((int) round(game.ai.x - collided_obstacle->x));
                             }
                         }
@@ -541,24 +535,16 @@ int main(void) {
 
             }
             if (game.ai.y < game.cameraY - GAME_HEIGHT || drown_flag || game.ai.x < UNPLAYABLE_WIDTH || game.ai.x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1) {
-                ai_dead = true;
+                game.ai.dead = true;
             }
             }
 
-            if (game_state == GAME_OVER && cai == 4) {
-                game_state = GAME;
-            }
+            display(game);
+            // Display the purse
+            mvprintw(0, LANE_WIDTH-3, "%d$", purse);
+            refresh();
 
-            if (game_state != GAME_OVER) {
-                display(game);
-                // Display the purse
-                mvprintw(0, LANE_WIDTH-3, "%d$", purse);
-                refresh();
-            }
-
-
-
-            if (ai_dead) {
+            if (game.ai.dead || game.player.dead) {
                 game_state = GAME_OVER;
             }
         
@@ -573,7 +559,7 @@ int main(void) {
             
             if (cai == 1 || cai == 2) {
                 mvprintw(1, 0, "AI chosen: %d", (int)cai);
-                if (ai_dead) {
+                if (game.ai.dead) {
                     mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "You won!");
                 } else {
                     mvprintw(GAME_HEIGHT/4, LANE_WIDTH+2, "You lost!");
