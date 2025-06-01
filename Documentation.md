@@ -150,5 +150,13 @@ La fonction supprime le train en collision avec le personnage
 # IA
 __Intelligence Artificielle__
 # CLI
-__Commande 
+
 # GUI
+### void reset_savefile(void)
+LA fonction permet de réinitialiser le fichier data.txt
+### void update_savefile(int high_score, int purse, bool* unlocked_skins)
+La fonction permet de sauvegarder les multiples variables extérieures au jeu entre les parties, et les exécution dans le fichier data.txt
+### int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai)
+IA, je connait pas
+### int main(void)
+La fonction principale
