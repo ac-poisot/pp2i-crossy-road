@@ -1167,26 +1167,26 @@ displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* c
     {
         collided_obstacle->prev->next = collided_obstacle->next;
         collided_obstacle->next->prev = collided_obstacle->prev;
-        free(collided_obstacle);
     }
     else {
     if(collided_obstacle->prev!=NULL && collided_obstacle->next==NULL)
     {
         collided_obstacle->prev->next = NULL;
-        free(collided_obstacle);
     }
     else {
     if (collided_obstacle->prev==NULL && collided_obstacle->next==NULL)
     {
         current_lane->obstacles = NULL;
+        
     }
     else{
     if (collided_obstacle->prev==NULL && collided_obstacle->next!=NULL) 
     {
         current_lane->obstacles = collided_obstacle->next;
         collided_obstacle->next->prev = NULL;
+    }}}}
         free(collided_obstacle);    
-    }}}}}
+    }
     return data;
 }
 displayedData tank_train (displayedData data){
