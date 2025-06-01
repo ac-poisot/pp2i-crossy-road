@@ -1087,7 +1087,7 @@ float_list* collides_coin(lane *current_lane, displayedData game) {
     /* checks if the player collides with a coin */
     float_list* current_coin = current_lane->coins;
     while (current_coin != NULL) {
-        if (round(game.player.x*10) == round(current_coin->val*10)) { // values truncated to first decimal digit to avoid float precision issues
+        if (round(game.player.x*5) == round(current_coin->val*5)) { // values truncated to first decimal digit to avoid float precision issues
             current_coin->val = -1; // mark the coin as collected
             return current_coin;
         }

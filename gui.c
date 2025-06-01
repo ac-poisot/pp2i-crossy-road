@@ -19,7 +19,7 @@ void update_savefile(int high_score, int purse, bool* unlocked_skins) {
     fclose(save_data);
 }
 
-int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag, bool is_ai) {
+int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai) {
     bool drown_flag = false; // whether the player is drowning
     bool blocked_path = false;
 
@@ -80,9 +80,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
 
         if (current_p->x_offset == 0 && current_p->on_log == NULL && player_top_lane->type == WATER && player_top_lane->speed != 0 && current_p->power == XIV) {
                 current_p->liftboost = player_top_lane->speed;
-                current_p->on_log = didier;
-                current_p->x_offset = 0.0001;
-            }
+        }
 
         //Check for collisions with obstacles
         obstacle* collided_obstacle = collides(player_top_lane, *current_p);
@@ -125,17 +123,12 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                     // case where we are going up to different log than before or from ground
                     if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == UP) {
                         int pos_on_log = (int) round(current_p->x - collided_obstacle->x); // in tiles, position of the player relative to the log
+                        if (pos_on_log > collided_obstacle->size-1) {
+                            pos_on_log = collided_obstacle->size-1;
+                        }
                         current_p->on_log = collided_obstacle;
                         current_p->liftboost = player_top_lane->speed;
                         current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
-
-                        // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
-                        if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
-                            current_p->on_log = collided_obstacle->next;
-                            
-                            current_p->x_offset = (collided_obstacle->next->x - current_p->x)/(ANIM_LENGTH);
-                            
-                        }
                     }
                 }
                 break;
@@ -145,7 +138,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
         }
 
         // leaving a log
-        if (current_p->on_log != NULL && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && current_p->orientation == UP) {
+        if (current_p->liftboost != 0 && !(player_top_lane->type == WATER && player_top_lane->speed != 0) && current_p->orientation == UP) {
             
             if (collided_obstacle != NULL && player_top_lane->type == GRASS) {
                 blocked_path = true;
@@ -161,7 +154,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
         // Check for collisions with coins
         float_list* collided_coin =  collides_coin(player_bottom_lane, *game);
         if (collided_coin != NULL) {
-            if(collided_coin->power == 0){
+            if(collided_coin->power == 0 && !is_ai){
                 Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
                 if (current_p->power == CRESUS) {
                     *purse += CRESUS_MODIF;
@@ -188,8 +181,6 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
 
         if (current_p->x_offset == 0 && current_p->on_log == NULL && player_bottom_lane->type == WATER && player_bottom_lane->speed != 0 && current_p->power == XIV) {
             current_p->liftboost = player_bottom_lane->speed;
-            current_p->on_log = didier;
-            current_p->x_offset = 0.0001;
         }
         // Check for collisions with obstacles
         obstacle* collided_obstacle = collides(player_bottom_lane, *current_p);
@@ -231,15 +222,12 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                     // case where we are going down to different log than before or from ground
                     if (current_p->on_log != collided_obstacle && current_p->on_log != collided_obstacle->next && current_p->orientation == DOWN) {
                         int pos_on_log = (int) round(current_p->x - collided_obstacle->x);
+                        if (pos_on_log > collided_obstacle->size-1) {
+                            pos_on_log = collided_obstacle->size-1;
+                        }
                         current_p->on_log = collided_obstacle;
                         current_p->liftboost = player_bottom_lane->speed;
                         current_p->x_offset = ((collided_obstacle->x + pos_on_log)-current_p->x)/(ANIM_LENGTH);
-
-                        // in case the player is too far right to be on the log that's being collided with, check if there is a log right next to it
-                        if (pos_on_log == collided_obstacle->size && collided_obstacle->next != NULL && floor(collided_obstacle->x + collided_obstacle->size) == floor(collided_obstacle->next->x)) {
-                            current_p->on_log = collided_obstacle->next;
-                            current_p->x_offset = (collided_obstacle->next->x - current_p->x)/(ANIM_LENGTH);
-                        }
                     }
                 }
                 break;
@@ -248,7 +236,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
             }
         }
 
-        if (current_p->on_log != NULL && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && current_p->orientation == DOWN) {                
+        if (current_p->liftboost != 0 && !(player_bottom_lane->type == WATER && player_bottom_lane->speed != 0) && current_p->orientation == DOWN) {                
             
             if (collided_obstacle != NULL && player_bottom_lane->type == GRASS) {
                 blocked_path = true;
@@ -336,8 +324,8 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
 
     if (current_p->y < game->cameraY - GAME_HEIGHT || // player is too low
         (drown_flag && !current_p->anim) || // player is drowning
-        (current_p->x < UNPLAYABLE_WIDTH && current_p->on_log != NULL) || // player is being carried offscreen
-        (current_p->x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && current_p->on_log != NULL)) // player is being carreid offscreen
+        (current_p->x < UNPLAYABLE_WIDTH && current_p->liftboost != 0) || // player is being carried offscreen
+        (current_p->x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && current_p->liftboost != 0)) // player is being carried offscreen
     {
         return 1;
     }
@@ -350,7 +338,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                 return 1; // if not, game over
             }
         }
-        else if (current_p->x+0.1 < current_p->on_log->x) { // check if player is too far left on the log it's currently on
+        else if (current_p->x+0.2 < current_p->on_log->x) { // check if player is too far left on the log it's currently on
             if (current_p->on_log->prev != NULL && floor(current_p->on_log->prev->x + current_p->on_log->prev->size) == floor(current_p->on_log->x)) { // check if player can move left to a different adjacent log
                 current_p->on_log = current_p->on_log->prev;
             } else {
@@ -363,11 +351,6 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
 
 
 int main(void) {
-    obstacle* didier = malloc(sizeof(obstacle));
-    didier->next = NULL;
-    didier->prev = NULL;
-    didier->size = -12;
-    didier->x = 0;
     struct timespec remaining, request = { 0, 1000000000/REFRESH_RATE}; // ~1 frame at REFRESH_RATE fps
     time_t SEED = time(NULL);
     srand(SEED);
@@ -712,11 +695,11 @@ int main(void) {
             }
             
             if (ai_choice < 3) {
-                game.player.dead = process_player(&game.player, &game, sounds, didier, &purse, &buffer_key_flag, false);
+                game.player.dead = process_player(&game.player, &game, sounds, &purse, &buffer_key_flag, false);
             }
 
             if (ai_choice != 0) {
-                game.ai.dead = process_player(&game.ai, &game, sounds, didier, &purse, &buffer_key_flag, true);
+                game.ai.dead = process_player(&game.ai, &game, sounds, &purse, &buffer_key_flag, true);
             }
 
             if (game.player.dead || game.ai.dead) {
@@ -908,7 +891,6 @@ int main(void) {
     
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    free(didier);
 
     free_sounds(sounds, music);
 
