@@ -509,6 +509,8 @@ player play_ai(int cai, lane* player_lane, player ai) {
         case 2:
         return minmax_memo_state(player_lane, 5, ai);
         break;
+        case 3:
+        return minmax_simple(player_lane, 5, ai);
         case 4:
         return minmax_memo_state(player_lane, 5, ai);
         break;

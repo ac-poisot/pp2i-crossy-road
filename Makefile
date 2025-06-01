@@ -48,8 +48,8 @@ main_only_core: core.o
 main_cli: core.o cli.o minmax.o list.o
 	$(CC) $(CFLAGS) $(CSANI) -o main_cli core.o cli.o minmax.o list.o -lncurses
 
-main_graphics: core.o gui.o button.o display.o sprite_management.o sound_management.o
-	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o button.o display.o sprite_management.o sound_management.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf -lSDL2_mixer
+main_graphics: core.o gui.o button.o display.o sprite_management.o sound_management.o minmax.o
+	$(CC) $(CFLAGS) $(CSANI) -o main_graphics core.o gui.o button.o display.o sprite_management.o sound_management.o minmax.o -lSDL2  -lSDL2_image -lSDL2 -lSDL2_ttf -lSDL2_mixer
 
 core_test: core.o core_test.o
 	$(CC) $(CFLAGS) $(CSANI) -o core_test core.o core_test.o

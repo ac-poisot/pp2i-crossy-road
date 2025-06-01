@@ -10,8 +10,9 @@
 #include "gui/sprite_management.h"
 #include "gui/sound_management.h"
 #include "gui/button.h"
+#include "minmax.h"
 
-#define AI_AMOUNT 6 // temp until ai branch merge
+#define AI_AMOUNT 5 // temp until ai branch merge
 
 #define GAME_SPEED 0.01 // In pixels per frame, speed of the scrolling
 #define ANIM_LENGTH 7 // In frames, time it takes for the player to get to the next tile // Double it for TANK

@@ -165,6 +165,10 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
         display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
     }
 
+    if (data.ai.skin != -1) {
+        displayPlayer(data.ai, data.cameraY, renderer, textures, skin_set);
+    }
+
 
     if (data.player.skin != -1 && data.player.power != 0 && !(data.player.power_time < power_duration*60/5 && (data.player.power_time%10) < 5)) {
         int cloud_size = TILE_SIDE*2;

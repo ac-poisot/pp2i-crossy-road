@@ -19,11 +19,11 @@ void update_savefile(int high_score, int purse, bool* unlocked_skins) {
     fclose(save_data);
 }
 
-int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag) {
+int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag) {
     bool drown_flag = false; // whether the player is drowning
     bool blocked_path = false;
 
-    lane* current_lane = game.camera_first_lane;
+    lane* current_lane = game->camera_first_lane;
     lane* player_top_lane = NULL; // lane on or above the player
     lane* player_bottom_lane = NULL; // lane below the player
 
@@ -44,7 +44,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
     if (player_top_lane != NULL) {
 
         // Check for collisions with coins
-        float_list* collided_coin =  collides_coin(player_top_lane, game);
+        float_list* collided_coin =  collides_coin(player_top_lane, *game);
         if (collided_coin != NULL) {
             if(collided_coin->power == 0){
                 Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
@@ -58,7 +58,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
             else {
                 if(collided_coin->power == ECOLO){
                     current_p->power_time =1;
-                    game = power4(game);
+                    *game = power4(*game);
                     current_p->on_log = NULL;
                     current_p->liftboost = 0;
                 }
@@ -96,7 +96,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     }
                 }
                 else {
-                    game = tank_road(game,  collided_obstacle,player_top_lane);
+                    *game = tank_road(*game,  collided_obstacle,player_top_lane);
                     collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
                 }
                 break;
@@ -105,7 +105,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     return 1;
                 }
                 else {
-                    game = tank_train(game);
+                    *game = tank_train(*game);
                     collided_obstacle = NULL;
                 }
                 break;
@@ -114,7 +114,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     return 1;
                 }
                 else {
-                    game = tank_road(game,  collided_obstacle,player_top_lane);
+                    *game = tank_road(*game,  collided_obstacle,player_top_lane);
                     collided_obstacle = NULL;
                 }
                 break;
@@ -159,7 +159,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
 
     if (player_bottom_lane != NULL) {
         // Check for collisions with coins
-        float_list* collided_coin =  collides_coin(player_bottom_lane, game);
+        float_list* collided_coin =  collides_coin(player_bottom_lane, *game);
         if (collided_coin != NULL) {
             if(collided_coin->power == 0){
                 Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
@@ -173,7 +173,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
             else {
                 if(collided_coin->power == ECOLO){
                     current_p->power_time =1;
-                    game = power4(game);
+                    *game = power4(*game);
                     current_p->on_log = NULL;
                     current_p->liftboost = 0;
                 }
@@ -202,7 +202,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     }
                 }
                 else {
-                    game = tank_road(game,collided_obstacle,player_bottom_lane);
+                    *game = tank_road(*game,collided_obstacle,player_bottom_lane);
                     collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
                 }
                 break;
@@ -211,7 +211,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     return 1;
                 }
                 else {
-                    game = tank_train(game);
+                    *game = tank_train(*game);
                     collided_obstacle = NULL;
                 }
                 break;
@@ -220,7 +220,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
                     return 1;
                 }
                 else {
-                    game = tank_road(game,collided_obstacle,player_bottom_lane);
+                    *game = tank_road(*game,collided_obstacle,player_bottom_lane);
                     collided_obstacle = NULL;
                 }
                 break;
@@ -287,9 +287,6 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
             switch (current_p->orientation) {
                 case UP:
                     current_p->y += PLAYER_SPEED;
-                    if (game.cameraY - current_p->y < (GAME_HEIGHT/4)) {
-                        game = move_camera(game, PLAYER_SPEED); // move the camera if the player is too high
-                    }
                     break;
                 case DOWN:
                     current_p->y -= PLAYER_SPEED;
@@ -318,6 +315,10 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
 
     }
 
+    if (game->cameraY - current_p->y < (GAME_HEIGHT/4)) {
+        *game = move_camera(*game, PLAYER_SPEED); // move the camera if the player is too high
+    }
+
     if (current_p->power_time>0){
         current_p->power_time--;
     }//Decrease time remaining for the power;
@@ -328,7 +329,7 @@ int process_player(player* current_p, displayedData game, Mix_Chunk** sounds, ob
 
     // checking for game over
 
-    if (current_p->y < game.cameraY - GAME_HEIGHT || // player is too low
+    if (current_p->y < game->cameraY - GAME_HEIGHT || // player is too low
         (drown_flag && !current_p->anim) || // player is drowning
         (current_p->x < UNPLAYABLE_WIDTH && current_p->on_log != NULL) || // player is being carried offscreen
         (current_p->x > LANE_WIDTH - UNPLAYABLE_WIDTH - 1 && current_p->on_log != NULL)) // player is being carreid offscreen
@@ -390,6 +391,7 @@ int main(void) {
     SDL_Event event;
     int running = 1;
     bool action = false;
+    lane* ai_lane = NULL;
 
     SDL_Color white = {255, 255, 255, 255};
     SDL_Color black = {0, 0, 0, 255};
@@ -415,9 +417,6 @@ int main(void) {
     displayedData demo = init_game(GAME_HEIGHT);
     demo.player.skin = -1;
     int fade = FADE_LENGTH;
-    
-    bool is_ai = 0;
-    player* current_p = NULL;
 
     int ai_choice = 0;
     int sprite_set = 1;
@@ -626,17 +625,11 @@ int main(void) {
                         free_lanes(game.first_lane);
                         game = init_game(GAME_HEIGHT);
                         game.player.skin = player_skin;
-                        buffer_key_flag = true;
-                        is_ai = false;
                         game.ai.skin = -1;
-                        current_p = &game.player;
-
                         if (ai_choice != 0) {
                             game.ai.skin = player_skin;
                         }
                         if (ai_choice >= 3) {
-                            is_ai = true;
-                            current_p = &game.ai;
                             game.player.skin = -1;
                         }
                     }
@@ -657,7 +650,21 @@ int main(void) {
             if (!Mix_PlayingMusic()) {
                 Mix_PlayMusic(music[MUSIC_MAIN], -1);
             }
-            if (action) {
+    
+            display(game, renderer, textures, sprite_set, TIME_POWER);
+            // Display the purse
+            char purseText[20];
+            sprintf(purseText, "%d$", purse);
+            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
+    
+            game = move_camera(game, GAME_SPEED);
+                   
+            // Update lanes
+            if (!(game.player.power == NEO && game.player.power_time%2 == 0) && !(game.ai.power == NEO && game.ai.power_time%2 == 0)) {
+                updateLanes(game.camera_first_lane);
+            }
+
+            if (action && ai_choice < 4) {
                 switch (event.type) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
@@ -680,24 +687,34 @@ int main(void) {
                     break;
                 }
             }
-            
-    
-            display(game, renderer, textures, sprite_set, TIME_POWER);
-            // Display the purse
-            char purseText[20];
-            sprintf(purseText, "%d$", purse);
-            display_text(purseText, WIDTH-24*((int)(log10(purse+0.5))+2)-15, 15, 24, renderer, white, "Symtext.ttf");
-    
-            game = move_camera(game, GAME_SPEED);
-                   
-            // Update lanes
-            if (!(current_p->power == NEO && current_p->power_time%2 == 0)) {
-                updateLanes(game.camera_first_lane);
+
+            if (ai_choice != 0) {
+                if (game.ai.anim == 0) {
+                    game.ai.anim = ANIM_LENGTH; // reset AI animation
+
+                    lane* current_lane = game.camera_first_lane;
+                    while (current_lane->next != NULL) {
+                        if (current_lane->y == ceil(game.ai.y)) {
+                            ai_lane = current_lane;
+                            break;
+                        }
+                        current_lane = current_lane->next;
+                        }
+                    
+                    game.ai = play_ai(ai_choice, ai_lane, game.ai);
+                }
+                game.ai.anim--;
             }
             
-            bool player_dead = process_player(current_p, game, sounds, didier, &purse, &buffer_key_flag);
+            if (ai_choice < 3) {
+                game.player.dead = process_player(&game.player, &game, sounds, didier, &purse, &buffer_key_flag);
+            }
 
-            if (player_dead) {
+            if (ai_choice != 0) {
+                game.ai.dead = process_player(&game.ai, &game, sounds, didier, &purse, &buffer_key_flag);
+            }
+
+            if (game.player.dead || game.ai.dead) {
                 game_state = GAME_OVER;
                 fade = FADE_LENGTH;
             }
@@ -724,9 +741,18 @@ int main(void) {
                         game_state = GO_TO_MENU;
                     }
             }
-            SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
-            SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
-            SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
+
+
+            if (game.player.dead || game.player.skin == -1) {
+                SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
+                SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
+                SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
+            }
+
+            if (game.ai.dead && game.player.skin != -1) {
+                display_text("AI defeated!", (WIDTH-CARD_WIDTH)/2 + 20, (HEIGHT/2-CARD_HEIGHT)/2 + CARD_HEIGHT + 20, 40, renderer, white, "Symtext.ttf");
+            }
+
             break;
         }
         case GO_TO_MENU: {
@@ -743,8 +769,8 @@ int main(void) {
                 }
                 fade--;
             } else {
-                if (high_score < (int) current_p->y) {
-                    high_score = (int) current_p->y;
+                if (high_score < (int) game.player.y) {
+                    high_score = (int) game.player.y;
                 }
                 update_savefile(high_score, purse, unlocked_skins);
                 game_state = MENU;
