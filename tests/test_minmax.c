@@ -210,7 +210,7 @@ void test_minmax_rec_begining(void) {
     assert(c.move == GO_AHEAD);
 
     lane** tab = n_update(3, l);
-    couple cm = minmax_rec_memo_state(l, 3, todo, p, tab);
+    couple cm = minmax_rec_memo_state(3, todo, p, tab);
     assert(cm.score == 3);
     assert(cm.move == GO_AHEAD);
 
@@ -257,7 +257,7 @@ void test_one_stay(void) {
     assert(c1.move == GO_RIGHT); //pas STAY car mis à jour
 
     lane** tab = n_update(1, l1->prev);
-    couple cm = minmax_rec_memo_state(l1->prev, 1, todo, p, tab);
+    couple cm = minmax_rec_memo_state(1, todo, p, tab);
     assert(cm.score == 0);
     assert(cm.move == GO_RIGHT); //pas STAY car mis à jour
     free_update(tab, 1);
@@ -301,7 +301,7 @@ void test_one_right(void) {
     assert(c1.move == GO_RIGHT);
 
     lane** tab = n_update(1, l2);
-    couple cm = minmax_rec_memo_state(l2, 1, todo, p, tab);
+    couple cm = minmax_rec_memo_state(1, todo, p, tab);
     assert(cm.score == 0);
     assert(cm.move == GO_RIGHT);
     free_update(tab, 1);
@@ -349,7 +349,7 @@ void test_two_rigth(void) {
     assert(c2.move == GO_RIGHT);
 
     lane** tab = n_update(2, l1->prev);
-    couple cm = minmax_rec_memo_state(l1->prev, 2, todo, p, tab);
+    couple cm = minmax_rec_memo_state(2, todo, p, tab);
     assert(cm.score == 1);
     assert(cm.move == GO_RIGHT);
     free_update(tab, 2);
@@ -396,7 +396,7 @@ void test_three_stay(void) {
     assert(c3.move == GO_RIGHT); //pas STAY car mis a jour
 
     lane** tab = n_update(3, l1->prev);
-    couple cm = minmax_rec_memo_state(l1->prev, 3, todo, p, tab);
+    couple cm = minmax_rec_memo_state(3, todo, p, tab);
     assert(cm.score == 1);
     assert(cm.move == GO_RIGHT); //pas STAY car mis a jour
     free_update(tab, 3);
@@ -446,7 +446,7 @@ void test_two_down(void) {
     assert(c4.move == GO_DOWN);
 
     lane** tab = n_update(2, l2->prev);
-    couple cm = minmax_rec_memo_state(l2->prev, 2, todo, p, tab);
+    couple cm = minmax_rec_memo_state(2, todo, p, tab);
     assert(cm.score == -1);
     assert(cm.move == GO_DOWN);
     free_update(tab, 2);
@@ -496,7 +496,7 @@ void test_three_down(void) {
     assert(c4.move == GO_DOWN);
 
     lane** tab = n_update(3, l2->prev);
-    couple cm = minmax_rec_memo_state(l2->prev, 3, todo, p, tab);
+    couple cm = minmax_rec_memo_state(3, todo, p, tab);
     assert(cm.score == 0);
     assert(cm.move == GO_DOWN);
     free_update(tab, 3);
@@ -536,7 +536,7 @@ void test_water_stay(void) {
     assert(p.y == 4);
 
     lane** tab = n_update(3, l);
-    couple cm = minmax_rec_memo_state(l, 3, todo, p, tab);
+    couple cm = minmax_rec_memo_state(3, todo, p, tab);
     assert(cm.score == 0);
     assert(cm.move == STAY);
     free_update(tab, 3);
@@ -564,7 +564,7 @@ void test_water_one_ahead(void) {
     assert(p.y == 4);
 
     lane** tab = n_update(2, l);
-    couple cm = minmax_rec_memo_state(l, 2, todo, p, tab);
+    couple cm = minmax_rec_memo_state(2, todo, p, tab);
     assert(cm.score == 1);
     assert(cm.move == GO_AHEAD);
     free_update(tab, 2);
@@ -592,7 +592,7 @@ void test_water_one_ahead_bis(void) {
     assert(p.y == 4);
 
     lane** tab = n_update(2, l);
-    couple cm = minmax_rec_memo_state(l, 2, todo, p, tab);
+    couple cm = minmax_rec_memo_state(2, todo, p, tab);
     assert(cm.score == 1);
     assert(cm.move == GO_AHEAD);
     free_update(tab, 2);

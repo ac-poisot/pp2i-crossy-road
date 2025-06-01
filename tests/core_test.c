@@ -97,7 +97,7 @@ void test_trees_generation(void) {
 
 void test_update_logs(void) {
 
-    // We create a custom lane with drowning slots
+    // We create a custom lane with logs
     lane* l = (lane*)malloc(sizeof(lane));
     l->type = WATER;
     l->y = 0;
@@ -122,11 +122,11 @@ void test_update_logs(void) {
     l->coins->next = NULL;
 
 
-    // We update the drowning slots of the lane
+    // We update the logs of the lane
     update_logs(l);
 
 
-    // Check if the drowning slot we created still exists and is in the right position
+    // Check if the log we created still exists and is in the right position
     obstacle* current = l->obstacles;
     bool did_move_correctly = false;
     while (current != NULL) {
@@ -152,7 +152,7 @@ void test_update_logs(void) {
     free_obstacles(l->obstacles);
     free_coins(l->coins);
     free(l);
-    printf("test_drowning_slots passed\n");
+    printf("test_logs passed\n");
 
 }
 

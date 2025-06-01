@@ -31,6 +31,6 @@ couple minmax_rec(lane* l, int deep, couple previous, player p);
 player minmax_simple(lane* l, int deep, player p);
 lane** n_update(int n, lane* l);
 void free_update(lane** tab, int n);
-couple minmax_rec_memo_state(lane* l, int deep, couple previous, player p, lane** tab);
+couple minmax_rec_memo_state(int deep, couple previous, player p, lane** tab);
 player minmax_memo_state(lane* l, int deep, player p);
 player play_ai(int cai, lane* player_lane, player ai);
