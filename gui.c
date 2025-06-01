@@ -19,7 +19,7 @@ void update_savefile(int high_score, int purse, bool* unlocked_skins) {
     fclose(save_data);
 }
 
-int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag) {
+int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, obstacle* didier, int* purse, bool* buffer_key_flag, bool is_ai) {
     bool drown_flag = false; // whether the player is drowning
     bool blocked_path = false;
 
@@ -46,7 +46,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
         // Check for collisions with coins
         float_list* collided_coin =  collides_coin(player_top_lane, *game);
         if (collided_coin != NULL) {
-            if(collided_coin->power == 0){
+            if(collided_coin->power == 0 && !is_ai){
                 Mix_PlayChannel(1, sounds[SOUND_COIN], 0);
                 if (current_p->power == CRESUS) {
                     *purse += CRESUS_MODIF;
@@ -69,7 +69,6 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
             }
             
         }
-
 
         if (player_top_lane->type == WATER && current_p->power != XIV) {
             drown_flag = true; // only matters for the top lane, which is the lane the player is on or is going to
@@ -97,7 +96,7 @@ int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, o
                 }
                 else {
                     *game = tank_road(*game,  collided_obstacle,player_top_lane);
-                    collided_obstacle = NULL;// Faire une fonction pour couper les arbres / Train / Voiture
+                    collided_obstacle = NULL;
                 }
                 break;
                 case TRACK:
@@ -707,11 +706,11 @@ int main(void) {
             }
             
             if (ai_choice < 3) {
-                game.player.dead = process_player(&game.player, &game, sounds, didier, &purse, &buffer_key_flag);
+                game.player.dead = process_player(&game.player, &game, sounds, didier, &purse, &buffer_key_flag, false);
             }
 
             if (ai_choice != 0) {
-                game.ai.dead = process_player(&game.ai, &game, sounds, didier, &purse, &buffer_key_flag);
+                game.ai.dead = process_player(&game.ai, &game, sounds, didier, &purse, &buffer_key_flag, true);
             }
 
             if (game.player.dead || game.ai.dead) {
