@@ -1,0 +1,136 @@
+#pragma once
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <math.h>
+
+#define LANE_WIDTH 24 // width of the displayed area
+#define UNPLAYABLE_WIDTH 2 // width of the unplayable area on the sides of the screen
+
+#define PLAYER_START_Y 5 // starting position of the player
+
+#define LANE_TYPES 4 // amount of different types of lanes
+
+#define GRASS     1
+#define WATER     2
+#define TRACK     3
+#define ROAD      4
+
+#define WARNING_TIME 60 // in frames, the time before the arrival of a train a warning is showed (! This value is taken into account in the spacing of the trains !)
+#define TRAIN_LENGTH (LANE_WIDTH*3) // in tiles, length of a train
+#define TRAIN_SPEED 1 // in tiles per frame, speed of a rightwards train
+#define TRAIN_SPACING_MIN 100 // in tiles, minimum of space between two trains
+#define TRAIN_SPACING_MAX 300 // in tiles, maximum of space between two trains
+
+#define VEHICLE_SPEED_MIN 0.05 // in tiles per frame, minimum speed of a rightwards vehicle
+#define VEHICLE_INTERVAL 6 // in tiles, space between two vehicles (either that amount or twice that amount)
+
+#define LOG_SPEED 0.05 // in tiles per frame, speed of a rightwards log
+#define MAX_LOG_SIZE 4 // in tiles, maximum size of a low
+#define LOG_SPACING_MAX 5 // in tiles, maximum of space between two logs (minimum is always 1)
+
+enum {
+    XIV = 1,
+    NEO,
+    TANK,
+    ECOLO,
+    CRESUS,
+    POWERS_END,
+};
+#define CRESUS_MODIF 3 // The modifier for the CRESUS power
+#define TIME_POWER 10 // In seconds, time the power lasts
+
+#define COIN_ISSUES 3 // there is a 1 in COIN_ISSUES chance of generating a coin on a lane
+#define POWER_PROBABILITY 4 // there is a 1 in POWER_PROBABILITY chance of turning a coin into a power-up
+
+typedef struct obstacle {
+    struct obstacle* next;
+    struct obstacle* prev;
+    float x; // position of the obstacle
+    int size;
+} obstacle;
+
+typedef struct float_list {
+    float val;
+    int power;
+    struct float_list* next;
+} float_list;
+
+typedef struct lane {
+    int y; // position of the lane
+    float speed; // speed of the obstacles
+    obstacle* obstacles; // array of obstacles present on the lane
+    int obst_size; // size of the obstacle (log or vehicle length…)
+    float_list* coins; // pointer to bools representing the position of coins present on the lane
+    int type; // type of the lane (plains, road, tracks, river)
+    struct lane* prev; // pointer to the previous lane
+    struct lane* next; // pointer to the next lane
+} lane;
+
+typedef struct player {
+    float y; // position of the player
+    float x; // position of the player
+    int orientation; // orientation of the player
+    int skin; // skin of the player (?)
+    bool dead;
+
+    // gui info
+    int power; // power of the player
+    int power_time; // time left for the power
+    int anim;  // timer for player animation (0 = stopped, anything else = moving)
+    int buffer; // stores the next movement to be performed
+    obstacle* on_log; // pointer to the log the player is currently on (if any)
+    float liftboost; // in tiles per frame, speed at which the player is being carried (specifically for logs)
+    float x_offset; // in tiles per frame, speed at which x coordinate must be changed during the animation to place the player on top of a tile (specifically for going on and off logs)
+
+} player;
+
+typedef struct displayedData {
+    float cameraY; // camera position
+    lane* first_lane; // pointer to the first lane of the game
+    lane* camera_first_lane; // pointer to the first lane displayed on the screen
+    player player; // player
+    player ai; // articifial intelligence
+    int score; // score
+    int gameOver; // 1 if the game is over, 0 otherwise
+} displayedData;
+
+
+
+void free_obstacles(obstacle* first_obstacle);
+void free_coins(float_list* first_coin);
+void free_lanes(lane* first_lane);
+int biome(int* boules);
+int* probabilite_biomes(lane* l);
+lane* empty_lane(lane* prev_lane, int type);
+lane* initialLanes(void);
+lane* random_lane(lane* prev_lane);
+bool* create_obstacles_array(obstacle* o);
+void array_not(bool* array);
+bool* array_and(bool* a, bool* b);
+bool array_exist(bool* array);
+bool reachable(lane* l, bool* a, float speed);
+obstacle* generate_vehicles(lane* l);
+obstacle* generate_trees(lane* l);
+obstacle* generate_waterlilies(lane* l);
+obstacle* generate_logs(void);
+obstacle* generate_trains(void);
+lane* generate_lane(lane* prev_lane, int type);
+void update_vehicles(lane* l);
+void update_logs(lane* l);
+void update_trains(lane* l);
+void display_obstacles(obstacle* l);
+void displayLanes(lane* l);
+void updateLanes(lane * l);
+void updateLane(lane * l);
+obstacle* collides(lane *current_lane, player player);
+float_list* collides_coin(lane *current_lane, displayedData game);
+displayedData move_camera(displayedData data, float speed);
+displayedData init_game(int game_height);
+displayedData power4 (displayedData data);
+displayedData tank_road (displayedData data,obstacle* collided_obstacle, lane* current_lane);
+displayedData tank_train (displayedData data);
+
+
