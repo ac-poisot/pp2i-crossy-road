@@ -157,17 +157,26 @@ void display(displayedData data, SDL_Renderer* renderer, SDL_Texture** textures,
 
     if (data.player.skin != -1) {
         displayPlayer(data.player, data.cameraY, renderer, textures, skin_set);
-
-        // Display score
-        char scoreText[20];
-        SDL_Color white = {255, 255, 255, 255};
-        sprintf(scoreText, "Score: %d", (int) data.player.y);
-        display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
     }
 
     if (data.ai.skin != -1) {
         displayPlayer(data.ai, data.cameraY, renderer, textures, skin_set);
     }
+
+    // Display score
+    char scoreText[20];
+
+    if (data.player.skin == -1) {
+        sprintf(scoreText, "Score: %d", (int) data.ai.y);
+    } else {
+        sprintf(scoreText, "Score: %d", (int) data.player.y);
+    }
+    SDL_Color white = {255, 255, 255, 255};
+    
+    if (data.player.skin != -1 || data.ai.skin != -1) {
+        display_text(scoreText, 15, 15, 24, renderer, white, "Symtext.ttf");
+    }
+
 
 
     if (data.player.skin != -1 && data.player.power != 0 && !(data.player.power_time < power_duration*60/5 && (data.player.power_time%10) < 5)) {

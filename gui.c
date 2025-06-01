@@ -721,10 +721,6 @@ int main(void) {
             break;
         case GAME_OVER: {
             Mix_HaltMusic();
-            if (!sound_played) {
-                sound_played = true;
-                Mix_PlayChannel(1, sounds[SOUND_DEATH], 0);
-            }
 
             button menu_button = {(WIDTH-BUTTON_WIDTH)/2, (HEIGHT-BUTTON_HEIGHT)/2, BUTTON_WIDTH, BUTTON_HEIGHT, MENU_BUTTON};
             display_button(menu_button, renderer, textures);
@@ -743,12 +739,20 @@ int main(void) {
 
 
             if (game.player.dead || game.player.skin == -1) {
+                if (!sound_played) {
+                    sound_played = true;
+                    Mix_PlayChannel(1, sounds[SOUND_DEATH], 0);
+                }
                 SDL_Rect spriteRect2 = {0, 0, CARD_WIDTH, CARD_HEIGHT};
                 SDL_Rect destRect2 = {(WIDTH-CARD_WIDTH)/2, (HEIGHT/2-CARD_HEIGHT)/2, CARD_WIDTH, CARD_HEIGHT};
                 SDL_RenderCopy(renderer, textures[GAME_OVER_CARD], &spriteRect2, &destRect2);
             }
 
             if (game.ai.dead && game.player.skin != -1) {
+                if (!sound_played) {
+                    sound_played = true;
+                    Mix_PlayChannel(1, sounds[SOUND_NEW_SKIN], 0);
+                }
                 display_text("AI defeated!", (WIDTH-CARD_WIDTH)/2 + 20, (HEIGHT/2-CARD_HEIGHT)/2 + CARD_HEIGHT + 20, 40, renderer, white, "Symtext.ttf");
             }
 
