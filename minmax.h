@@ -13,10 +13,10 @@
 
 #define NOT_POSSIBLE 0
 #define GO_AHEAD 1
-#define GO_DOWN  2
-#define GO_RIGHT 3
-#define GO_LEFT  4
-#define STAY     5
+#define GO_RIGHT 2
+#define GO_LEFT  3
+#define STAY     4
+#define GO_DOWN  5
 
 typedef struct couple_s {
     int score;
