@@ -149,33 +149,51 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 # IA
 __Intelligence Artificielle__
 
-Le fichier minmax contient des fonctions pour faire des copies profondes pour pouvoir faire des calculs sans modifier le jeu en cours
+Le fichier minmax contient des fonctions pour faire des copies profondes pour pouvoir faire des calculs sans modifier le jeu en cours.
 
 ### copy_obstacles(obstacle* o)
-- réalise une copie profonde des obstacles
+- Réalise une copie profonde des obstacles
 ### copy_lane(lane* l, int p) 
-- réalise une copie profonde des p lanes devant et derrière le joueur. Le résultat est la lane du début, donc le début des lanes copiées doit être obtenu allieurs pour libérer la mémoire.
+- Réalise une copie profonde des p lanes devant et derrière le joueur. Le résultat est la lane du début, donc le début des lanes copiées doit être obtenu allieurs pour libérer la mémoire.
 ### collides_without_game(lane* current_lane, player p)
-- vérifie que le joueur n'entre pas en collision avec un obstacle
+- Vérifie que le joueur n'entre pas en collision avec un obstacle
 ### update_lanes(lane* l)
-- met à jour les lanes depuis la lane passée en paramètre
+- Met à jour les lanes depuis la lane passée en paramètre
 ### minmax_rec(lane* l, int deep, couple previous, player p)
-- calcule le meilleur mouvement possible grâce à un minmax. renvoie dans une structure spéciale couple. Si on obtient un score égal au score meilleur actuel, on garde celui obtenu précédement
-### minmax_simpl(lane* l, int deep, player p)
-- réalise un appel à minmax_rec et ne renvoie que le mouvement à faire
+- Calcule le meilleur mouvement possible grâce à un minmax. Renvoie dans une structure spéciale couple. Si on obtient un score égal au score meilleur actuel, on garde celui obtenu précédement.
+### minmax_simple(lane* l, int deep, player p)
+- Réalise un appel à ``minmax_rec`` et ne renvoie que le mouvement à faire.
 ### n_update(int n, lane* l)
-- met dans un tableau les n mises à jour futures pour éviter des les recalculer. En case i, il y a la mise à jour n-i-1
+- Met dans un tableau les n mises à jour futures pour éviter des les recalculer. En case i, il y a la mise à jour n-i-1.
 ### free_update(lane** tab, int n)
-- libère la mémoire associée aux mises à jour
+- Libère la mémoire associée aux mises à jour.
 ### minmax_rec_memo_state(int deep, couple previous, player p, lane** tab)
-- même chose que minmax_rec mais avec un tableau des updates pour éviter des calculs
+- Même chose que minmax_rec mais avec un tableau des updates pour éviter des calculs.
 ### minmax_memo_state(lane* l, int deep, player p)
-- réalise un appel à minmax_rec_memo_state et ne renvoie que le mouvement à faire
+- Réalise un appel à ``minmax_rec_memo_state`` et ne renvoie que le mouvement à faire.
 ### play_ai(int cai, lane* player_lane, player ai)
-- permet de jouer de façon générique avec l'ia dans cli et gui
+- Permet de jouer de façon générique avec l'I.A. dans CLI et GUI.
 
 # CLI
 __Command Line Interface__
+
+### void init_colors(void);
+- Initialise les couples de couleurs ncurses.
+
+### void display_lane(lane* lane, int lane_count);
+- Permet d'afficher une *lane* et tout ce qu'elle comprend dans le terminal.
+
+### void display(displayedData data);
+- Permet d'afficher dans le terminal l'ensemble des informations liées au jeu.
+
+### void display_title_animation(void) ;
+- Permet d'afficher et de gérer l'animation liée à l'écran titre.
+
+### void display_shop(void);
+- Permet d'afficher l'écran du magasin de *skins*.
+
+### int main(void);
+- La fonction principale qui permet de lancer le jeu en ligne de commande.
 
 # GUI
 __Graphics User Interface__

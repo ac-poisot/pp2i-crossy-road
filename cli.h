@@ -46,5 +46,6 @@ void display_lane(lane* lane, int lane_count);
 void display(displayedData data);
 void display_title_animation(void) ;
 void display_shop(void);
+int main(void);
 
 #endif // CLI_H
