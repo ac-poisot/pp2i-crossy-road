@@ -89,9 +89,9 @@ lane* copy_lane(lane* l, int p) {
 bool collides_without_game(lane *current_lane, player p) {
     /* checks if the player collides with an obstacle */
     obstacle* current_obstacle = current_lane->obstacles;
-    if (current_lane->type != 2) { // WATER == 2
+    if (current_lane->type != WATER) {
         while (current_obstacle != NULL) {
-            if (p.x >= current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            if (p.x >= current_obstacle->x-2 && p.x < current_obstacle->x + (current_obstacle->size)+2) {
                 return true;
             } else {
                 current_obstacle = current_obstacle->next;
@@ -100,7 +100,7 @@ bool collides_without_game(lane *current_lane, player p) {
        return false;
     } else {
         while (current_obstacle != NULL) {
-            if (p.x >= current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            if (p.x > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
                 return false;
             } else {
                 current_obstacle = current_obstacle->next;
@@ -493,7 +493,7 @@ player minmax_memo_state(lane* l, int deep, player p) {
 
 player play_ai(int cai, lane* player_lane, player ai) {
     // make the move for the ai
-    int depth = 5;
+    int depth = 7;
     switch (cai) {
         case 1:
         return minmax_simple(player_lane, depth, ai);

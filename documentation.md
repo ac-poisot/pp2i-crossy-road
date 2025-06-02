@@ -113,11 +113,11 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 ### obstacle * generate_waterlilies(lane * l)
 - La fonction ajoute des nénuphars à la *lane*.
 ### obstacle * generate_logs(void)
-- 
+- La fonction ajoute des rondins à la *lane*.
 ### obstacle * generate_trains(void)
 - La fonction ajoute des trains à la *lane*.
 ### lane * generate_lane(lane * prev_lane, int type)
-- 
+- La fonction crée une nouvelle *lane* de type précisé et la raccroche à celle donnée en paramètre.
 ### void update_vehicles(lane * l)
 - La fonction met à jour les véhicules de la *lane*.
 ### void update_logs(lane*  l)
@@ -146,7 +146,7 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - La fonction supprime la voiture ou l'arbre en collision avec le personnage.
 ### displayedData tank_train (displayedData data)
 - La fonction supprime le train en collision avec le personnage.
-# IA
+# I.A.
 __Intelligence Artificielle__
 
 Le fichier minmax contient des fonctions pour faire des copies profondes pour pouvoir faire des calculs sans modifier le jeu en cours.
@@ -262,4 +262,4 @@ __Graphics User Interface__
 ### int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai)
 - Réalise tous les tests de collisions pour un joueur et met à jour toutes les variables associées. Renvoie si le joueur est mort ou non.
 ### int main(void)
-- La fonction principale.
+- La fonction principale qui permet de lancer le jeu en fenêtre graphique.
