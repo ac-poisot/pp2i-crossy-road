@@ -1,7 +1,7 @@
 # Introduction
 Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - Le __CORE__ est le noyau du jeu, toutes les fonctions de calculs majeurs des états du jeu sont réunies dans celui-ci.
-- L'__IA__ et le fichier ``minmax.c`` contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
+- L'__I.A.__ et le fichier ``minmax.c`` contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
 - Le __CLI__ permet d'avoir une représentation visuelle du jeu sur shell, pour développer les fonctionnalités finales. Il contient une boucle de jeu, peut être lancée avec la commande `make run_cli`. Il n'a pas de fichier test.
 - Le __GUI__ est le fichier final utilisant la bibliothèque SDL pour avoir un exécutable du jeu. Il peut lui aussi être lancé avec la commande `make run_graphics` et n'a pas non plus de fichier test.
 
