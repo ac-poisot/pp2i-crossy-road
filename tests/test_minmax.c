@@ -13,11 +13,6 @@
 #define UNPLAYABLE_WIDTH 2
 
 #define NOT_POSSIBLE 0
-#define GO_AHEAD 1
-#define GO_DOWN  2
-#define GO_RIGHT 3
-#define GO_LEFT  4
-#define STAY     5
 
 obstacle* init_obst(obstacle* next, obstacle* prev, float x, int size) {
     obstacle* o = (obstacle*)malloc(sizeof(obstacle));

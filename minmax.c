@@ -100,7 +100,7 @@ bool collides_without_game(lane *current_lane, player p) {
        return false;
     } else {
         while (current_obstacle != NULL) {
-            if (p.x > current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
+            if (p.x >= current_obstacle->x && p.x < current_obstacle->x + (current_obstacle->size)) {
                 return false;
             } else {
                 current_obstacle = current_obstacle->next;
