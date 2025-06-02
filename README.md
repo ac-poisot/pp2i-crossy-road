@@ -10,12 +10,15 @@ sudo apt install libsdl2-mixer-dev
 
 ## Launching the game
 
-### In command line
+### In command line (terminal version)
+Execute the ``run_cli.sh`` file.
 ```
 ./run_cli.sh
 ```
 
+
 ## In a graphics window
+Execute the ``run_gui.sh`` file.
 ```
 ./run_gui.sh
 ```

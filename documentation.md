@@ -1,7 +1,7 @@
 # Introduction
 Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - Le __CORE__ est le noyau du jeu, toutes les fonctions de calculs majeurs des états du jeu sont réunies dans celui-ci.
-- L'__IA__ et le fichier ``minmax.c`` contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
+- L'__I.A.__ et le fichier ``minmax.c`` contiennent les fonctions de calculs des possibilité de notre modèle d'IA.
 - Le __CLI__ permet d'avoir une représentation visuelle du jeu sur shell, pour développer les fonctionnalités finales. Il contient une boucle de jeu, peut être lancée avec la commande `make run_cli`. Il n'a pas de fichier test.
 - Le __GUI__ est le fichier final utilisant la bibliothèque SDL pour avoir un exécutable du jeu. Il peut lui aussi être lancé avec la commande `make run_graphics` et n'a pas non plus de fichier test.
 
@@ -113,11 +113,11 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 ### obstacle * generate_waterlilies(lane * l)
 - La fonction ajoute des nénuphars à la *lane*.
 ### obstacle * generate_logs(void)
-- 
+- La fonction ajoute des rondins à la *lane*.
 ### obstacle * generate_trains(void)
 - La fonction ajoute des trains à la *lane*.
 ### lane * generate_lane(lane * prev_lane, int type)
-- 
+- La fonction crée une nouvelle *lane* de type précisé et la raccroche à celle donnée en paramètre.
 ### void update_vehicles(lane * l)
 - La fonction met à jour les véhicules de la *lane*.
 ### void update_logs(lane*  l)
@@ -146,10 +146,54 @@ Le projet est séparé en plusieurs parties, le CORE, l'IA, le CLI, et le GUI :
 - La fonction supprime la voiture ou l'arbre en collision avec le personnage.
 ### displayedData tank_train (displayedData data)
 - La fonction supprime le train en collision avec le personnage.
-# IA
+# I.A.
 __Intelligence Artificielle__
+
+Le fichier minmax contient des fonctions pour faire des copies profondes pour pouvoir faire des calculs sans modifier le jeu en cours.
+
+### copy_obstacles(obstacle* o)
+- Réalise une copie profonde des obstacles
+### copy_lane(lane* l, int p) 
+- Réalise une copie profonde des p lanes devant et derrière le joueur. Le résultat est la lane du début, donc le début des lanes copiées doit être obtenu allieurs pour libérer la mémoire.
+### collides_without_game(lane* current_lane, player p)
+- Vérifie que le joueur n'entre pas en collision avec un obstacle
+### update_lanes(lane* l)
+- Met à jour les lanes depuis la lane passée en paramètre
+### minmax_rec(lane* l, int deep, couple previous, player p)
+- Calcule le meilleur mouvement possible grâce à un minmax. Renvoie dans une structure spéciale couple. Si on obtient un score égal au score meilleur actuel, on garde celui obtenu précédement.
+### minmax_simple(lane* l, int deep, player p)
+- Réalise un appel à ``minmax_rec`` et ne renvoie que le mouvement à faire.
+### n_update(int n, lane* l)
+- Met dans un tableau les n mises à jour futures pour éviter des les recalculer. En case i, il y a la mise à jour n-i-1.
+### free_update(lane** tab, int n)
+- Libère la mémoire associée aux mises à jour.
+### minmax_rec_memo_state(int deep, couple previous, player p, lane** tab)
+- Même chose que minmax_rec mais avec un tableau des updates pour éviter des calculs.
+### minmax_memo_state(lane* l, int deep, player p)
+- Réalise un appel à ``minmax_rec_memo_state`` et ne renvoie que le mouvement à faire.
+### play_ai(int cai, lane* player_lane, player ai)
+- Permet de jouer de façon générique avec l'I.A. dans CLI et GUI.
+
 # CLI
 __Command Line Interface__
+
+### void init_colors(void);
+- Initialise les couples de couleurs ncurses.
+
+### void display_lane(lane* lane, int lane_count);
+- Permet d'afficher une *lane* et tout ce qu'elle comprend dans le terminal.
+
+### void display(displayedData data);
+- Permet d'afficher dans le terminal l'ensemble des informations liées au jeu.
+
+### void display_title_animation(void) ;
+- Permet d'afficher et de gérer l'animation liée à l'écran titre.
+
+### void display_shop(void);
+- Permet d'afficher l'écran du magasin de *skins*.
+
+### int main(void);
+- La fonction principale qui permet de lancer le jeu en ligne de commande.
 
 # GUI
 __Graphics User Interface__
@@ -218,4 +262,4 @@ __Graphics User Interface__
 ### int process_player(player* current_p, displayedData* game, Mix_Chunk** sounds, int* purse, bool* buffer_key_flag, bool is_ai)
 - Réalise tous les tests de collisions pour un joueur et met à jour toutes les variables associées. Renvoie si le joueur est mort ou non.
 ### int main(void)
-- La fonction principale.
+- La fonction principale qui permet de lancer le jeu en fenêtre graphique.
